@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "outDir": "./src",
+    "declaration": true,
+    "target": "es2015",
+    "module": "commonjs",
+    "moduleResolution": "node"
+  },
+  "include": [
+    "src/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

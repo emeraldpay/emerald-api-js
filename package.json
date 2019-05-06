@@ -1,0 +1,42 @@
+{
+	"name": "@emeraldplatform/grpc",
+	"version": "0.1.0",
+	"description": "gRPC wrapper for Emerald APIs",
+	"private": false,
+	"license": "Apache-2.0",
+	"main": "src/index.js",
+	"types": "src/index.d.ts",
+	"files": [
+		"lib/**/*"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ETCDEVTeam/emerald-js-grpc.git"
+	},
+	"keywords": [
+		"grpc",
+		"api",
+		"emerald",
+		"emerald-pay",
+		"emerald-wallet"
+	],
+	"scripts": {
+		"prepare:copy": "cp ../emerald-grpc/proto/* ./proto",
+		"generate:init": "mkdir -p src/generated",
+		"generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./src/generated --grpc_out=./src/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ./proto/ ./proto/*.proto",
+		"generate:ts": "./node_modules/protoc/protoc/bin/protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./src/generated -I ./proto ./proto/*.proto",
+		"build": "tsc"
+	},
+	"dependencies": {
+		"google-protobuf": "3.7.1",
+		"grpc": "1.20.3"
+	},
+	"devDependencies": {
+		"grpc-tools": "1.7.3",
+		"grpc_tools_node_protoc_ts": "2.5.0",
+		"protoc": "1.0.2",
+		"@types/google-protobuf": "3.2.7",
+		"typescript": "3.4.2",
+		"@types/node": "12.0.0"
+	}
+}
