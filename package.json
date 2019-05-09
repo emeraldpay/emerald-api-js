@@ -1,11 +1,11 @@
 {
 	"name": "@emeraldplatform/grpc",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "gRPC wrapper for Emerald APIs",
 	"private": false,
 	"license": "Apache-2.0",
-	"main": "src/index.js",
-	"types": "src/index.d.ts",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
 	"files": [
 		"lib/**/*"
 	],
@@ -22,9 +22,12 @@
 	],
 	"scripts": {
 		"prepare:copy": "cp ../emerald-grpc/proto/* ./proto",
-		"generate:init": "mkdir -p src/generated",
-		"generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./src/generated --grpc_out=./src/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ./proto/ ./proto/*.proto",
-		"generate:ts": "./node_modules/protoc/protoc/bin/protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./src/generated -I ./proto ./proto/*.proto",
+		"generate": "npm run generate:init && npm run generate:js && npm run generate:ts",
+		"generate:init": "mkdir -p lib/generated",
+		"generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./lib/generated --grpc_out=./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ./proto/ ./proto/*.proto",
+		"generate:ts": "./node_modules/protoc/protoc/bin/protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./lib/generated -I ./proto ./proto/*.proto",
+		"generate:copy": "rm -rf src/generated && cp -r lib/generated src/",
+		"build:all": "npm run generate && npm run generate:copy && npm run build",
 		"build": "tsc"
 	},
 	"dependencies": {
