@@ -1,6 +1,6 @@
 {
 	"name": "@emeraldplatform/grpc",
-	"version": "0.3.1",
+	"version": "0.4.0",
 	"description": "gRPC wrapper for Emerald APIs",
 	"private": false,
 	"license": "Apache-2.0",
@@ -21,14 +21,16 @@
 		"emerald-wallet"
 	],
 	"scripts": {
+		"clean": "rimraf proto && rimraf lib && rimraf src/generated",
+		"prepare": "npm run prepare:init && npm run prepare:copy",
+		"prepare:init": "mkdir -p lib/generated && mkdir -p proto",
 		"prepare:copy": "cp ../emerald-grpc/proto/* ./proto",
-		"generate": "npm run generate:init && npm run generate:js && npm run generate:ts",
-		"generate:init": "mkdir -p lib/generated",
+		"generate": "npm run generate:js && npm run generate:ts && npm run generate:copy",
 		"generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./lib/generated --grpc_out=./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ./proto/ ./proto/*.proto",
 		"generate:ts": "./node_modules/protoc/protoc/bin/protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./lib/generated -I ./proto ./proto/*.proto",
-		"generate:copy": "rm -rf src/generated && cp -r lib/generated src/",
-		"build:all": "npm run generate && npm run generate:copy && npm run build",
-		"build": "tsc"
+		"generate:copy": "rimraf src/generated && cp -r lib/generated src/",
+		"build": "npm run clean && npm run prepare && npm run generate && npm run build:ts",
+		"build:ts": "tsc"
 	},
 	"dependencies": {
 		"@types/google-protobuf": "3.2.7",
@@ -41,6 +43,7 @@
 		"grpc_tools_node_protoc_ts": "2.5.0",
 		"protoc": "1.0.2",
 		"typescript": "3.4.2",
-		"@types/node": "12.0.0"
+		"@types/node": "12.0.0",
+		"rimraf": "^2.6.3"
 	}
 }
