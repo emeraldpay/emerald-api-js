@@ -15,4 +15,8 @@ export class TrackClient {
     public trackAccount(request: track_pb.TrackAccountRequest, onConnect: Connected<track_pb.AccountStatus>) {
         this.callRetry.retryAlways(this.client.trackAccount, request, onConnect);
     }
+
+    public trackTx(request: track_pb.TrackTxRequest, onConnect: Connected<track_pb.TxStatus>) {
+        this.callRetry.retryAlways(this.client.trackTx, request, onConnect);
+    }
 }
