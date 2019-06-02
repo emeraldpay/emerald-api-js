@@ -1,7 +1,7 @@
 import * as grpc from "grpc";
 import * as prices_grpc_pb from '../generated/prices_grpc_pb';
 import * as prices_pb from '../generated/prices_pb';
-import {CallRetry, Connected} from "./CallRetry";
+import {CallRetry, StreamHandler} from "./CallRetry";
 
 export class PricesClient {
     client: prices_grpc_pb.PricesClient;
@@ -12,7 +12,7 @@ export class PricesClient {
         this.callRetry = new CallRetry(this.client);
     }
 
-    public streamRates(request: prices_pb.GetRateRequest, onConnect: Connected<prices_pb.GetRateReply>) {
+    public streamRates(request: prices_pb.GetRateRequest, onConnect: StreamHandler<prices_pb.GetRateReply>) {
         this.callRetry.retryAlways(this.client.streamRates, request, onConnect);
     }
 }

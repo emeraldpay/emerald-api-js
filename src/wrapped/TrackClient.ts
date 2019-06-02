@@ -1,7 +1,7 @@
 import * as grpc from "grpc";
 import * as track_grpc_pb from '../generated/track_grpc_pb';
 import * as track_pb from '../generated/track_pb';
-import {CallRetry, Connected} from "./CallRetry";
+import {CallRetry, StreamHandler} from "./CallRetry";
 
 export class TrackClient {
     client: track_grpc_pb.TrackClient;
@@ -12,11 +12,11 @@ export class TrackClient {
         this.callRetry = new CallRetry(this.client);
     }
 
-    public trackAccount(request: track_pb.TrackAccountRequest, onConnect: Connected<track_pb.AccountStatus>) {
+    public trackAccount(request: track_pb.TrackAccountRequest, onConnect: StreamHandler<track_pb.AccountStatus>) {
         this.callRetry.retryAlways(this.client.trackAccount, request, onConnect);
     }
 
-    public trackTx(request: track_pb.TrackTxRequest, onConnect: Connected<track_pb.TxStatus>) {
+    public trackTx(request: track_pb.TrackTxRequest, onConnect: StreamHandler<track_pb.TxStatus>) {
         this.callRetry.retryAlways(this.client.trackTx, request, onConnect);
     }
 }
