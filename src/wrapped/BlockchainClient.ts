@@ -16,4 +16,8 @@ export class BlockchainClient {
     public streamHead(request: common_pb.Chain, onConnect: StreamHandler<blockchain_pb.ChainHead>) {
         this.callRetry.retryAlways(this.client.streamHead, request, onConnect);
     }
+
+    public call(request: blockchain_pb.CallBlockchainRequest, handler: StreamHandler<blockchain_pb.CallBlockchainReplyItem>) {
+        this.callRetry.retryAlways(this.client.call, request, handler);
+    }
 }
