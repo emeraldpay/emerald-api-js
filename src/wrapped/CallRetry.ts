@@ -39,6 +39,12 @@ export class CallRetry {
                     this.callWhenReady(handler, sc);
                 }
             });
+            listener.on('end', () => {
+                sc.onClose();
+            });
+            listener.on('close', () => {
+                sc.onClose();
+            });
             onConnect(listener);
         };
         return handler;
@@ -96,22 +102,30 @@ interface ContinueCheck {
     shouldContinue(): Boolean;
     onSuccess();
     onFail();
+    onClose();
 }
 
 class AlwaysRepeat implements ContinueCheck {
+    closed: Boolean = false;
+
     onFail() {
     }
 
     onSuccess() {
     }
 
+    onClose() {
+        this.closed = true;
+    }
+
     shouldContinue(): Boolean {
-        return true;
+        return !this.closed;
     }
 }
 
 class OnceSuccess implements ContinueCheck {
     succeed: Boolean = false;
+    closed: Boolean = false;
 
     onFail() {
     }
@@ -120,8 +134,12 @@ class OnceSuccess implements ContinueCheck {
         this.succeed = true;
     }
 
+    onClose() {
+        this.closed = true;
+    }
+
     shouldContinue(): Boolean {
-        return !this.succeed;
+        return !this.succeed && !this.closed;
     }
 
 }
