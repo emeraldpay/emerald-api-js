@@ -3,14 +3,17 @@ import {TokenSignature} from "./signature";
 import {AuthClient} from './wrapped/Auth';
 import {AuthRequest, AuthResponse} from "./generated/auth_pb";
 
+const packageJson = require('../package.json');
+
 class CredentialsContext {
     url: string;
     private readonly ca: Buffer;
     private readonly ssl: ChannelCredentials;
     private authentication: EmeraldAuthentication;
     private token: Promise<TokenSignature>;
+    private readonly agent: string[];
 
-    constructor(url: string, ca: string | Buffer) {
+    constructor(url: string, ca: string | Buffer, agent: string[]) {
         this.url = url;
         if (typeof ca == 'string') {
             this.ca = Buffer.from(ca, 'utf8')
@@ -18,6 +21,7 @@ class CredentialsContext {
             this.ca = ca;
         }
         this.ssl = credentials.createSsl(this.ca);
+        this.agent = agent;
     }
 
     getSsl(): ChannelCredentials {
@@ -29,7 +33,7 @@ class CredentialsContext {
             this.authentication = new BasicUserAuth(this.url, this.getSsl());
         }
         if (!this.token) {
-            this.token = this.authentication.authenticate();
+            this.token = this.authentication.authenticate(this.agent);
         }
         return this.token;
     }
@@ -42,12 +46,12 @@ class Connected {
         this.existing = []
     }
 
-    getOrCreate(url: string, ca: string | Buffer): CredentialsContext {
+    getOrCreate(url: string, ca: string | Buffer, agent: string[]): CredentialsContext {
         const found = this.existing.find((it) => it.url === url);
         if (found) {
             return found;
         }
-        const created = new CredentialsContext(url, ca);
+        const created = new CredentialsContext(url, ca, agent);
         this.existing.push(created);
         return created;
     }
@@ -55,8 +59,8 @@ class Connected {
 
 const connected = new Connected();
 
-export function emeraldCredentials(url: string, ca: string | Buffer): ChannelCredentials {
-    const ctx = connected.getOrCreate(url, ca);
+export function emeraldCredentials(url: string, ca: string | Buffer, agent: string[]): ChannelCredentials {
+    const ctx = connected.getOrCreate(url, ca, agent);
     const ssl = ctx.getSsl();
     const callCredentials = credentials.createFromMetadataGenerator(
         (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => {
@@ -80,7 +84,7 @@ export function emeraldCredentials(url: string, ca: string | Buffer): ChannelCre
 }
 
 interface EmeraldAuthentication {
-    authenticate(): Promise<TokenSignature>
+    authenticate(agent: string[]): Promise<TokenSignature>
 }
 
 class BasicUserAuth implements EmeraldAuthentication {
@@ -90,9 +94,11 @@ class BasicUserAuth implements EmeraldAuthentication {
         this.client = new AuthClient(url, cred);
     }
 
-    authenticate(): Promise<TokenSignature> {
+    authenticate(agent: string[]): Promise<TokenSignature> {
         const authRequest = new AuthRequest();
-        authRequest.setSupportedTokensList(["NONCE_HMAC_SHA256"]);
+        authRequest.setAgentDetailsList(agent);
+        authRequest.addAgentDetails(`emerald-js/${packageJson.version}`);
+        authRequest.setCapabilitiesList(["NONCE_HMAC_SHA256"]);
         authRequest.setScopesList(["BASIC_USER"]);
         return this.client.authenticate(authRequest).then((result: AuthResponse) => {
             if (!result.getSucceed()) {
