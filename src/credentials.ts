@@ -2,7 +2,6 @@ import {credentials, Metadata, ChannelCredentials} from "grpc";
 import {TokenSignature} from "./signature";
 import {AuthClient} from './wrapped/Auth';
 import {AuthRequest, AuthResponse} from "./generated/auth_pb";
-import * as fs from "fs";
 
 class CredentialsContext {
     url: string;
@@ -11,12 +10,12 @@ class CredentialsContext {
     private authentication: EmeraldAuthentication;
     private token: Promise<TokenSignature>;
 
-    constructor(url: string, caOrPath: string | Buffer) {
+    constructor(url: string, ca: string | Buffer) {
         this.url = url;
-        if (typeof caOrPath == 'string') {
-            this.ca = fs.readFileSync(caOrPath)
+        if (typeof ca == 'string') {
+            this.ca = Buffer.from(ca, 'utf8')
         } else {
-            this.ca = caOrPath;
+            this.ca = ca;
         }
         this.ssl = credentials.createSsl(this.ca);
     }
@@ -43,12 +42,12 @@ class Connected {
         this.existing = []
     }
 
-    getOrCreate(url: string, caOrPath: string | Buffer): CredentialsContext {
+    getOrCreate(url: string, ca: string | Buffer): CredentialsContext {
         const found = this.existing.find((it) => it.url === url);
         if (found) {
             return found;
         }
-        const created = new CredentialsContext(url, caOrPath);
+        const created = new CredentialsContext(url, ca);
         this.existing.push(created);
         return created;
     }
@@ -56,8 +55,8 @@ class Connected {
 
 const connected = new Connected();
 
-export function emeraldCredentials(url: string, caOrPath: string | Buffer): ChannelCredentials {
-    const ctx = connected.getOrCreate(url, caOrPath);
+export function emeraldCredentials(url: string, ca: string | Buffer): ChannelCredentials {
+    const ctx = connected.getOrCreate(url, ca);
     const ssl = ctx.getSsl();
     const callCredentials = credentials.createFromMetadataGenerator(
         (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => {
