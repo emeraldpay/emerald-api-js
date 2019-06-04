@@ -17,7 +17,15 @@ export class BlockchainClient {
         this.callRetry.retryAlways(this.client.streamHead, request, onConnect);
     }
 
-    public call(request: blockchain_pb.CallBlockchainRequest, handler: StreamHandler<blockchain_pb.CallBlockchainReplyItem>) {
-        this.callRetry.retryAlways(this.client.call, request, handler);
+    public nativeCall(request: blockchain_pb.CallBlockchainRequest, handler: StreamHandler<blockchain_pb.CallBlockchainReplyItem>) {
+        this.callRetry.retryAlways(this.client.nativeCall, request, handler);
+    }
+
+    public trackAccount(request: blockchain_pb.TrackAccountRequest, onConnect: StreamHandler<blockchain_pb.AccountStatus>) {
+        this.callRetry.retryAlways(this.client.trackAccount, request, onConnect);
+    }
+
+    public trackTx(request: blockchain_pb.TrackTxRequest, onConnect: StreamHandler<blockchain_pb.TxStatus>) {
+        this.callRetry.retryAlways(this.client.trackTx, request, onConnect);
     }
 }

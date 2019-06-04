@@ -12,18 +12,18 @@ export {
     CallBlockchainRequest,
     CallBlockchainItem,
     CallBlockchainReplyItem,
-    ChainHead
+    ChainHead,
+    TrackTxRequest,
+    TxStatus,
+    AccountStatus,
+    TrackAccountRequest
 } from './generated/blockchain_pb';
 export {IBlockchainClient, BlockchainClient as BlockchainClientPb} from './generated/blockchain_grpc_pb';
-
-export {TrackAccountRequest, TrackTxRequest, AccountStatus, TxStatus} from './generated/track_pb';
-export {ITrackClient, TrackClient as TrackClientPb} from './generated/track_grpc_pb';
 
 export {CHAINS, ChainSpec, chainByCode} from './chain';
 
 export {credentials as credentialsPb} from 'grpc';
 
-export {TrackClient} from './wrapped/TrackClient';
 export {PricesClient} from './wrapped/PricesClient';
 export {BlockchainClient} from './wrapped/BlockchainClient';
 
