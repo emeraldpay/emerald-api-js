@@ -1,10 +1,10 @@
-import {Chain} from './generated/common_pb';
+import {Chain, ChainRef} from './generated/common_pb';
 
 const allTypes = [
-    Chain.Type.BITCOIN, Chain.Type.LIGHTNING, Chain.Type.GRIN, Chain.Type.TETHER,
-    Chain.Type.ETHEREUM, Chain.Type.DAI,
-    Chain.Type.ETHEREUM_CLASSIC, Chain.Type.BITETHER,
-    Chain.Type.MORDEN
+    ChainRef.CHAIN_BITCOIN, ChainRef.CHAIN_LIGHTNING, ChainRef.CHAIN_GRIN,
+    ChainRef.CHAIN_ETHEREUM,
+    ChainRef.CHAIN_ETHEREUM_CLASSIC,
+    ChainRef.CHAIN_MORDEN
 ];
 
 export class ChainSpec {
@@ -30,34 +30,30 @@ export class ChainSpec {
 }
 
 export const CHAINS = {
-    BITCOIN: new ChainSpec(0,'BTC', 'Bitcoin'),
-    LIGHTNING: new ChainSpec(1, 'BTC_LN', 'Bitcoin Lightning'),
-    GRIN: new ChainSpec(30, 'GRIN', 'Grin'),
-    TETHER: new ChainSpec(40, 'USDT', 'Tether'),
+    BITCOIN: new ChainSpec(1,'BTC', 'Bitcoin'),
+    LIGHTNING: new ChainSpec(101, 'BTC_LN', 'Bitcoin Lightning'),
+    GRIN: new ChainSpec(10, 'GRIN', 'Grin'),
 
     // Networks with tokens
-    ETHEREUM: new ChainSpec(100, 'ETH', 'Ethereum'),
-    DAI: new ChainSpec(101, 'Dai', 'Dai'),
-
-    ETHEREUM_CLASSIC: new ChainSpec(200, 'ETC', 'Ethereum Classic'),
-    BITETHER: new ChainSpec(201, 'BEC', 'Bitether'),
+    ETHEREUM: new ChainSpec(20, 'ETH', 'Ethereum'),
+    ETHEREUM_CLASSIC: new ChainSpec(21, 'ETC', 'Ethereum Classic'),
 
     // Testnets
     MORDEN: new ChainSpec(1001, 'MORDEN', 'Mordent Testnet'),
 
-    UNKNOWN: new ChainSpec(999999, 'Unknown', 'Unknown'),
+    UNSPECIFIED: new ChainSpec(9, 'UNKNOWN', 'Unknown'),
 };
 
 const all = [
-    CHAINS.BITCOIN, CHAINS.LIGHTNING, CHAINS.GRIN, CHAINS.TETHER,
-    CHAINS.ETHEREUM, CHAINS.DAI,
-    CHAINS.ETHEREUM_CLASSIC, CHAINS.BITETHER,
+    CHAINS.BITCOIN, CHAINS.LIGHTNING, CHAINS.GRIN,
+    CHAINS.ETHEREUM,
+    CHAINS.ETHEREUM_CLASSIC,
     CHAINS.MORDEN,
-    CHAINS.UNKNOWN
+    CHAINS.UNSPECIFIED
 ];
 
 export function chainByCode(code: string): ChainSpec {
-    return all.find((it) => it.code === code) || CHAINS.UNKNOWN
+    return all.find((it) => it.code.toLowerCase() === code.toLowerCase()) || CHAINS.UNSPECIFIED
 }
 
 

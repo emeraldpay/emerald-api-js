@@ -21,8 +21,8 @@ export class BlockchainClient {
         this.callRetry.retryAlways(this.client.nativeCall, request, handler);
     }
 
-    public trackAccount(request: blockchain_pb.TrackAccountRequest, onConnect: StreamHandler<blockchain_pb.AccountStatus>) {
-        this.callRetry.retryAlways(this.client.trackAccount, request, onConnect);
+    public trackAddress(request: blockchain_pb.TrackAddressRequest, onConnect: StreamHandler<blockchain_pb.AddressStatus>) {
+        this.callRetry.retryAlways(this.client.trackAddress, request, onConnect);
     }
 
     public trackTx(request: blockchain_pb.TrackTxRequest, onConnect: StreamHandler<blockchain_pb.TxStatus>) {

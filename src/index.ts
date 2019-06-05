@@ -1,8 +1,10 @@
 export {
     Chain,
+    ChainRef,
     AnyAddress,
     MultiAddress,
-    SingleAddress
+    SingleAddress,
+    Asset
 } from './generated/common_pb';
 
 export {GetRateRequest, GetRateReply, GetRateReplyItem} from './generated/market_pb';
@@ -15,8 +17,8 @@ export {
     ChainHead,
     TrackTxRequest,
     TxStatus,
-    AccountStatus,
-    TrackAccountRequest
+    AddressStatus,
+    TrackAddressRequest
 } from './generated/blockchain_pb';
 export {IBlockchainClient, BlockchainClient as BlockchainClientPb} from './generated/blockchain_grpc_pb';
 
