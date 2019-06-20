@@ -39,7 +39,7 @@ export const CHAINS = {
     ETHEREUM_CLASSIC: new ChainSpec(21, 'ETC', 'Ethereum Classic'),
 
     // Testnets
-    MORDEN: new ChainSpec(1001, 'MORDEN', 'Mordent Testnet'),
+    MORDEN: new ChainSpec(1001, 'MORDEN', 'Morden Testnet'),
 
     UNSPECIFIED: new ChainSpec(9, 'UNKNOWN', 'Unknown'),
 };
