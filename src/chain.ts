@@ -11,6 +11,7 @@ export class ChainSpec {
     id: number;
     code: string;
     fullname: string;
+    customId?: number;
 
     constructor(id: number, code: string, fullname: string) {
         this.id = id;
@@ -30,26 +31,36 @@ export class ChainSpec {
 }
 
 export const CHAINS = {
+    UNSPECIFIED: new ChainSpec(0, 'UNKNOWN', 'Unknown'),
+
     BITCOIN: new ChainSpec(1,'BTC', 'Bitcoin'),
-    LIGHTNING: new ChainSpec(101, 'BTC_LN', 'Bitcoin Lightning'),
-    GRIN: new ChainSpec(10, 'GRIN', 'Grin'),
+    GRIN: new ChainSpec(2, 'GRIN', 'Grin'),
 
     // Networks with tokens
-    ETHEREUM: new ChainSpec(20, 'ETH', 'Ethereum'),
-    ETHEREUM_CLASSIC: new ChainSpec(21, 'ETC', 'Ethereum Classic'),
+    ETHEREUM: new ChainSpec(100, 'ETH', 'Ethereum'),
+    ETHEREUM_CLASSIC: new ChainSpec(101, 'ETC', 'Ethereum Classic'),
+
+    // Sidechains and state channels
+    LIGHTNING: new ChainSpec(1001, 'BTC_LN', 'Bitcoin Lightning'),
+
 
     // Testnets
-    MORDEN: new ChainSpec(1001, 'MORDEN', 'Morden Testnet'),
+    MORDEN: new ChainSpec(10001, 'MORDEN', 'Morden Testnet'),
+    KOVAN: new ChainSpec(10002, 'MORDEN', 'Morden Testnet'),
+    BITCOIN_TESTNET: new ChainSpec(10003, 'MORDEN', 'Morden Testnet'),
+    FLOONET: new ChainSpec(10004, 'MORDEN', 'Morden Testnet'),
 
-    UNSPECIFIED: new ChainSpec(9, 'UNKNOWN', 'Unknown'),
+    // Non standard/custom starts from 50000
+    CUSTOM: new ChainSpec(50000, 'CUSTOM', 'Custom Chain')
 };
 
 const all = [
-    CHAINS.BITCOIN, CHAINS.LIGHTNING, CHAINS.GRIN,
-    CHAINS.ETHEREUM,
-    CHAINS.ETHEREUM_CLASSIC,
-    CHAINS.MORDEN,
-    CHAINS.UNSPECIFIED
+    CHAINS.BITCOIN, CHAINS.GRIN,
+    CHAINS.ETHEREUM, CHAINS.ETHEREUM_CLASSIC,
+    CHAINS.LIGHTNING,
+    CHAINS.MORDEN, CHAINS.KOVAN, CHAINS.BITCOIN_TESTNET, CHAINS.FLOONET,
+    CHAINS.UNSPECIFIED,
+    CHAINS.CUSTOM
 ];
 
 export function chainByCode(code: string): ChainSpec {
