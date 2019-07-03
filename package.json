@@ -1,6 +1,6 @@
 {
 	"name": "@emeraldplatform/grpc",
-	"version": "0.7.0",
+	"version": "0.8.0",
 	"description": "gRPC wrapper for Emerald APIs",
 	"private": false,
 	"license": "Apache-2.0",
