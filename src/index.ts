@@ -11,14 +11,14 @@ export {GetRateRequest, GetRateReply, GetRateReplyItem} from './generated/market
 export {IMarketClient, MarketClient as MarketClientPb} from './generated/market_grpc_pb';
 
 export {
-    CallBlockchainRequest,
-    CallBlockchainItem,
-    CallBlockchainReplyItem,
+    NativeCallRequest,
+    NativeCallItem,
+    NativeCallReplyItem,
     ChainHead,
-    TrackTxRequest,
+    TxStatusRequest,
     TxStatus,
-    AddressStatus,
-    TrackAddressRequest
+    BalanceRequest,
+    AddressBalance
 } from './generated/blockchain_pb';
 export {IBlockchainClient, BlockchainClient as BlockchainClientPb} from './generated/blockchain_grpc_pb';
 
