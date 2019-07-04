@@ -71,11 +71,14 @@ export class CallRetry {
         const connState = this.client.getChannel().getConnectivityState(true);
         const isReady = (state: number, retry: boolean): boolean => {
             // console.warn("state", state);
-            if (state === connectivityState.SHUTDOWN || state === connectivityState.TRANSIENT_FAILURE) {
+            if (state === connectivityState.TRANSIENT_FAILURE) {
                 if (retry) setTimeout(this.callWhenReady.bind(this), 5000, f, sc);
                 return false;
             } else if (state === connectivityState.READY) {
                 return true;
+            } else if (state === connectivityState.SHUTDOWN) {
+                sc.onClose();
+                return false;
             } else {
                 if (retry) setTimeout(this.callWhenReady.bind(this), 250, f, sc);
                 return false;
