@@ -4,7 +4,7 @@ const allTypes = [
     ChainRef.CHAIN_BITCOIN, ChainRef.CHAIN_LIGHTNING, ChainRef.CHAIN_GRIN,
     ChainRef.CHAIN_ETHEREUM,
     ChainRef.CHAIN_ETHEREUM_CLASSIC,
-    ChainRef.CHAIN_MORDEN
+    ChainRef.CHAIN_MORDEN, ChainRef.CHAIN_KOVAN, ChainRef.CHAIN_TESTNET_BITCOIN, ChainRef.CHAIN_FLOONET
 ];
 
 export class ChainSpec {
@@ -45,10 +45,10 @@ export const CHAINS = {
 
 
     // Testnets
-    MORDEN: new ChainSpec(10001, 'MORDEN', 'Morden Testnet'),
-    KOVAN: new ChainSpec(10002, 'MORDEN', 'Morden Testnet'),
-    BITCOIN_TESTNET: new ChainSpec(10003, 'MORDEN', 'Morden Testnet'),
-    FLOONET: new ChainSpec(10004, 'MORDEN', 'Morden Testnet'),
+    MORDEN: new ChainSpec(10001, 'MORDEN', 'Morden Ethereum Testnet'),
+    KOVAN: new ChainSpec(10002, 'KOVAN', 'Kovan Ethereum Testnet'),
+    BITCOIN_TESTNET: new ChainSpec(10003, 'BITCOIN_TESTNET', 'Bitcoin Testnet'),
+    FLOONET: new ChainSpec(10004, 'FLOONET', 'Floonet Grin Testnet'),
 
     // Non standard/custom starts from 50000
     CUSTOM: new ChainSpec(50000, 'CUSTOM', 'Custom Chain')
