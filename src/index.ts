@@ -30,3 +30,4 @@ export {MarketClient} from './wrapped/MarketClient';
 export {BlockchainClient} from './wrapped/BlockchainClient';
 
 export {emeraldCredentials} from './credentials';
+export {ClientReadable} from './wrapped/CallRetry';

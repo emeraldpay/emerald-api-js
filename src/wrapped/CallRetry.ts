@@ -1,10 +1,114 @@
 import * as grpc from "grpc";
 import {connectivityState, ServiceError} from "grpc";
+import { Readable } from "stream";
 
-type MakeRequest = () => void;
-export type StreamHandler<R> = (response: grpc.ClientReadableStream<R>) => void
-type StreamableCall<T, R> = (req: T) => grpc.ClientReadableStream<R>
-type StandardCall<T, R> = (req: T, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: R) => void) =>  grpc.ClientUnaryCall
+export type StreamHandler<R> = (response: ClientReadable<R>) => void;
+
+type StreamableCall<T, R> = (req: T) => grpc.ClientReadableStream<R>;
+type StandardCall<T, R> = (req: T, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: R) => void) =>  grpc.ClientUnaryCall;
+
+export interface ClientReadable<R> extends Readable {
+    cancel(): void;
+}
+
+interface MethodExecutor {
+    execute(reconnect: Function);
+}
+
+class StreamExecutor<T, R> extends Readable implements ClientReadable<R>, MethodExecutor {
+    private sc: ContinueCheck;
+    private method: StreamableCall<T, R>;
+    private request: T;
+
+    private upstream: grpc.ClientReadableStream<R>;
+
+    private connections = 0;
+
+    constructor(sc: ContinueCheck, method: StreamableCall<T, R>, request: T) {
+        super({objectMode: true});
+        this.sc = sc;
+        this.method = method;
+        this.request = request;
+    }
+
+    _read(size?: number): any {
+    }
+
+    execute(reconnect: Function) {
+        if (this.upstream) {
+            this.upstream.cancel();
+            this.upstream = undefined;
+        }
+        this.connections++;
+        const upstream: grpc.ClientReadableStream<R> = this.method(this.request);
+        upstream.on("data", (data: R) => {
+            this.push(data);
+        });
+        upstream.on("error", (err: ServiceError) => {
+            this.sc.onFail();
+            if (err && (
+                err.code === grpc.status.UNKNOWN
+                || err.code === grpc.status.UNAVAILABLE
+                || err.code === grpc.status.INTERNAL
+            )) {
+                console.warn(`gRPC connection lost with code: ${err.code}. Reconnecting...`);
+                reconnect()
+            } else {
+                console.error(`gRPC connection lost with code: ${err ? err.code : ''}. Closing...`);
+                this.destroy(err);
+            }
+        });
+        upstream.on("close", () => {
+            this.sc.onClose();
+            this.emit("close");
+        });
+        upstream.on("end", () => {
+            this.sc.onClose();
+            this.emit("end");
+        });
+        this.upstream = upstream;
+    }
+
+    cancel(): void {
+        this.sc.onClose();
+        if (this.upstream) {
+            this.upstream.cancel();
+        }
+    }
+}
+
+class CallExecutor<T, R> implements MethodExecutor {
+    private sc: ContinueCheck;
+    private method: StandardCall<T, R>;
+    private request: T;
+    promise: Promise<R>;
+    private resolve;
+    private reject;
+
+    constructor(sc: ContinueCheck, method: StandardCall<T, R>, request: T) {
+        this.sc = sc;
+        this.method = method;
+        this.request = request;
+
+        this.promise = new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+        })
+    }
+
+    execute(reconnect: Function) {
+        this.method(this.request, null, (err, resp) => {
+            if (err) {
+                this.sc.onFail();
+                this.reject(err);
+            } else {
+                this.sc.onSuccess();
+                this.resolve(resp);
+            }
+            this.sc.onClose();
+        });
+    }
+}
 
 export class CallRetry {
     client: grpc.Client;
@@ -15,56 +119,21 @@ export class CallRetry {
 
     public retryAlways<T, R>(method: StreamableCall<T, R>, request: T, onConnect: StreamHandler<R>) {
         const alwaysRepeat = new AlwaysRepeat();
-        const handler = this.makeStreamHandler(method.bind(this.client), request, onConnect, alwaysRepeat);
-        this.callWhenReady(handler, alwaysRepeat);
+        const processor = new StreamExecutor(alwaysRepeat, method.bind(this.client), request);
+        onConnect(processor);
+        this.callWhenReady(processor, alwaysRepeat);
     }
 
     public callOnceReady<T, R>(method: StandardCall<T, R>, request: T): Promise<R> {
         const onceSuccess = new OnceSuccess();
+        const processor = new CallExecutor(onceSuccess, method.bind(this.client), request);
         return new Promise((resolve, reject) => {
-            const handler = this.makeCallHandler(method.bind(this.client), request, resolve, reject, onceSuccess);
-            this.callWhenReady(handler, onceSuccess);
+            this.callWhenReady(processor, onceSuccess);
+            processor.promise.then(resolve).catch(reject);
         })
     }
 
-    public makeStreamHandler<T, R>(method: StreamableCall<T, R>, request: T, onConnect: StreamHandler<R>, sc: ContinueCheck): MakeRequest {
-        const handler = () => {
-            const listener = method(request);
-            listener.on('error', (err: ServiceError) => {
-                sc.onFail();
-                if (err && (
-                    err.code === grpc.status.UNKNOWN
-                    || err.code === grpc.status.UNAVAILABLE
-                )) {
-                    this.callWhenReady(handler, sc);
-                }
-            });
-            listener.on('end', () => {
-                sc.onClose();
-            });
-            listener.on('close', () => {
-                sc.onClose();
-            });
-            onConnect(listener);
-        };
-        return handler;
-    }
-
-    public makeCallHandler<T, R>(method: StandardCall<T, R>, request: T,
-                                 resolve: (value?: R | PromiseLike<R>) => void, reject: (reason?: any) => void,
-                                 sc: ContinueCheck): MakeRequest {
-        return () => {
-            method(request, null, (err, resp) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve(resp)
-                }
-            });
-        };
-    }
-
-    public callWhenReady(f: MakeRequest, sc: ContinueCheck) {
+    public callWhenReady<T, R>(executor: MethodExecutor, sc: ContinueCheck) {
         if (!sc.shouldContinue()) {
             return;
         }
@@ -72,7 +141,7 @@ export class CallRetry {
         const isReady = (state: number, retry: boolean): boolean => {
             // console.warn("state", state);
             if (state === connectivityState.TRANSIENT_FAILURE) {
-                if (retry) setTimeout(this.callWhenReady.bind(this), 5000, f, sc);
+                if (retry) setTimeout(this.callWhenReady.bind(this), 5000, executor, sc);
                 return false;
             } else if (state === connectivityState.READY) {
                 return true;
@@ -80,13 +149,14 @@ export class CallRetry {
                 sc.onClose();
                 return false;
             } else {
-                if (retry) setTimeout(this.callWhenReady.bind(this), 250, f, sc);
+                if (retry) setTimeout(this.callWhenReady.bind(this), 250, executor, sc);
                 return false;
             }
         };
         const execute = () => {
-            f();
-            sc.onSuccess();
+            executor.execute(() => {
+                setTimeout(this.callWhenReady.bind(this), 1000, executor, sc);
+            });
         };
         if (isReady(connState, false)) {
             execute();
