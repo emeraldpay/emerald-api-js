@@ -110,16 +110,36 @@ class CallExecutor<T, R> implements MethodExecutor {
     }
 }
 
+export enum ConnectionStatus {
+    PENDING,
+    CONNECTING,
+    CONNECTED,
+    ERRORED,
+    CLOSED
+}
+
+export type ConnectionListener = (status: ConnectionStatus) => void;
+
 export class CallRetry {
-    client: grpc.Client;
+    private client: grpc.Client;
+    private status: ConnectionStatus = ConnectionStatus.PENDING;
+    private statusListener?: ConnectionListener;
+    private started = false;
 
     constructor(client: grpc.Client) {
         this.client = client;
+        this.started = true;
     }
 
     public retryAlways<T, R>(method: StreamableCall<T, R>, request: T, onConnect: StreamHandler<R>) {
         const alwaysRepeat = new AlwaysRepeat();
         const processor = new StreamExecutor(alwaysRepeat, method.bind(this.client), request);
+        processor.addListener("data", () => {
+            this.notify(ConnectionStatus.CONNECTED);
+        });
+        processor.addListener("error", () => {
+            this.notify(ConnectionStatus.ERRORED);
+        });
         onConnect(processor);
         this.callWhenReady(processor, alwaysRepeat);
     }
@@ -129,14 +149,22 @@ export class CallRetry {
         const processor = new CallExecutor(onceSuccess, method.bind(this.client), request);
         return new Promise((resolve, reject) => {
             this.callWhenReady(processor, onceSuccess);
-            processor.promise.then(resolve).catch(reject);
+            processor.promise.then((value: R) => {
+                resolve(value);
+                this.notify(ConnectionStatus.CONNECTED);
+            }).catch((err) => {
+                reject(err);
+                this.notify(ConnectionStatus.ERRORED);
+            });
         })
     }
 
     public callWhenReady<T, R>(executor: MethodExecutor, sc: ContinueCheck) {
         if (!sc.shouldContinue()) {
+            this.notify(ConnectionStatus.CLOSED);
             return;
         }
+        this.notify(ConnectionStatus.CONNECTING);
         const connState = this.client.getChannel().getConnectivityState(true);
         const isReady = (state: number, retry: boolean): boolean => {
             // console.warn("state", state);
@@ -155,12 +183,15 @@ export class CallRetry {
         };
         const execute = () => {
             executor.execute(() => {
+                this.notify(ConnectionStatus.CONNECTING);
                 setTimeout(this.callWhenReady.bind(this), 1000, executor, sc);
             });
         };
         if (isReady(connState, false)) {
+            this.notify(ConnectionStatus.CONNECTED);
             execute();
         } else {
+            this.notify(ConnectionStatus.CONNECTING);
             this.client.getChannel().watchConnectivityState(connState, Date.now() + 5000, (err) => {
                 const connStateNew = this.client.getChannel().getConnectivityState(true);
                 if (isReady(connStateNew, true)) {
@@ -168,6 +199,20 @@ export class CallRetry {
                 }
             });
         }
+    }
+
+    protected notify(status: ConnectionStatus) {
+        if (status != this.status) {
+            this.status = status;
+        }
+        if (this.statusListener) {
+            this.statusListener(status);
+        }
+    }
+
+    public setConnectionListener(listener: ConnectionListener) {
+        this.statusListener = listener;
+        listener(this.status);
     }
 }
 

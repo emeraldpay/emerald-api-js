@@ -5,7 +5,15 @@ import {AuthRequest, AuthResponse, TempAuth} from "./generated/auth_pb";
 
 const packageJson = require('../package.json');
 
-class CredentialsContext {
+export enum AuthenticationStatus {
+    AUTHENTICATING,
+    AUTHENTICATED,
+    ERROR
+}
+
+export type AuthenticationListener = (status: AuthenticationStatus) => void;
+
+export class CredentialsContext {
     url: string;
     private readonly ca: Buffer;
     private readonly ssl: ChannelCredentials;
@@ -13,6 +21,8 @@ class CredentialsContext {
     private token: Promise<TokenSignature>;
     private readonly agent: string[];
     private readonly userId: string;
+    private listener?: AuthenticationListener;
+    private status = AuthenticationStatus.AUTHENTICATING;
 
     constructor(url: string, ca: string | Buffer, agent: string[], userId: string) {
         this.url = url;
@@ -26,11 +36,11 @@ class CredentialsContext {
         this.userId = userId;
     }
 
-    getSsl(): ChannelCredentials {
+    protected getSsl(): ChannelCredentials {
         return this.ssl
     }
 
-    getSigner(): Promise<TokenSignature> {
+    protected getSigner(): Promise<TokenSignature> {
         if (!this.authentication) {
             this.authentication = new BasicUserAuth(this.url, this.getSsl());
         }
@@ -39,50 +49,48 @@ class CredentialsContext {
         }
         return this.token;
     }
-}
 
-class Connected {
-    existing: CredentialsContext[];
-
-    constructor() {
-        this.existing = []
+    public getChannelCredentials(): ChannelCredentials {
+        const ssl = this.getSsl();
+        const callCredentials = credentials.createFromMetadataGenerator(
+            (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => {
+                this.getSigner().then((ts) => {
+                    let signature = ts.next();
+                    // console.log("auth", params.service_url, signature.msg, signature.signature);
+                    if (!signature) {
+                        this.notify(AuthenticationStatus.ERROR);
+                        callback(new Error("No signature"));
+                        return;
+                    }
+                    let meta = new Metadata();
+                    meta.add("token", signature.token);
+                    meta.add("nonce", signature.msg);
+                    meta.add("sign", signature.signature);
+                    this.notify(AuthenticationStatus.AUTHENTICATED);
+                    callback(null, meta);
+                }).catch((err) => {
+                    this.notify(AuthenticationStatus.ERROR);
+                    callback(new Error("Unable to get token"));
+                })
+            });
+        return credentials.combineChannelCredentials(ssl, callCredentials)
     }
 
-    getOrCreate(url: string, ca: string | Buffer, agent: string[], userId: string): CredentialsContext {
-        const found = this.existing.find((it) => it.url === url);
-        if (found) {
-            return found;
+    public setListener(listener: AuthenticationListener) {
+        this.listener = listener;
+        listener(this.status);
+    }
+
+    protected notify(status: AuthenticationStatus) {
+        if (this.listener && status != this.status) {
+            this.listener(status);
+            this.status = status;
         }
-        const created = new CredentialsContext(url, ca, agent, userId);
-        this.existing.push(created);
-        return created;
     }
 }
 
-const connected = new Connected();
-
-export function emeraldCredentials(url: string, ca: string | Buffer, agent: string[], userId: string): ChannelCredentials {
-    const ctx = connected.getOrCreate(url, ca, agent, userId);
-    const ssl = ctx.getSsl();
-    const callCredentials = credentials.createFromMetadataGenerator(
-        (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => {
-        ctx.getSigner().then((ts) => {
-            let signature = ts.next();
-            // console.log("auth", params.service_url, signature.msg, signature.signature);
-            if (!signature) {
-                callback(new Error("No signature"));
-                return;
-            }
-            let meta = new Metadata();
-            meta.add("token", signature.token);
-            meta.add("nonce", signature.msg);
-            meta.add("sign", signature.signature);
-            callback(null, meta);
-        }).catch((err) => {
-            callback(new Error("Unable to get token"));
-        })
-    });
-    return credentials.combineChannelCredentials(ssl, callCredentials)
+export function emeraldCredentials(url: string, ca: string | Buffer, agent: string[], userId: string): CredentialsContext {
+    return new CredentialsContext(url, ca, agent, userId);
 }
 
 interface EmeraldAuthentication {
