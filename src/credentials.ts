@@ -23,6 +23,7 @@ export class CredentialsContext {
     private readonly userId: string;
     private listener?: AuthenticationListener;
     private status = AuthenticationStatus.AUTHENTICATING;
+    private channelCredentials: ChannelCredentials;
 
     constructor(url: string, ca: string | Buffer, agent: string[], userId: string) {
         this.url = url;
@@ -34,23 +35,7 @@ export class CredentialsContext {
         this.ssl = credentials.createSsl(this.ca);
         this.agent = agent;
         this.userId = userId;
-    }
 
-    protected getSsl(): ChannelCredentials {
-        return this.ssl
-    }
-
-    protected getSigner(): Promise<TokenSignature> {
-        if (!this.authentication) {
-            this.authentication = new BasicUserAuth(this.url, this.getSsl());
-        }
-        if (!this.token) {
-            this.token = this.authentication.authenticate(this.agent, this.userId);
-        }
-        return this.token;
-    }
-
-    public getChannelCredentials(): ChannelCredentials {
         const ssl = this.getSsl();
         const callCredentials = credentials.createFromMetadataGenerator(
             (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => {
@@ -73,7 +58,25 @@ export class CredentialsContext {
                     callback(new Error("Unable to get token"));
                 })
             });
-        return credentials.combineChannelCredentials(ssl, callCredentials)
+        this.channelCredentials = credentials.combineChannelCredentials(ssl, callCredentials)
+    }
+
+    protected getSsl(): ChannelCredentials {
+        return this.ssl
+    }
+
+    protected getSigner(): Promise<TokenSignature> {
+        if (!this.authentication) {
+            this.authentication = new BasicUserAuth(this.url, this.getSsl());
+        }
+        if (!this.token) {
+            this.token = this.authentication.authenticate(this.agent, this.userId);
+        }
+        return this.token;
+    }
+
+    public getChannelCredentials(): ChannelCredentials {
+        return this.channelCredentials;
     }
 
     public setListener(listener: AuthenticationListener) {
