@@ -7,7 +7,7 @@ export {
     Asset
 } from './generated/common_pb';
 
-export {GetRateRequest, GetRateReply, GetRateReplyItem} from './generated/market_pb';
+export {GetRatesRequest, GetRatesResponse, Pair, Rate} from './generated/market_pb';
 export {IMarketClient, MarketClient as MarketClientPb} from './generated/market_grpc_pb';
 
 export {

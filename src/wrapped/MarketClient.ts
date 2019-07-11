@@ -16,7 +16,7 @@ export class MarketClient {
         this.callRetry.setConnectionListener(listener);
     }
 
-    public streamRates(request: prices_pb.GetRateRequest, onConnect: StreamHandler<prices_pb.GetRateReply>) {
-        this.callRetry.retryAlways(this.client.streamRates, request, onConnect);
+    public getRates(request: prices_pb.GetRatesRequest): Promise<prices_pb.GetRatesResponse> {
+        return this.callRetry.callOnceReady(this.client.getRates, request);
     }
 }
