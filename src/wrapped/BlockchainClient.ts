@@ -17,23 +17,23 @@ export class BlockchainClient {
         this.callRetry.setConnectionListener(listener);
     }
 
-    public streamHead(request: common_pb.Chain, onConnect: StreamHandler<blockchain_pb.ChainHead>) {
-        this.callRetry.retryAlways(this.client.streamHead, request, onConnect);
+    public subscribeHead(request: common_pb.Chain, onConnect: StreamHandler<blockchain_pb.ChainHead>) {
+        this.callRetry.retryAlways(this.client.subscribeHead, request, onConnect);
     }
 
     public nativeCall(request: blockchain_pb.NativeCallRequest, handler: StreamHandler<blockchain_pb.NativeCallReplyItem>) {
         this.callRetry.retryAlways(this.client.nativeCall, request, handler);
     }
 
-    public streamBalance(request: blockchain_pb.BalanceRequest, onConnect: StreamHandler<blockchain_pb.AddressBalance>) {
-        this.callRetry.retryAlways(this.client.streamBalance, request, onConnect);
+    public subscribeBalance(request: blockchain_pb.BalanceRequest, onConnect: StreamHandler<blockchain_pb.AddressBalance>) {
+        this.callRetry.retryAlways(this.client.subscribeBalance, request, onConnect);
     }
 
     public getBalance(request: blockchain_pb.BalanceRequest): Promise<grpc.ClientReadableStream<blockchain_pb.AddressBalance>> {
         return this.callRetry.callOnceReady(this.client.getBalance, request);
     }
 
-    public streamTxStatus(request: blockchain_pb.TxStatusRequest, onConnect: StreamHandler<blockchain_pb.TxStatus>) {
-        this.callRetry.retryAlways(this.client.streamTxStatus, request, onConnect);
+    public subscribeTxStatus(request: blockchain_pb.TxStatusRequest, onConnect: StreamHandler<blockchain_pb.TxStatus>) {
+        this.callRetry.retryAlways(this.client.subscribeTxStatus, request, onConnect);
     }
 }
