@@ -28,7 +28,7 @@ export {credentials as credentialsPb} from 'grpc';
 
 export {MarketClient} from './wrapped/MarketClient';
 export {BlockchainClient} from './wrapped/BlockchainClient';
-export {DiagnoseClient} from './wrapped/DiagnoseClient';
+export {MonitoringClient} from './wrapped/MonitoringClient';
 
 export {emeraldCredentials, CredentialsContext, AuthenticationStatus, AuthenticationListener} from './credentials';
 export {ClientReadable, ConnectionListener, ConnectionStatus} from './wrapped/CallRetry';
