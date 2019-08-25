@@ -1,7 +1,7 @@
 {
-	"name": "@emeraldplatform/grpc",
-	"version": "0.10.0",
-	"description": "gRPC wrapper for Emerald APIs",
+	"name": "@emeraldpay/grpc-client",
+	"version": "0.11.0-0.2",
+	"description": "Javascript client for Emerald gRPC APIs",
 	"private": false,
 	"license": "Apache-2.0",
 	"main": "lib/index.js",
@@ -11,7 +11,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/ETCDEVTeam/emerald-js-grpc.git"
+		"url": "git+https://github.com/emeraldpay/emerald-js-grpc.git"
 	},
 	"keywords": [
 		"grpc",
