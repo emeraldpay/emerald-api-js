@@ -51,8 +51,8 @@ class StreamExecutor<T, R> extends Readable implements ClientReadable<R>, Method
                 || err.code === grpc.status.UNAVAILABLE
                 || err.code === grpc.status.INTERNAL
             )) {
-                console.warn(`gRPC connection lost with code: ${err.code}. Reconnecting...`);
-                reconnect()
+                console.trace(`gRPC connection to ${this.method.name} lost with code: ${err.code}. Reconnecting...`);
+                setTimeout(reconnect.bind(this), 100);
             } else {
                 console.error(`gRPC connection lost with code: ${err ? err.code : ''}. Closing...`);
                 this.destroy(err);
