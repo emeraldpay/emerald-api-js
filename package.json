@@ -1,6 +1,6 @@
 {
 	"name": "@emeraldpay/grpc-client",
-	"version": "0.11.0-0.2",
+	"version": "0.11.1-0.2",
 	"description": "Javascript client for Emerald gRPC APIs",
 	"private": false,
 	"license": "Apache-2.0",
@@ -31,7 +31,8 @@
 		"generate:copy": "rimraf src/generated && cp -r lib/generated src/",
 		"build": "npm run clean && npm run init && npm run generate && npm run build:ts",
 		"build:ts": "tsc",
-		"test": "jest"
+		"test": "jest",
+		"prepublishOnly": "npm run clean && npm run build && npm run test"
 	},
 	"dependencies": {
 		"@types/google-protobuf": "3.2.7",
