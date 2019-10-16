@@ -15,10 +15,16 @@ interface MethodExecutor {
     execute(reconnect: Function);
 }
 
+type Logger = (msg: string) => void;
+
+const NoLogger: Logger = (msg => {});
+const ConsoleLogger: Logger = console.log;
+
 class StreamExecutor<T, R> extends Readable implements ClientReadable<R>, MethodExecutor {
     private sc: ContinueCheck;
     private method: StreamableCall<T, R>;
     private request: T;
+    private log: Logger = NoLogger;
 
     private upstream: grpc.ClientReadableStream<R>;
 
@@ -29,6 +35,10 @@ class StreamExecutor<T, R> extends Readable implements ClientReadable<R>, Method
         this.sc = sc;
         this.method = method;
         this.request = request;
+    }
+
+    setLogger(log: Logger) {
+        this.log = log;
     }
 
     _read(size?: number): any {
@@ -51,10 +61,11 @@ class StreamExecutor<T, R> extends Readable implements ClientReadable<R>, Method
                 || err.code === grpc.status.UNAVAILABLE
                 || err.code === grpc.status.INTERNAL
             )) {
-                console.trace(`gRPC connection to ${this.method.name} lost with code: ${err.code}. Reconnecting...`);
-                setTimeout(reconnect.bind(this), 100);
+                this.log(`gRPC connection lost with code: ${err.code}. ${err.details} ${err.message} Reconnecting...`);
+                // setTimeout(reconnect.bind(this), 100);
+                reconnect()
             } else {
-                console.error(`gRPC connection lost with code: ${err ? err.code : ''}. Closing...`);
+                this.log(`gRPC connection lost with code: ${err ? err.code : ''}. Closing...`);
                 this.destroy(err);
             }
         });
