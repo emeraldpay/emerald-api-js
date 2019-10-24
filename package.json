@@ -1,6 +1,6 @@
 {
 	"name": "@emeraldpay/grpc-client",
-	"version": "0.11.1-0.2",
+	"version": "0.11.2-0.2",
 	"description": "Javascript client for Emerald gRPC APIs",
 	"private": false,
 	"license": "Apache-2.0",
@@ -35,16 +35,17 @@
 		"prepublishOnly": "npm run clean && npm run build && npm run test"
 	},
 	"dependencies": {
-		"@types/google-protobuf": "3.2.7",
-		"google-protobuf": "3.7.1",
-		"grpc": "1.20.3",
+		"@types/google-protobuf": "3.7.2",
+		"google-protobuf": "3.10.0",
+		"grpc": "1.24.1",
 		"protobufjs": "6.8.8",
 		"hash.js": "1.1.7",
-		"text-encoding": "0.7.0"
+		"text-encoding": "0.7.0",
+		"graceful-fs": "4.2.3"
 	},
 	"devDependencies": {
-		"grpc-tools": "1.7.3",
-		"grpc_tools_node_protoc_ts": "2.5.0",
+		"grpc-tools": "1.8.0",
+		"grpc_tools_node_protoc_ts": "2.5.5",
 		"protoc": "1.0.2",
 		"typescript": "3.4.2",
 		"@types/node": "12.0.0",
