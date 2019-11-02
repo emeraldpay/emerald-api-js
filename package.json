@@ -1,6 +1,6 @@
 {
 	"name": "@emeraldpay/grpc-client",
-	"version": "0.11.2-0.2",
+	"version": "0.11.3-0.2",
 	"description": "Javascript client for Emerald gRPC APIs",
 	"private": false,
 	"license": "Apache-2.0",
@@ -37,7 +37,7 @@
 	"dependencies": {
 		"@types/google-protobuf": "3.7.2",
 		"google-protobuf": "3.10.0",
-		"grpc": "1.24.1",
+		"grpc": "^1.24.2",
 		"protobufjs": "6.8.8",
 		"hash.js": "1.1.7",
 		"text-encoding": "0.7.0",
