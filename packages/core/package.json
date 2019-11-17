@@ -1,0 +1,42 @@
+{
+  "name": "@emeraldpay/api-client-core",
+  "version": "0.1.0",
+  "description": "Common code for Emerald gRPC APIs",
+  "private": false,
+  "license": "Apache-2.0",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emeraldpay/emerald-js-grpc.git"
+  },
+  "keywords": [
+    "grpc",
+    "api",
+    "emerald",
+    "emerald-pay",
+    "emerald-wallet"
+  ],
+  "scripts": {
+    "clean": "rimraf lib",
+    "build": "npm run build:ts",
+    "build:ts": "tsc",
+    "test": "jest",
+    "prepublishOnly": "npm run clean && npm run build && npm run test"
+  },
+  "dependencies": {
+    "google-protobuf": "^3.10.0",
+    "protobufjs": "^6.8.8"
+  },
+  "devDependencies": {
+    "@types/google-protobuf": "^3.7.2",
+    "@types/jest": "^24.0.23",
+    "jest": "24.9.0",
+    "rimraf": "^2.6.3",
+    "ts-jest": "24.1.0",
+    "typescript": "^3.4.2"
+  }
+}

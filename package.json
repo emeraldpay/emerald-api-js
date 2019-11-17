@@ -1,6 +1,8 @@
 {
 	"private": true,
 	"workspaces": [
-		"packages/node"
+		"packages/core",
+		"packages/node",
+		"packages/web"
 	]
 }
