@@ -1,4 +1,4 @@
-import {InsightClient} from "./wrapped/InsightClient";
+import {InsightsClient} from "./wrapped/InsightsClient";
 import {BlockchainClient} from "./wrapped/BlockchainClient";
 import {WebChannel} from "./channel";
 
@@ -13,8 +13,8 @@ export class EmeraldApi {
         this.channel = new WebChannel();
     }
 
-    insight(): InsightClient {
-        return new InsightClient(this.hostname, this.channel);
+    insights(): InsightsClient {
+        return new InsightsClient(this.hostname, this.channel);
     }
 
     blockchain(): BlockchainClient {

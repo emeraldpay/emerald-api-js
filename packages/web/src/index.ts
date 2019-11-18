@@ -1,7 +1,7 @@
 export {
-    InsightClient,
-    InsightData
-} from './wrapped/InsightClient';
+    InsightsClient,
+    InsightsData
+} from './wrapped/InsightsClient';
 
 export {
     BlockchainClient,
