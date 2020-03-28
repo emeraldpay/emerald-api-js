@@ -41,7 +41,7 @@ export class CredentialsContext {
             (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => {
                 this.getSigner().then((ts) => {
                     let signature = ts.next();
-                    // console.log("auth", params.service_url, signature.msg, signature.signature);
+                    // console.log("start auth", params.service_url, signature.msg, signature.signature);
                     if (!signature) {
                         this.notify(AuthenticationStatus.ERROR);
                         callback(new Error("No signature"));
@@ -113,7 +113,7 @@ class BasicUserAuth implements EmeraldAuthentication {
         tempAuth.setId(userId);
         authRequest.setTempAuth(tempAuth);
         authRequest.setAgentDetailsList(agent);
-        authRequest.addAgentDetails(`emerald-js/${packageJson.version}`);
+        authRequest.addAgentDetails(`emerald-client-node/${packageJson.version}`);
         authRequest.setCapabilitiesList(["NONCE_HMAC_SHA256"]);
         authRequest.setScopesList(["BASIC_USER"]);
         return this.client.authenticate(authRequest).then((result: AuthResponse) => {

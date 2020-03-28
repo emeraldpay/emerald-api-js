@@ -1,4 +1,4 @@
-import {TokenSignature} from "./signature";
+import {TokenSignature} from "../signature";
 
 test('Valid signature', () => {
     let signature = new TokenSignature(

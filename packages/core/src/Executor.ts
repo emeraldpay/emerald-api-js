@@ -25,6 +25,15 @@ export class StandardExecutor<T, R> extends ManagedPublisher<R> implements Metho
 
     constructor(sc: ContinueCheck, method: RemoteCall<T, R>, request: T) {
         super();
+        if (typeof sc == 'undefined') {
+            throw Error('sc is not provided to StandardExecutor');
+        }
+        if (typeof method == 'undefined') {
+            throw Error("method is not provided to StandardExecutor");
+        }
+        if (typeof request == 'undefined') {
+            throw Error("request is not provided to StandardExecutor");
+        }
         this.sc = sc;
         this.method = method;
         this.request = request;

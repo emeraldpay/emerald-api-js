@@ -1,3 +1,5 @@
+import {AlwaysRepeat, OnceSuccess, Publisher, RemoteCall, Retry, StandardExecutor} from "./index";
+
 export enum ConnectionStatus {
     PENDING,
     CONNECTING,
@@ -15,9 +17,44 @@ export enum ConnectivityState {
 }
 
 export type ConnectionListener = (status: ConnectionStatus) => void;
-type StateListener = (err: any, state: ConnectivityState) => void;
+export type StateListener = (err: any, state: ConnectivityState) => void;
 
 export interface Channel {
     getState(): ConnectivityState;
+
     watch(current: ConnectivityState, deadline: number, handler: StateListener);
+}
+
+export function alwaysRetry<T, R>(channel: Channel, call: RemoteCall<R, T>, req: R): Publisher<T> {
+    const reconnect = new AlwaysRepeat();
+    const executor = new StandardExecutor(reconnect, call, req);
+    const retry = new Retry(channel, executor, reconnect);
+    retry.callWhenReady();
+    return executor;
+}
+
+export function readOnce<T, R>(channel: Channel, call: RemoteCall<R, T>, req: R): Publisher<T> {
+    const once = new OnceSuccess();
+    const executor = new StandardExecutor(once, call, req);
+    const retry = new Retry(channel, executor, once);
+    retry.callWhenReady();
+    return executor;
+}
+
+export function asStateListener(listener: ConnectionListener): StateListener {
+    return (err, state) => {
+        if (state == ConnectivityState.IDLE) {
+            listener(ConnectionStatus.PENDING)
+        } else if (state == ConnectivityState.CONNECTING) {
+            listener(ConnectionStatus.CONNECTING)
+        } else if (state == ConnectivityState.READY) {
+            listener(ConnectionStatus.CONNECTED)
+        } else if (state == ConnectivityState.TRANSIENT_FAILURE) {
+            listener(ConnectionStatus.ERRORED)
+        } else if (state == ConnectivityState.SHUTDOWN) {
+            listener(ConnectionStatus.CLOSED)
+        } else if (err) {
+            listener(ConnectionStatus.ERRORED)
+        }
+    }
 }

@@ -1,16 +1,50 @@
 import * as grpc from "./grpcReimports";
 
+/**
+ * Interface for data produced by a call
+ */
 export interface Publisher<T> {
+    /**
+     * Cancel call
+     */
     cancel()
+
+    /**
+     * Handler for incoming data
+     * @param handler
+     */
     onData(handler: Handler<T>): Publisher<T>
+
+    /**
+     * Handler for errors
+     * @param handler
+     */
     onError(handler: Handler<grpc.Error>): Publisher<T>
+
+    /**
+     * Handler for call end
+     * @param handler
+     */
     finally(handler: () => void): Publisher<T>
 }
 
+/**
+ * Data conversion from one type to another
+ */
 export type DataMapper<I, O> = (data: I) => O;
+
+/**
+ * Handler for data
+ */
 export type Handler<T> = (value: T) => void;
 
-function linkedHandler<T>(current: Handler<T>, additional: Handler<T>): Handler<T> {
+/**
+ * Join two handlers as one. Each of them will be called.
+ *
+ * @param current
+ * @param additional
+ */
+function consHandlers<T>(current: Handler<T>, additional: Handler<T>): Handler<T> {
     if (current == null) {
         return additional;
     }
@@ -35,6 +69,9 @@ function linkedHandler<T>(current: Handler<T>, additional: Handler<T>): Handler<
     }
 }
 
+/**
+ * Publisher with methods to emit events.
+ */
 export class ManagedPublisher<T> implements Publisher<T> {
 
     private onDataHandler: Handler<T> = null;
@@ -79,22 +116,25 @@ export class ManagedPublisher<T> implements Publisher<T> {
     }
 
     finally(handler: Handler<void>): Publisher<T> {
-        this.onFinally = linkedHandler(this.onFinally, handler);
+        this.onFinally = consHandlers(this.onFinally, handler);
         return this;
     }
 
     onData(handler: Handler<T>): Publisher<T> {
-        this.onDataHandler = linkedHandler(this.onDataHandler, handler);
+        this.onDataHandler = consHandlers(this.onDataHandler, handler);
         return this;
     }
 
     onError(handler: Handler<grpc.Error>): Publisher<T> {
-        this.onErrorHandler = linkedHandler(this.onErrorHandler, handler);
+        this.onErrorHandler = consHandlers(this.onErrorHandler, handler);
         return this;
     }
 
 }
 
+/**
+ * Publisher that converts incoming data to another type
+ */
 export class MappingPublisher<I, O> implements Publisher<O> {
 
     private reader: Publisher<I>;
@@ -140,4 +180,46 @@ export class MappingPublisher<I, O> implements Publisher<O> {
         this.onFinally = handler;
         return this;
     }
+}
+
+export function publishToPromise<T>(publisher: Publisher<T>): Promise<T> {
+    let closed = false;
+    return new Promise((resolve, reject) => {
+        publisher.onData((data) => {
+            if (closed) return;
+            resolve(data);
+            closed = true;
+        });
+        publisher.onError((err) => {
+            if (closed) return;
+            reject(err);
+            closed = true;
+        });
+        publisher.finally(() => {
+            if (closed) return;
+            reject(new Error("Not executed"));
+            closed = true;
+        })
+    })
+}
+
+export function publishListToPromise<T>(publisher: Publisher<T>): Promise<Array<T>> {
+    let closed = false;
+    let result: Array<T> = [];
+    return new Promise((resolve, reject) => {
+        publisher.onData((data) => {
+            if (closed) return;
+            result.push(data);
+        });
+        publisher.onError((err) => {
+            if (closed) return;
+            closed = true;
+            reject(err);
+        });
+        publisher.finally(() => {
+            if (closed) return;
+            closed = true;
+            resolve(result);
+        })
+    })
 }

@@ -31,4 +31,3 @@ export {BlockchainClient} from './wrapped/BlockchainClient';
 export {MonitoringClient} from './wrapped/MonitoringClient';
 
 export {emeraldCredentials, CredentialsContext, AuthenticationStatus, AuthenticationListener} from './credentials';
-export {ClientReadable, ConnectionListener, ConnectionStatus} from './wrapped/CallRetry';

@@ -1,23 +1,27 @@
 import * as grpc from "grpc";
 import * as auth_grpc_pb from '../generated/auth_grpc_pb';
 import * as auth_pb from '../generated/auth_pb';
-import {CallRetry, ConnectionListener} from "./CallRetry";
-
+import {ConnectionListener, Publisher, publishToPromise, readOnce} from "@emeraldpay/api-client-core";
+import {callSingle, NativeChannel} from "../channel";
 
 export class AuthClient {
     readonly client: auth_grpc_pb.AuthClient;
-    readonly callRetry: CallRetry;
+    readonly channel: NativeChannel;
 
     constructor(address: string, credentials: grpc.ChannelCredentials) {
         this.client = new auth_grpc_pb.AuthClient(address, credentials);
-        this.callRetry = new CallRetry(this.client);
+        this.channel = new NativeChannel(this.client);
     }
 
     public setConnectionListener(listener: ConnectionListener) {
-        this.callRetry.setConnectionListener(listener);
+        this.channel.setListener(listener);
     }
 
     public authenticate(request: auth_pb.AuthRequest): Promise<auth_pb.AuthResponse> {
-        return this.callRetry.callOnceReady(this.client.authenticate, request);
+        let call = callSingle(this.client.authenticate.bind(this.client), (resp: auth_pb.AuthResponse) => {
+            return resp
+        });
+        let result = readOnce(this.channel, call, request);
+        return publishToPromise(result)
     }
 }

@@ -1,7 +1,8 @@
 export {
     Publisher, ManagedPublisher,
     Handler,
-    DataMapper, MappingPublisher
+    DataMapper, MappingPublisher,
+    publishToPromise, publishListToPromise
 } from './Publisher';
 
 export {
@@ -16,5 +17,11 @@ export {
 } from './Retry'
 
 export {
-    ConnectionListener, ConnectivityState, ConnectionStatus, Channel
+    ConnectionListener, ConnectivityState, ConnectionStatus,
+    Channel, StateListener,
+    alwaysRetry, readOnce, asStateListener
 } from './Channel'
+
+export {
+    ChainHead, NativeCallError, NativeCallItem, NativeCallResponse
+} from './typesBlockchain'

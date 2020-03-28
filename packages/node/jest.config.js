@@ -3,7 +3,8 @@ module.exports = {
   testEnvironment: 'node',
   testPathIgnorePatterns: [
     "<rootDir>/lib/",
-    "<rootDir>/node_modules/"
+    "<rootDir>/node_modules/",
+    // "__integration-tests__"
   ],
   coverageDirectory: "./coverage/",
   collectCoverageFrom: [

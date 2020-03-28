@@ -11,6 +11,15 @@ export class Retry<T, R> {
     private readonly sc: ContinueCheck;
 
     constructor(channel: Channel, executor: MethodExecutor, sc: ContinueCheck) {
+        if (typeof channel == 'undefined') {
+            throw Error("channel is not provided");
+        }
+        if (typeof executor == 'undefined') {
+            throw Error("executor is not provided");
+        }
+        if (typeof sc == 'undefined') {
+            throw Error('sc is not provided');
+        }
         this.channel = channel;
         this.executor = executor;
         this.sc = sc;

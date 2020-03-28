@@ -5,7 +5,6 @@ export {
 
 export {
     BlockchainClient,
-    ChainHead
 } from './wrapped/BlockchainClient';
 
 export {
