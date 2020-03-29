@@ -35,7 +35,8 @@
   },
   "dependencies": {
     "google-protobuf": "^3.10.0",
-    "protobufjs": "^6.8.8"
+    "protobufjs": "^6.8.8",
+    "text-encoding": "^0.7.0"
   },
   "devDependencies": {
     "@types/google-protobuf": "^3.7.2",

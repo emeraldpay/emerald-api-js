@@ -14,22 +14,28 @@ export {
 export {
     Retry,
     AlwaysRepeat, OnceSuccess, ContinueCheck
-} from './Retry'
+} from './Retry';
 
 export {
     ConnectionListener, ConnectivityState, ConnectionStatus,
     Channel, StateListener,
     alwaysRetry, readOnce, asStateListener
-} from './Channel'
+} from './Channel';
 
 export {
     ChainHead, NativeCallError, NativeCallItem, NativeCallResponse,
     ConvertBlockchain, AddressBalance, BalanceRequest
-} from './typesBlockchain'
+} from './typesBlockchain';
 
 export {
     Blockchain, Asset, SingleAddress, AnyAddress, MultiAddress, AssetCode
-} from './typesCommon'
+} from './typesCommon';
+
+export {
+    Pair, GetRatesRequest, Rate, GetRatesResponse,
+    AnyCurrency, TestCurrency, CountryCurrency, StablecoinCurrency, CryptoCurrency,
+    ConvertMarket
+} from './typesMarket';
 
 export {
     MessageFactory

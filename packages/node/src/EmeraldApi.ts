@@ -1,6 +1,7 @@
 import {BlockchainClient} from "./wrapped/BlockchainClient";
 import {CredentialsContext, emeraldCredentials} from "./credentials";
 import {MonitoringClient} from "./wrapped/MonitoringClient";
+import {MarketClient} from "./wrapped/MarketClient";
 
 const certDev = '-----BEGIN CERTIFICATE-----\n' +
     'MIIFgjCCA2qgAwIBAgIBATANBgkqhkiG9w0BAQsFADBhMRswGQYDVQQKExJFbWVy\n' +
@@ -54,5 +55,9 @@ export class EmeraldApi {
 
     monitoring(): MonitoringClient {
         return new MonitoringClient(this.hostname, this.credentials.getChannelCredentials());
+    }
+
+    market(): MarketClient {
+        return new MarketClient(this.hostname, this.credentials.getChannelCredentials());
     }
 }
