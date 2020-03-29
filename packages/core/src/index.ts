@@ -23,5 +23,14 @@ export {
 } from './Channel'
 
 export {
-    ChainHead, NativeCallError, NativeCallItem, NativeCallResponse
+    ChainHead, NativeCallError, NativeCallItem, NativeCallResponse,
+    ConvertBlockchain, AddressBalance, BalanceRequest
 } from './typesBlockchain'
+
+export {
+    Blockchain, Asset, SingleAddress, AnyAddress, MultiAddress, AssetCode
+} from './typesCommon'
+
+export {
+    MessageFactory
+} from './convert';
