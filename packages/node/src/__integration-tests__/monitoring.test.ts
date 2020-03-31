@@ -4,8 +4,13 @@ import {EmeraldApi} from "../EmeraldApi";
 jest.setTimeout(5000);
 
 describe("MonitoringClient", () => {
+    let api: EmeraldApi;
+
+    beforeAll(() => {
+        api = EmeraldApi.devApi();
+    });
+
     test('Ping', () => {
-        const api = new EmeraldApi();
         const client = api.monitoring();
 
         const req = new Chain();

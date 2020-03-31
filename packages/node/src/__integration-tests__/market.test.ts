@@ -4,8 +4,13 @@ import {GetRatesResponse} from "@emeraldpay/api-client-core";
 jest.setTimeout(5000);
 
 describe("MarketClient", () => {
+    let api: EmeraldApi;
+
+    beforeAll(() => {
+        api = EmeraldApi.devApi();
+    });
+
     test('Get ETH rate', async () => {
-        const api = new EmeraldApi();
         const client = api.market();
 
         let act = await client.getRates([{base: "ETH", target: "USD"}]);
@@ -16,7 +21,6 @@ describe("MarketClient", () => {
     });
 
     test('Get BTC rate', async () => {
-        const api = new EmeraldApi();
         const client = api.market();
 
         let act = await client.getRates([{base: "BTC", target: "USD"}]);
@@ -27,7 +31,6 @@ describe("MarketClient", () => {
     });
 
     test('Get multiple rates', async () => {
-        const api = new EmeraldApi();
         const client = api.market();
 
         let act = await client.getRates([

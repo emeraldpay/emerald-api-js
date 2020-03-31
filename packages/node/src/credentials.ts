@@ -1,5 +1,5 @@
 import {credentials, Metadata, ChannelCredentials} from "grpc";
-import {TokenSignature} from "./signature";
+import {AuthMetadata, JwtSignature, TokenSignature} from "./signature";
 import {AuthClient} from './wrapped/Auth';
 import {AuthRequest, AuthResponse, TempAuth} from "./generated/auth_pb";
 
@@ -18,7 +18,7 @@ export class CredentialsContext {
     private readonly ca: Buffer;
     private readonly ssl: ChannelCredentials;
     private authentication: EmeraldAuthentication;
-    private token: Promise<TokenSignature>;
+    private token: Promise<AuthMetadata>;
     private readonly agent: string[];
     private readonly userId: string;
     private listener?: AuthenticationListener;
@@ -39,18 +39,15 @@ export class CredentialsContext {
         const ssl = this.getSsl();
         const callCredentials = credentials.createFromMetadataGenerator(
             (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => {
-                this.getSigner().then((ts) => {
-                    let signature = ts.next();
-                    // console.log("start auth", params.service_url, signature.msg, signature.signature);
-                    if (!signature) {
-                        this.notify(AuthenticationStatus.ERROR);
-                        callback(new Error("No signature"));
-                        return;
-                    }
+                this.getSigner().then((auth) => {
                     let meta = new Metadata();
-                    meta.add("token", signature.token);
-                    meta.add("nonce", signature.msg);
-                    meta.add("sign", signature.signature);
+                    try {
+                        auth.add(meta);
+                    } catch (e) {
+                        this.notify(AuthenticationStatus.ERROR);
+                        callback(e);
+                        return
+                    }
                     this.notify(AuthenticationStatus.AUTHENTICATED);
                     callback(null, meta);
                 }).catch((err) => {
@@ -65,9 +62,9 @@ export class CredentialsContext {
         return this.ssl
     }
 
-    protected getSigner(): Promise<TokenSignature> {
+    protected getSigner(): Promise<AuthMetadata> {
         if (!this.authentication) {
-            this.authentication = new BasicUserAuth(this.url, this.getSsl());
+            this.authentication = new JwtUserAuth(this.url, this.getSsl());
         }
         if (!this.token) {
             this.token = this.authentication.authenticate(this.agent, this.userId);
@@ -97,30 +94,36 @@ export function emeraldCredentials(url: string, ca: string | Buffer, agent: stri
 }
 
 interface EmeraldAuthentication {
-    authenticate(agent: string[], userId: string): Promise<TokenSignature>
+    authenticate(agent: string[], userId: string): Promise<AuthMetadata>
 }
 
-class BasicUserAuth implements EmeraldAuthentication {
+class JwtUserAuth implements EmeraldAuthentication {
     client: AuthClient;
 
     constructor(url: string, cred: ChannelCredentials) {
         this.client = new AuthClient(url, cred);
     }
 
-    authenticate(agent: string[], userId: string): Promise<TokenSignature> {
+    authenticate(agent: string[], userId: string): Promise<AuthMetadata> {
         const authRequest = new AuthRequest();
         const tempAuth = new TempAuth();
         tempAuth.setId(userId);
         authRequest.setTempAuth(tempAuth);
         authRequest.setAgentDetailsList(agent);
         authRequest.addAgentDetails(`emerald-client-node/${packageJson.version}`);
-        authRequest.setCapabilitiesList(["NONCE_HMAC_SHA256"]);
+        authRequest.setCapabilitiesList(["JWT_RS256", "NONCE_HMAC_SHA256"]);
         authRequest.setScopesList(["BASIC_USER"]);
         return this.client.authenticate(authRequest).then((result: AuthResponse) => {
             if (!result.getSucceed()) {
                 throw new Error(`Failed to auth ${result.getDenyCode()}: ${result.getDenyMessage()}`);
             }
-            return new TokenSignature(result.getToken(), result.getSecret());
+            if (result.getType() == "JWT_RS256") {
+                return new JwtSignature(result.getToken(), new Date(result.getExpire()));
+            } else if (result.getType() == "NONCE_HMAC_SHA256") {
+                return new TokenSignature(result.getToken(), result.getSecret());
+            } else {
+                throw new Error("Unsupported auth: " + result.getType())
+            }
         });
     }
 

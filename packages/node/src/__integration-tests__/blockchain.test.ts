@@ -5,8 +5,13 @@ import {NativeCallResponse} from "@emeraldpay/api-client-core/lib/typesBlockchai
 jest.setTimeout(5000);
 
 describe("BlockchainClient", () => {
+    let api: EmeraldApi;
+
+    beforeAll(() => {
+        api = EmeraldApi.devApi();
+    });
+
     test('Get head', (done) => {
-        const api = new EmeraldApi();
         const client = api.blockchain();
 
         client.subscribeHead(Blockchain.ETHEREUM)
@@ -21,7 +26,6 @@ describe("BlockchainClient", () => {
     });
 
     test('Get block', (done) => {
-        const api = new EmeraldApi();
         const client = api.blockchain();
 
         client.nativeCall(Blockchain.ETHEREUM, [
@@ -43,8 +47,7 @@ describe("BlockchainClient", () => {
             })
     });
 
-    test('Get few blocks', (done) => {
-        const api = new EmeraldApi();
+    test('Make few requests', (done) => {
         const client = api.blockchain();
         let exp = 0;
 
@@ -56,15 +59,14 @@ describe("BlockchainClient", () => {
             },
             {
                 id: 1,
-                method: "eth_getBlockByHash",
-                //block on height 2
-                payload: ["0xb495a1d7e6663152ae92708da4843337b958146015a2802f4193a410044698c9", false]
+                method: "eth_gasPrice",
+                payload: []
             }
         ]).onData((value) => {
             expect(value.success).toBeTruthy();
             let act = value as NativeCallResponse;
             expect(act.payload.result).toBeDefined();
-            console.log('Block' + exp, act.payload.result);
+            console.log('Resp #' + exp, act.payload.result);
             exp++;
             if (exp == 2) {
                 done()
@@ -77,7 +79,6 @@ describe("BlockchainClient", () => {
     });
 
     test("Get balance", (done) => {
-        const api = new EmeraldApi();
         const client = api.blockchain();
 
         const resp = client.getBalance(
