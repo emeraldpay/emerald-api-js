@@ -1,5 +1,6 @@
 import {
-    Channel, ConnectionListener,
+    asStatus,
+    Channel, ConnectionListener, ConnectionStatus,
     ConnectivityState,
     DataMapper,
     ManagedPublisher, MappingPublisher,
@@ -44,6 +45,7 @@ function toConnectivityState(state: grpc.connectivityState): ConnectivityState {
 
 export class NativeChannel implements Channel {
     private readonly client: grpc.Client;
+    private listener: NodeJS.Timeout
 
     constructor(client: grpc.Client) {
         this.client = client;
@@ -62,7 +64,11 @@ export class NativeChannel implements Channel {
     }
 
     setListener(listener: ConnectionListener) {
-        //TODO
+        clearInterval(this.listener);
+        this.listener = setInterval(() => {
+            let state = this.client.getChannel().getConnectivityState(false);
+            listener(asStatus(state))
+        }, 1000)
     }
 }
 

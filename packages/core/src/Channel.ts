@@ -19,6 +19,13 @@ export enum ConnectivityState {
 export type ConnectionListener = (status: ConnectionStatus) => void;
 export type StateListener = (err: any, state: ConnectivityState) => void;
 
+export function asStatus(state: ConnectivityState | number): ConnectionStatus {
+    if (state >= 0 && state <= 4) {
+        return state
+    }
+    return ConnectionStatus.CLOSED
+}
+
 export interface Channel {
     getState(): ConnectivityState;
 

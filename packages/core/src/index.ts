@@ -19,12 +19,14 @@ export {
 export {
     ConnectionListener, ConnectivityState, ConnectionStatus,
     Channel, StateListener,
-    alwaysRetry, readOnce, asStateListener
+    alwaysRetry, readOnce, asStateListener,
+    asStatus
 } from './Channel';
 
 export {
     ChainHead, NativeCallError, NativeCallItem, NativeCallResponse,
-    ConvertBlockchain, AddressBalance, BalanceRequest
+    ConvertBlockchain, AddressBalance, BalanceRequest,
+    isNativeCallError, isNativeCallResponse
 } from './typesBlockchain';
 
 export {

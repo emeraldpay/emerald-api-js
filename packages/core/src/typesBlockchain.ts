@@ -30,6 +30,15 @@ export type NativeCallResponse = {
 export type NativeCallError = {
     id: number;
     success: boolean;
+    message: string | undefined;
+}
+
+export function isNativeCallResponse(obj: NativeCallResponse | NativeCallError): obj is NativeCallResponse {
+    return typeof obj === "object" && obj.success;
+}
+
+export function isNativeCallError(obj: NativeCallResponse | NativeCallError): obj is NativeCallError {
+    return typeof obj === "object" && !obj.success;
 }
 
 export type BalanceRequest = {
@@ -91,7 +100,8 @@ export class ConvertBlockchain {
             } else {
                 return {
                     id: resp.getId(),
-                    success: false
+                    success: false,
+                    message: resp.getErrormessage()
                 } as NativeCallError
             }
         };
