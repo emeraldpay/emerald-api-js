@@ -6,10 +6,13 @@ export enum Blockchain {
     ETHEREUM_CLASSIC = 101,
     TESTNET_KOVAN = 10002,
     TESTNET_BITCOIN = 10003,
-    TESTNET_FLOONET = 10004
+    TESTNET_FLOONET = 10004,
+    TESTNET_GOERLI = 10005,
+    TESTNET_ROPSTEN = 10006,
+    TESTNET_RINKEBY = 10007,
 }
 
-export type AssetCode = 'ETHER' | 'DAI' | 'TETHER';
+export type AssetCode = 'ETHER' | 'DAI' | 'TETHER' | 'BTC';
 
 export type Asset = {
     blockchain: Blockchain,

@@ -11,7 +11,7 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/emeraldpay/emerald-js-grpc.git"
+		"url": "git+https://github.com/emeraldpay/emerald-api-js.git"
 	},
 	"keywords": [
 		"grpc",
@@ -21,13 +21,12 @@
 		"emerald-wallet"
 	],
 	"scripts": {
-		"clean": "rimraf proto && rimraf lib && rimraf src/generated",
-		"init": "npm run init:dirs && npm run init:copy",
-		"init:dirs": "mkdir -p lib/generated && mkdir -p proto",
-		"init:copy": "cp ../../../api-definitions/proto/* ./proto",
+		"clean": "rimraf lib && rimraf src/generated",
+		"init": "npm run init:dirs",
+		"init:dirs": "mkdir -p lib/generated",
 		"generate": "npm run generate:js && npm run generate:ts && npm run generate:copy",
-		"generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./lib/generated --grpc_out=./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ./proto/ ./proto/*.proto",
-		"generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./lib/generated -I ./proto ./proto/*.proto",
+		"generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./lib/generated --grpc_out=./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ../../api-definitions/proto/ ../../api-definitions/proto/*.proto",
+		"generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
 		"generate:copy": "rimraf src/generated && cp -r lib/generated src/",
 		"build": "npm run clean && npm run init && npm run generate && npm run build:ts",
 		"build:ts": "tsc",

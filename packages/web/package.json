@@ -10,9 +10,9 @@
 		"lib/**/*"
 	],
 	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/emeraldpay/emerald-js-grpc.git"
-	},
+      "type": "git",
+      "url": "git+https://github.com/emeraldpay/emerald-api-js.git"
+    },
 	"keywords": [
 		"grpc",
 		"api",
@@ -21,18 +21,17 @@
 		"emerald-wallet"
 	],
 	"scripts": {
-		"clean": "rimraf proto && rimraf lib && rimraf src/generated",
-		"init": "npm run init:dirs && npm run init:copy",
-		"init:dirs": "mkdir -p lib/generated && mkdir -p proto",
-		"init:copy": "cp ../../../api-definitions/proto/* ./proto",
-		"generate": "npm run generate:js && npm run generate:copy",
-		"generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs:./lib/generated --grpc-web_out=import_style=typescript,mode=grpcwebtext:./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ./proto/ ./proto/*.proto",
-		"generate:copy": "rimraf src/generated && cp -r lib/generated src/",
-		"build": "npm run clean && npm run init && npm run generate && npm run build:ts",
-		"build:ts": "tsc",
-		"test": "jest",
-		"prepublishOnly": "npm run clean && npm run build && npm run test"
-	},
+      "clean": "rimraf lib && rimraf src/generated",
+      "init": "npm run init:dirs",
+      "init:dirs": "mkdir -p lib/generated",
+      "generate": "npm run generate:js && npm run generate:copy",
+      "generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs:./lib/generated --grpc-web_out=import_style=typescript,mode=grpcwebtext:./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
+      "generate:copy": "rimraf src/generated && cp -r lib/generated src/",
+      "build": "npm run clean && npm run init && npm run generate && npm run build:ts",
+      "build:ts": "tsc",
+      "test": "jest",
+      "prepublishOnly": "npm run clean && npm run build && npm run test"
+    },
 	"dependencies": {
 		"@emeraldpay/api-client-core": "0.2.0-dev",
 		"google-protobuf": "^3.10.0",

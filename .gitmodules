@@ -1,0 +1,3 @@
+[submodule "api-definitions"]
+	path = api-definitions
+	url = https://github.com/emeraldpay/emerald-grpc.git
