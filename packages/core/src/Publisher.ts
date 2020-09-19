@@ -109,7 +109,9 @@ export class ManagedPublisher<T> implements Publisher<T> {
             if (this.onFinally) {
                 this.onFinally();
             }
-        } catch (e) {}
+        } catch (e) {
+            console.warn("Error on closing the publisher", e)
+        }
     }
 
     cancel() {
@@ -187,18 +189,18 @@ export function publishToPromise<T>(publisher: Publisher<T>): Promise<T> {
     return new Promise((resolve, reject) => {
         publisher.onData((data) => {
             if (closed) return;
-            resolve(data);
             closed = true;
+            resolve(data);
         });
         publisher.onError((err) => {
             if (closed) return;
-            reject(err);
             closed = true;
+            reject(err);
         });
         publisher.finally(() => {
             if (closed) return;
-            reject(new Error("Not executed"));
             closed = true;
+            reject(new Error("Not executed"));
         })
     })
 }

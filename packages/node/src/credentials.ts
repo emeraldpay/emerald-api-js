@@ -18,7 +18,7 @@ export class CredentialsContext {
     private readonly ca: Buffer;
     private readonly ssl: ChannelCredentials;
     private authentication: EmeraldAuthentication;
-    private token: Promise<AuthMetadata>;
+    private token?: AuthMetadata;
     private readonly agent: string[];
     private readonly userId: string;
     private listener?: AuthenticationListener;
@@ -66,10 +66,14 @@ export class CredentialsContext {
         if (!this.authentication) {
             this.authentication = new JwtUserAuth(this.url, this.getSsl());
         }
-        if (!this.token) {
-            this.token = this.authentication.authenticate(this.agent, this.userId);
+        if (typeof this.token == "undefined") {
+            return this.authentication.authenticate(this.agent, this.userId)
+                .then((token) => {
+                    this.token = token;
+                    return token;
+                });
         }
-        return this.token;
+        return Promise.resolve(this.token);
     }
 
     public getChannelCredentials(): ChannelCredentials {
