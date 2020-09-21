@@ -7,7 +7,7 @@ import {
     MappingPublisher, OnceSuccess,
     Publisher,
     RemoteCall, Retry, StandardExecutor
-} from "@emeraldpay/api-client-core";
+} from "@emeraldpay/api";
 import {ClientReadableStream} from "grpc-web";
 
 export class WebChannel implements Channel {

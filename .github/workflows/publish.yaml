@@ -1,0 +1,42 @@
+name: Publish package
+
+on:
+  release:
+    types: [ created ]
+
+jobs:
+  npm:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"
+          always-auth: true
+
+      - name: Configure NPM
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Instal JS dependencies
+        run: yarn install
+
+      - name: Configure Node.js Path
+        run: npm config set scripts-prepend-node-path true
+
+      - name: Publish to NPM (core)
+        run: npm publish --access=public
+        working-directory: packages/core
+
+      - name: Publish to NPM (node)
+        run: npm publish --access=public
+        working-directory: packages/node
+
+      - name: Publish to NPM (web)
+        run: npm publish --access=public
+        working-directory: packages/web

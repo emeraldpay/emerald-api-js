@@ -6,7 +6,7 @@ import {
     NativeCallResponse,
     Publisher,
     readOnce
-} from "@emeraldpay/api-client-core";
+} from "@emeraldpay/api";
 import {WebChannel, callStream} from "../channel";
 import {classFactory} from "./Factory";
 

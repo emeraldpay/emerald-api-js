@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "Node",
+    "declaration": true,
+    "target": "ES2015",
+    "esModuleInterop": true,
+    "module": "CommonJS"
+  }
+}

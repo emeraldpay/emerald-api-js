@@ -3,7 +3,7 @@ import {
     ConvertMarket, GetRatesRequest, GetRatesResponse,
     publishToPromise,
     readOnce
-} from "@emeraldpay/api-client-core";
+} from "@emeraldpay/api";
 import {WebChannel, callStream, callSingle} from "../channel";
 import {classFactory} from "./Factory";
 

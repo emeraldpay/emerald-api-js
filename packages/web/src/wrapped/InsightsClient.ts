@@ -2,7 +2,7 @@ import * as insight_pb from '../generated/InsightsServiceClientPb';
 import {GetDataRequest, GetDataResponse} from '../generated/insights_pb';
 import {TextDecoder} from 'text-encoding';
 import {callSingle, WebChannel} from "../channel";
-import {readOnce, publishToPromise} from "@emeraldpay/api-client-core";
+import {readOnce, publishToPromise} from "@emeraldpay/api";
 
 const textDecoder = new TextDecoder("utf-8");
 

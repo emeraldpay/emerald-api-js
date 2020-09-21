@@ -6,7 +6,7 @@ import {
     ManagedPublisher, MappingPublisher,
     Publisher, RemoteCall,
     StateListener
-} from "@emeraldpay/api-client-core";
+} from "@emeraldpay/api";
 import * as grpc from "grpc";
 import {Call, ClientReadableStream, ClientUnaryCall} from "grpc";
 import {Readable} from "stream";

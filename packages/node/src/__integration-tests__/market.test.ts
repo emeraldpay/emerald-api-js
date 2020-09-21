@@ -1,5 +1,5 @@
 import {EmeraldApi} from "../EmeraldApi";
-import {GetRatesResponse} from "@emeraldpay/api-client-core";
+import {GetRatesResponse} from "@emeraldpay/api";
 
 jest.setTimeout(5000);
 

@@ -1,6 +1,6 @@
 import {EmeraldApi} from "../EmeraldApi";
-import {Blockchain} from "@emeraldpay/api-client-core";
-import {NativeCallResponse} from "@emeraldpay/api-client-core/lib/typesBlockchain";
+import {Blockchain} from "@emeraldpay/api";
+import {NativeCallResponse} from "@emeraldpay/api";
 
 jest.setTimeout(5000);
 
@@ -37,8 +37,8 @@ describe("BlockchainClient", () => {
         ]).onData((value) => {
             expect(value.success).toBeTruthy();
             let act = value as NativeCallResponse;
-            expect(act.payload.result).toBeDefined();
-            console.log('Block', act.payload.result);
+            expect(act.payload).toBeDefined();
+            console.log('Block', act.payload);
             done()
         })
             .onError((err) => {
@@ -65,15 +65,15 @@ describe("BlockchainClient", () => {
         ]).onData((value) => {
             expect(value.success).toBeTruthy();
             let act = value as NativeCallResponse;
-            expect(act.payload.result).toBeDefined();
-            console.log('Resp #' + exp, act.payload.result);
+            expect(act.payload).toBeDefined();
+            console.log('Resp #' + exp, act.payload);
             exp++;
             if (exp == 2) {
                 done()
             }
         })
             .onError((err) => {
-                console.warn("err", err);
+                console.warn("requsts err", err);
                 done.fail(err)
             })
     });
@@ -81,7 +81,7 @@ describe("BlockchainClient", () => {
     test("Get balance", (done) => {
         const client = api.blockchain();
 
-        const resp = client.getBalance(
+        client.getBalance(
             {
                 asset: {blockchain: Blockchain.ETHEREUM, code: "ETHER"},
                 address: "0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE"
@@ -92,7 +92,7 @@ describe("BlockchainClient", () => {
             expect(value[0].address).toBe("0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be");
             done()
         }).catch((err) => {
-            console.warn(err);
+            console.warn("balance failed", err);
             done.fail(err)
         })
     });
