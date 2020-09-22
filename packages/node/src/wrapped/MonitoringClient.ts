@@ -1,7 +1,7 @@
 import * as grpc from "grpc";
 import * as monitoring_grpc_pb from '../generated/monitoring_grpc_pb';
 import * as monitoring_pb from '../generated/monitoring_pb';
-import {ConnectionListener, publishToPromise, readOnce} from "@emeraldpay/api-client-core";
+import {ConnectionListener, publishToPromise, readOnce} from "@emeraldpay/api";
 import {callSingle, NativeChannel} from "../channel";
 
 export class MonitoringClient {

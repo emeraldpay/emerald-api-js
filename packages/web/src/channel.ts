@@ -5,7 +5,7 @@ import {
     DataMapper,
     ManagedPublisher,
     MappingPublisher, OnceSuccess,
-    Publisher,
+    Publisher, PromisePublisher,
     RemoteCall, Retry, StandardExecutor
 } from "@emeraldpay/api";
 import {ClientReadableStream} from "grpc-web";
@@ -46,5 +46,12 @@ export function callStream<R, I, O>(delegate: (req: R) => ClientReadableStream<I
 export function callSingle<R, I, O>(delegate: (req: R) => ClientReadableStream<I>, mapper: DataMapper<I, O>): RemoteCall<R, O> {
     return (req) => {
         return createPublisher(delegate(req), mapper);
+    }
+}
+
+export function callPromise<R, I, O>(delegate: (req: R) => Promise<I>, mapper: DataMapper<I, O>): RemoteCall<R, O> {
+    return (req) => {
+        const source = new PromisePublisher(delegate(req));
+        return new MappingPublisher(source, mapper);
     }
 }

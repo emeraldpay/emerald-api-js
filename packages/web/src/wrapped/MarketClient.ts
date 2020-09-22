@@ -4,7 +4,7 @@ import {
     publishToPromise,
     readOnce
 } from "@emeraldpay/api";
-import {WebChannel, callStream, callSingle} from "../channel";
+import {WebChannel, callStream, callSingle, callPromise} from "../channel";
 import {classFactory} from "./Factory";
 
 export class MarketClient {
@@ -19,9 +19,9 @@ export class MarketClient {
 
     public getRates(request: GetRatesRequest): Promise<GetRatesResponse> {
         const req = this.convert.ratesRequest(request);
-        let mapper = this.convert.ratesResponse();
+        const mapper = this.convert.ratesResponse();
 
-        let call = callSingle(this.client.getRates.bind(this.client), mapper);
+        let call = callPromise(this.client.getRates.bind(this.client), mapper);
         return publishToPromise(readOnce(this.channel, call, req));
     }
 

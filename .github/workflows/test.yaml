@@ -20,12 +20,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
           node-version: "12.x"
       - name: Install Libs
         run: yarn install
+      - name: Install gRPC
+        run: npm install -g protoc-gen-grpc-web
 
       - name: Build
         run: yarn workspaces run build
@@ -36,12 +40,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
           node-version: "12.x"
       - name: Install Libs
         run: yarn install
+      - name: Install gRPC
+        run: npm install -g protoc-gen-grpc-web
+
+      - name: Build
+        run: yarn workspaces run build
 
       - name: Test (node)
         run: yarn workspace @emeraldpay/api-node run test

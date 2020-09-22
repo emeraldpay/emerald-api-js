@@ -12,13 +12,13 @@ export class Retry<T, R> {
 
     constructor(channel: Channel, executor: MethodExecutor, sc: ContinueCheck) {
         if (typeof channel == 'undefined') {
-            throw Error("channel is not provided");
+            throw new Error("channel is not provided");
         }
         if (typeof executor == 'undefined') {
-            throw Error("executor is not provided");
+            throw new Error("executor is not provided");
         }
         if (typeof sc == 'undefined') {
-            throw Error('sc is not provided');
+            throw new Error('sc is not provided');
         }
         this.channel = channel;
         this.executor = executor;
@@ -86,14 +86,17 @@ export class Retry<T, R> {
 
 
 export interface ContinueCheck {
-    shouldContinue(): Boolean;
+    shouldContinue(): boolean;
+
     onSuccess();
+
     onFail();
+
     onClose();
 }
 
 export class AlwaysRepeat implements ContinueCheck {
-    closed: Boolean = false;
+    closed: boolean = false;
 
     onFail() {
     }
@@ -105,14 +108,14 @@ export class AlwaysRepeat implements ContinueCheck {
         this.closed = true;
     }
 
-    shouldContinue(): Boolean {
+    shouldContinue(): boolean {
         return !this.closed;
     }
 }
 
 export class OnceSuccess implements ContinueCheck {
-    succeed: Boolean = false;
-    closed: Boolean = false;
+    succeed: boolean = false;
+    closed: boolean = false;
 
     onFail() {
     }
@@ -125,7 +128,7 @@ export class OnceSuccess implements ContinueCheck {
         this.closed = true;
     }
 
-    shouldContinue(): Boolean {
+    shouldContinue(): boolean {
         return !this.succeed && !this.closed;
     }
 

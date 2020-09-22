@@ -5,7 +5,7 @@ import {
     GetRatesResponse,
     publishToPromise,
     readOnce
-} from "@emeraldpay/api-client-core";
+} from "@emeraldpay/api";
 import {callSingle, NativeChannel} from "../channel";
 import {classFactory} from "./Factory";
 

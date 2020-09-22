@@ -1,5 +1,5 @@
 export {
-    Publisher, ManagedPublisher,
+    Publisher, ManagedPublisher, PromisePublisher,
     Handler,
     DataMapper, MappingPublisher,
     publishToPromise, publishListToPromise
