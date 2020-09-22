@@ -47,6 +47,9 @@ jobs:
       - name: Install Libs
         run: yarn install
 
+      - name: Build
+        run: yarn workspaces run build
+
       - name: Test (node)
         run: yarn workspace @emeraldpay/api-node run test
       - name: Test (web)

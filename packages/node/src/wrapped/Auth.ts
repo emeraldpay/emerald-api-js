@@ -1,7 +1,7 @@
 import * as grpc from "grpc";
 import * as auth_grpc_pb from '../generated/auth_grpc_pb';
 import * as auth_pb from '../generated/auth_pb';
-import {ConnectionListener, Publisher, publishToPromise, readOnce} from "@emeraldpay/api-client-core";
+import {ConnectionListener, Publisher, publishToPromise, readOnce} from "@emeraldpay/api";
 import {callSingle, NativeChannel} from "../channel";
 
 export class AuthClient {
