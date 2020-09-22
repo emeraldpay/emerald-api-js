@@ -24,8 +24,10 @@ jobs:
       - name: Configure NPM
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
-      - name: Instal JS dependencies
+      - name: Install JS dependencies
         run: yarn install
+      - name: Install gRPC
+        run: npm install -g protoc-gen-grpc-web
 
       - name: Configure Node.js Path
         run: npm config set scripts-prepend-node-path true

@@ -28,6 +28,8 @@ jobs:
           node-version: "12.x"
       - name: Install Libs
         run: yarn install
+      - name: Install gRPC
+        run: npm install -g protoc-gen-grpc-web
 
       - name: Build
         run: yarn workspaces run build
@@ -46,6 +48,8 @@ jobs:
           node-version: "12.x"
       - name: Install Libs
         run: yarn install
+      - name: Install gRPC
+        run: npm install -g protoc-gen-grpc-web
 
       - name: Build
         run: yarn workspaces run build
