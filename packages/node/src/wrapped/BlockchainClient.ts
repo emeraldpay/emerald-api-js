@@ -17,10 +17,10 @@ import {
     publishListToPromise,
     publishToPromise,
     readOnce
-} from "@emeraldpay/api-client-core";
+} from "@emeraldpay/api";
 import {callSingle, callStream, NativeChannel} from "../channel";
 import {classFactory} from "./Factory";
-import {AddressBalance, BalanceRequest} from "@emeraldpay/api-client-core/lib/typesBlockchain";
+import {AddressBalance, BalanceRequest} from "@emeraldpay/api";
 
 
 export class BlockchainClient {
