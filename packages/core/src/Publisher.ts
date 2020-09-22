@@ -184,6 +184,37 @@ export class MappingPublisher<I, O> implements Publisher<O> {
     }
 }
 
+export class PromisePublisher<T> implements Publisher<T> {
+    private value: Promise<T>;
+
+    constructor(value: Promise<T>) {
+        this.value = value;
+    }
+
+    cancel() {
+    }
+
+    onData(handler: Handler<T>): Publisher<T> {
+        this.value
+            .then((data) => {
+                handler(data);
+                return data
+            })
+        return this;
+    }
+
+    onError(handler: Handler<grpc.Error>): Publisher<T> {
+        this.value.catch((err) => handler({code: err.code || -1, message: err.message}))
+        return this;
+    }
+
+    finally(handler: () => void): Publisher<T> {
+        this.value.finally(handler);
+        return this;
+    }
+
+}
+
 export function publishToPromise<T>(publisher: Publisher<T>): Promise<T> {
     let closed = false;
     return new Promise((resolve, reject) => {
@@ -205,9 +236,9 @@ export function publishToPromise<T>(publisher: Publisher<T>): Promise<T> {
     })
 }
 
-export function publishListToPromise<T>(publisher: Publisher<T>): Promise<Array<T>> {
+export function publishListToPromise<T>(publisher: Publisher<T>): Promise<T[]> {
     let closed = false;
-    let result: Array<T> = [];
+    let result: T[] = [];
     return new Promise((resolve, reject) => {
         publisher.onData((data) => {
             if (closed) return;

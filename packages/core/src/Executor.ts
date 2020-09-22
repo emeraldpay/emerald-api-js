@@ -5,7 +5,7 @@ import {ContinueCheck} from "./Retry";
 export type RemoteCall<T, R> = (req: T) => Publisher<R>;
 
 export interface MethodExecutor {
-    execute(reconnect: Function);
+    execute(reconnect: () => void);
 }
 
 type Logger = (msg: string) => void;
@@ -26,13 +26,13 @@ export class StandardExecutor<T, R> extends ManagedPublisher<R> implements Metho
     constructor(sc: ContinueCheck, method: RemoteCall<T, R>, request: T) {
         super();
         if (typeof sc == 'undefined') {
-            throw Error('sc is not provided to StandardExecutor');
+            throw new Error('sc is not provided to StandardExecutor');
         }
         if (typeof method == 'undefined') {
-            throw Error("method is not provided to StandardExecutor");
+            throw new Error("method is not provided to StandardExecutor");
         }
         if (typeof request == 'undefined') {
-            throw Error("request is not provided to StandardExecutor");
+            throw new Error("request is not provided to StandardExecutor");
         }
         this.sc = sc;
         this.method = method;
@@ -46,7 +46,7 @@ export class StandardExecutor<T, R> extends ManagedPublisher<R> implements Metho
     _read(size?: number): any {
     }
 
-    execute(reconnect: Function) {
+    execute(reconnect: () => void) {
         if (this.upstream) {
             this.upstream.cancel();
             this.upstream = undefined;
