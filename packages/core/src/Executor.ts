@@ -51,25 +51,35 @@ export class StandardExecutor<T, R> extends ManagedPublisher<R> implements Metho
             this.upstream.cancel();
             this.upstream = undefined;
         }
-        this.connections++;
+        let callId = this.connections++;
         const upstream: Publisher<R> = this.method(this.request);
-        upstream.onData((data: R) => this.emitData(data));
-        upstream.onError((err: grpc.Error) => {
+        upstream.onData((data: R) => {
+            this.log(`gRPC request ${callId} data`);
+            this.emitData(data)
+        });
+        upstream.onError((e) => {
             this.sc.onFail();
-            if (err && (
-                err.code === grpc.status.UNKNOWN
-                || err.code === grpc.status.UNAVAILABLE
-                || err.code === grpc.status.INTERNAL
-            )) {
-                this.log(`gRPC connection lost with code: ${err.code}. ${err.message} Reconnecting...`);
-                // setTimeout(reconnect.bind(this), 100);
-                reconnect()
+            // @ts-ignore
+            if (e && typeof e.code == "number") {
+                let err = e as grpc.Error;
+                if (err.code === grpc.status.UNKNOWN
+                    || err.code === grpc.status.UNAVAILABLE
+                    || err.code === grpc.status.INTERNAL) {
+                    this.log(`gRPC connection for ${callId} lost with code: ${err.code}. ${err.message}. Reconnecting...`);
+                    setTimeout(reconnect.bind(this), 100);
+                } else {
+                    this.log(`gRPC connection for ${callId} lost with code: ${err ? err.code : ''}. Closing...`);
+                    this.cancel();
+                    this.emitError(err);
+                }
             } else {
-                this.log(`gRPC connection lost with code: ${err ? err.code : ''}. Closing...`);
+                this.log(`gRPC client error ${e ? e.message : 'UNKNOWN'}. Closing...`)
                 this.cancel();
+                this.emitError(e);
             }
         });
         upstream.finally(() => {
+            this.log(`gRPC request ${callId} closed`);
             this.sc.onClose();
             this.emitClosed()
         });

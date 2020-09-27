@@ -9,7 +9,6 @@ import {
 } from "@emeraldpay/api";
 import * as grpc from "grpc";
 import {Call, ClientReadableStream, ClientUnaryCall} from "grpc";
-import {Readable} from "stream";
 
 function fromConnectivityState(state: ConnectivityState): grpc.connectivityState {
     if (state === ConnectivityState.CONNECTING) {
@@ -77,7 +76,7 @@ class NativeStreamPublisher<T> extends ManagedPublisher<T> implements Publisher<
         super();
         reader
             .on("data", (data) => super.emitData(data))
-            .on("error", (err) => super.emitJsError(err))
+            .on("error", (err) => super.emitError(err))
             .on("end", () => super.emitClosed());
     }
 }
@@ -88,7 +87,7 @@ class NativeCallPublisher<T> extends ManagedPublisher<T>
     handler(): SingleCallback<T> {
         return (err, data) => {
             if (err) {
-                this.emitJsError(err)
+                this.emitError(err)
             } else {
                 this.emitData(data)
             }

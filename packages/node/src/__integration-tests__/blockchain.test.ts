@@ -78,7 +78,7 @@ describe("BlockchainClient", () => {
             })
     });
 
-    test("Get balance", (done) => {
+    test("Get ethereum balance", (done) => {
         const client = api.blockchain();
 
         client.getBalance(
@@ -96,5 +96,42 @@ describe("BlockchainClient", () => {
             done.fail(err)
         })
     });
-});
 
+    test("Get bitcoin balance for address", (done) => {
+        const client = api.blockchain();
+
+        client.getBalance(
+            {
+                asset: {blockchain: Blockchain.BITCOIN, code: "BTC"},
+                address: "bc1qmh07ff738tnennr6xz5lkcy3478v2v6k0aacwc"
+            }
+        ).then((value) => {
+            console.log("Balance", value);
+            expect(value.length).toBe(1);
+            expect(value[0].address).toBe("bc1qmh07ff738tnennr6xz5lkcy3478v2v6k0aacwc");
+            done()
+        }).catch((err) => {
+            console.warn("balance failed", err);
+            done.fail(err)
+        })
+    });
+
+    test("Get bitcoin balance for xpub", (done) => {
+        const client = api.blockchain();
+
+        client.getBalance(
+            {
+                asset: {blockchain: Blockchain.TESTNET_BITCOIN, code: "BTC"},
+                address: {xpub: "vpub5ab1RDcpFBvgxMWxKfvVLLHtC6JfF784F6zBdKhoWJhcrS8Mu8LbhMWRWoXHDAgWtWfAAuF6DWLJqy7kLNn69wvyXQwdYJ4ehsTFhW65Qkp"},
+                includeUtxo: true
+            }
+        ).then((value) => {
+            console.log("Balance", value);
+            expect(value.length > 0).toBeTruthy();
+            done()
+        }).catch((err) => {
+            console.warn("balance failed", err);
+            done.fail(err)
+        })
+    });
+});

@@ -19,7 +19,9 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == "common_pb.MultiAddress") {
         return new common_pb.MultiAddress();
     }
-
+    if (id == "common_pb.XpubAddress") {
+        return new common_pb.XpubAddress();
+    }
 
     if (id == "blockchain_pb.NativeCallRequest") {
         return new blockchain_pb.NativeCallRequest();

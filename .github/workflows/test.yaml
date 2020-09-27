@@ -54,6 +54,8 @@ jobs:
       - name: Build
         run: yarn workspaces run build
 
+      - name: Test (core)
+        run: yarn workspace @emeraldpay/api run test
       - name: Test (node)
         run: yarn workspace @emeraldpay/api-node run test
       - name: Test (web)

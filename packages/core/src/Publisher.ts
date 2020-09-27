@@ -1,5 +1,24 @@
 import * as grpc from "./grpcReimports";
 
+type EmitItem = EmitItemData | EmitItemError | EmitItemClosed;
+
+interface EmitItemData {
+    type: "data",
+    value: any
+}
+
+interface EmitItemError {
+    type: "error",
+    value: AnyError
+}
+
+interface EmitItemClosed {
+    type: "closed"
+}
+
+export type AnyError = Error | grpc.Error;
+
+
 /**
  * Interface for data produced by a call
  */
@@ -19,13 +38,13 @@ export interface Publisher<T> {
      * Handler for errors
      * @param handler
      */
-    onError(handler: Handler<grpc.Error>): Publisher<T>
+    onError(handler: Handler<AnyError>): Publisher<T>
 
     /**
      * Handler for call end
      * @param handler
      */
-    finally(handler: () => void): Publisher<T>
+    finally(handler: Handler<void>): Publisher<T>
 }
 
 /**
@@ -44,11 +63,11 @@ export type Handler<T> = (value: T) => void;
  * @param current
  * @param additional
  */
-function consHandlers<T>(current: Handler<T>, additional: Handler<T>): Handler<T> {
-    if (current == null) {
+function consHandlers<T>(current: Handler<T> | undefined, additional: Handler<T> | undefined): Handler<T> {
+    if (current == null || typeof current == "undefined") {
         return additional;
     }
-    if (additional == null) {
+    if (additional == null || typeof additional == "undefined") {
         return current;
     }
     return (value: T) => {
@@ -70,47 +89,65 @@ function consHandlers<T>(current: Handler<T>, additional: Handler<T>): Handler<T
 }
 
 /**
- * Publisher with methods to emit events.
+ * Publisher that may keep actual events in buffer, until a handler added to process. I.e. for case when request received
+ * data before onData(..) was called. Otherwise the call may miss data, or errors.
  */
-export class ManagedPublisher<T> implements Publisher<T> {
+export class BufferedPublisher<T> implements Publisher<T> {
+    private buffer: EmitItem[] = [];
 
-    private onDataHandler: Handler<T> = null;
-    private onErrorHandler: Handler<grpc.Error> = null;
-    private onFinally: Handler<void> = null;
+    private onDataHandler: Handler<T> = undefined;
+    private onErrorHandler: Handler<AnyError> = undefined;
+    private onFinally: Handler<void> = undefined;
 
     emitData(data: T) {
-        try {
-            if (this.onDataHandler) {
-                this.onDataHandler(data);
-            }
-        } catch (e) {
-            this.emitJsError(e);
-        }
+        this.buffer.push({type: "data", value: data});
+        this.execute();
     }
 
-    emitError(err: grpc.Error) {
-        try {
-            if (this.onErrorHandler) {
-                this.onErrorHandler(err);
-            }
-        } catch (e) {
-            if (err.code !== -1) {
-                this.emitJsError(e);
-            }
-        }
-    }
-
-    emitJsError(err: Error) {
-        this.emitError({code: -1, message: err.message})
+    emitError(err: AnyError) {
+        this.buffer.push({type: "error", value: err});
+        this.execute();
     }
 
     emitClosed() {
-        try {
-            if (this.onFinally) {
-                this.onFinally();
+        this.buffer.push({type: "closed"});
+        this.execute();
+    }
+
+    execute(repeat: boolean = false) {
+        const left: EmitItem[] = [];
+        let internalError = false;
+        let self = this;
+        this.buffer.forEach((item) => {
+            if (item.type == "data" && typeof this.onDataHandler != "undefined") {
+                try {
+                    this.onDataHandler(item.value);
+                } catch (e) {
+                    left.push(item);
+                    internalError = true;
+                }
+            } else if (item.type == "error" && typeof this.onErrorHandler != "undefined") {
+                try {
+                    this.onErrorHandler(item.value);
+                } catch (e) {
+                    left.push(item);
+                    internalError = true;
+                }
+            } else if (item.type == "closed" && typeof this.onFinally != "undefined") {
+                try {
+                    self.onFinally();
+                } catch (e) {
+                    left.push({type: "error", value: e});
+                    left.push(item);
+                    internalError = true;
+                }
+            } else {
+                left.push(item);
             }
-        } catch (e) {
-            console.warn("Error on closing the publisher", e)
+        });
+        this.buffer = left;
+        if (internalError && !repeat) {
+            this.execute(true);
         }
     }
 
@@ -119,16 +156,62 @@ export class ManagedPublisher<T> implements Publisher<T> {
 
     finally(handler: Handler<void>): Publisher<T> {
         this.onFinally = consHandlers(this.onFinally, handler);
+        this.execute();
         return this;
     }
 
     onData(handler: Handler<T>): Publisher<T> {
         this.onDataHandler = consHandlers(this.onDataHandler, handler);
+        this.execute();
         return this;
     }
 
-    onError(handler: Handler<grpc.Error>): Publisher<T> {
+    onError(handler: Handler<AnyError>): Publisher<T> {
         this.onErrorHandler = consHandlers(this.onErrorHandler, handler);
+        this.execute();
+        return this;
+    }
+
+}
+
+/**
+ * Publisher with methods to emit events.
+ */
+export class ManagedPublisher<T> implements Publisher<T> {
+
+    private readonly buffer: BufferedPublisher<T>
+
+    constructor() {
+        this.buffer = new BufferedPublisher<T>()
+    }
+
+    emitData(data: T) {
+        this.buffer.emitData(data);
+    }
+
+    emitError(err: AnyError) {
+        this.buffer.emitError(err);
+    }
+
+    emitClosed() {
+        this.buffer.emitClosed();
+    }
+
+    cancel() {
+    }
+
+    finally(handler: Handler<void>): Publisher<T> {
+        this.buffer.finally(handler);
+        return this;
+    }
+
+    onData(handler: Handler<T>): Publisher<T> {
+        this.buffer.onData(handler);
+        return this;
+    }
+
+    onError(handler: Handler<AnyError>): Publisher<T> {
+        this.buffer.onError(handler);
         return this;
     }
 
@@ -140,25 +223,22 @@ export class ManagedPublisher<T> implements Publisher<T> {
 export class MappingPublisher<I, O> implements Publisher<O> {
 
     private reader: Publisher<I>;
-    private onDataHandler: Handler<O> = null;
-    private onErrorHandler: Handler<grpc.Error> = null;
-    private onFinally: () => void = null;
+    private readonly buffer: BufferedPublisher<O>;
 
     constructor(reader: Publisher<I>, mapper: DataMapper<I, O>) {
+        this.buffer = new BufferedPublisher<O>();
         this.reader = reader;
         reader.onData((data: I) => {
-            const value = mapper(data);
-            if (this.onDataHandler) {
-                this.onDataHandler(value);
+            try {
+                const value = mapper(data);
+                this.buffer.emitData(value);
+            } catch (e) {
+                this.buffer.emitError(e);
             }
         }).onError((err) => {
-            if (this.onErrorHandler) {
-                this.onErrorHandler(err);
-            }
+            this.buffer.emitError(err);
         }).finally(() => {
-            if (this.onFinally) {
-                this.onFinally();
-            }
+            this.buffer.emitClosed();
         });
     }
 
@@ -169,17 +249,17 @@ export class MappingPublisher<I, O> implements Publisher<O> {
     }
 
     onData(handler: Handler<O>): Publisher<O> {
-        this.onDataHandler = handler;
+        this.buffer.onData(handler);
         return this;
     }
 
-    onError(handler: Handler<grpc.Error>): Publisher<O> {
-        this.onErrorHandler = handler;
+    onError(handler: Handler<AnyError>): Publisher<O> {
+        this.buffer.onError(handler);
         return this;
     }
 
-    finally(handler: () => void): Publisher<O> {
-        this.onFinally = handler;
+    finally(handler: Handler<void>): Publisher<O> {
+        this.buffer.finally(handler);
         return this;
     }
 }
@@ -203,13 +283,13 @@ export class PromisePublisher<T> implements Publisher<T> {
         return this;
     }
 
-    onError(handler: Handler<grpc.Error>): Publisher<T> {
+    onError(handler: Handler<AnyError>): Publisher<T> {
         this.value.catch((err) => handler({code: err.code || -1, message: err.message}))
         return this;
     }
 
-    finally(handler: () => void): Publisher<T> {
-        this.value.finally(handler);
+    finally(handler: Handler<void>): Publisher<T> {
+        this.value.finally(() => handler());
         return this;
     }
 
@@ -253,6 +333,6 @@ export function publishListToPromise<T>(publisher: Publisher<T>): Promise<T[]> {
             if (closed) return;
             closed = true;
             resolve(result);
-        })
-    })
+        });
+    });
 }

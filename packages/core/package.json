@@ -30,7 +30,8 @@
     "generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs:./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
     "generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
     "generate:remove-grpc": "rimraf lib/generated/*_grpc_pb.d.ts",
-    "generate:copy": "rimraf src/generated && cp -r lib/generated src/"
+    "generate:copy": "rimraf src/generated && cp -r lib/generated src/",
+    "test": "jest"
   },
   "dependencies": {
     "google-protobuf": "^3.10.0",

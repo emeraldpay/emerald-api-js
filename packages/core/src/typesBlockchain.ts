@@ -1,7 +1,16 @@
 import * as blockchain_pb from "./generated/blockchain_pb";
 import * as common_pb from "./generated/common_pb";
 import {DataMapper} from "./Publisher";
-import {AnyAddress, Asset, Blockchain, isMultiAddress, isSingleAddress, SingleAddress} from "./typesCommon";
+import {
+    AnyAddress,
+    Asset,
+    Blockchain,
+    isMultiAddress,
+    isSingleAddress,
+    SingleAddress,
+    isXpubAddress,
+    asDetailedXpub
+} from "./typesCommon";
 import {MessageFactory} from "./convert";
 import {TextDecoder, TextEncoder} from "text-encoding";
 
@@ -43,13 +52,21 @@ export function isNativeCallError(obj: NativeCallResponse | NativeCallError): ob
 
 export type BalanceRequest = {
     asset: Asset,
-    address: AnyAddress
+    address: AnyAddress,
+    includeUtxo?: boolean
 }
 
-export type AddressBalance = {
-    asset: Asset,
-    address: SingleAddress,
-    balance: string
+export interface AddressBalance {
+    asset: Asset;
+    address: SingleAddress;
+    balance: string;
+    utxo?: Utxo[] | undefined;
+}
+
+export interface Utxo {
+    txid: string;
+    vout: number;
+    value: string;
 }
 
 export class ConvertBlockchain {
@@ -114,11 +131,31 @@ export class ConvertBlockchain {
         protoAsset.setCode(req.asset.code);
         result.setAsset(protoAsset);
 
+        if (typeof req.includeUtxo == "boolean") {
+            result.setIncludeUtxo(req.includeUtxo);
+        }
+
         let protoAnyAddress: common_pb.AnyAddress = this.factory("common_pb.AnyAddress");
         if (isSingleAddress(req.address)) {
             let protoSingleAddress: common_pb.SingleAddress = this.factory("common_pb.SingleAddress");
             protoSingleAddress.setAddress(req.address);
             protoAnyAddress.setAddressSingle(protoSingleAddress);
+        } else if (isXpubAddress(req.address)) {
+            let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
+            let xpub = asDetailedXpub(req.address);
+            protoXpubAddress.setXpub(textEncoder.encode(xpub.xpub));
+            if (xpub.start) {
+                protoXpubAddress.setStart(xpub.start);
+            }
+            if (typeof xpub.limit === "number") {
+                protoXpubAddress.setLimit(xpub.limit);
+            } else {
+                protoXpubAddress.setLimit(100);
+            }
+            if (xpub.path) {
+                protoXpubAddress.setPath(xpub.path);
+            }
+            protoAnyAddress.setAddressXpub(protoXpubAddress);
         } else if (isMultiAddress(req.address)) {
             let protoMultiAddress: common_pb.MultiAddress = this.factory("common_pb.MultiAddress");
             req.address.forEach((address) => {
@@ -140,10 +177,21 @@ export class ConvertBlockchain {
                 // @ts-ignore
                 code: resp.getAsset().getCode()
             };
+            let utxo: Utxo[] | undefined = undefined;
+            if (resp.getUtxoList().length > 0) {
+                utxo = resp.getUtxoList().map((it) => {
+                    return {
+                        txid: it.getTxId(),
+                        vout: it.getIndex(),
+                        value: it.getBalance()
+                    }
+                });
+            }
             return {
                 asset,
                 address: resp.getAddress().getAddress(),
-                balance: resp.getBalance()
+                balance: resp.getBalance(),
+                utxo
             }
         }
     }
