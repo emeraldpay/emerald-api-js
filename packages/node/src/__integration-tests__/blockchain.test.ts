@@ -122,7 +122,7 @@ describe("BlockchainClient", () => {
         client.getBalance(
             {
                 asset: {blockchain: Blockchain.TESTNET_BITCOIN, code: "BTC"},
-                address: {xpub: "vpub5ab1RDcpFBvgxMWxKfvVLLHtC6JfF784F6zBdKhoWJhcrS8Mu8LbhMWRWoXHDAgWtWfAAuF6DWLJqy7kLNn69wvyXQwdYJ4ehsTFhW65Qkp"},
+                address: "vpub5ab1RDcpFBvgxMWxKfvVLLHtC6JfF784F6zBdKhoWJhcrS8Mu8LbhMWRWoXHDAgWtWfAAuF6DWLJqy7kLNn69wvyXQwdYJ4ehsTFhW65Qkp",
                 includeUtxo: true
             }
         ).then((value) => {

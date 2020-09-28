@@ -143,7 +143,7 @@ export class ConvertBlockchain {
         } else if (isXpubAddress(req.address)) {
             let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
             let xpub = asDetailedXpub(req.address);
-            protoXpubAddress.setXpub(textEncoder.encode(xpub.xpub));
+            protoXpubAddress.setXpub(xpub.xpub);
             if (xpub.start) {
                 protoXpubAddress.setStart(xpub.start);
             }
@@ -152,8 +152,8 @@ export class ConvertBlockchain {
             } else {
                 protoXpubAddress.setLimit(100);
             }
-            if (xpub.path) {
-                protoXpubAddress.setPath(xpub.path);
+            if (xpub.unused_limit && xpub.unused_limit > 0) {
+                protoXpubAddress.setUnusedLimit(xpub.unused_limit)
             }
             protoAnyAddress.setAddressXpub(protoXpubAddress);
         } else if (isMultiAddress(req.address)) {

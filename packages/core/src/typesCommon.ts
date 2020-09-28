@@ -28,7 +28,7 @@ export interface DetailedXpubAddress {
     xpub: string;
     start?: number;
     limit?: number;
-    path?: string;
+    unused_limit?: number;
 }
 
 export function isSingleAddress(address: AnyAddress): address is SingleAddress {
