@@ -14,15 +14,18 @@ describe("BlockchainClient", () => {
     test('Get head', (done) => {
         const client = api.blockchain();
 
-        client.subscribeHead(Blockchain.ETHEREUM)
+        const call = client.subscribeHead(Blockchain.ETHEREUM);
+        call
             .onData((value) => {
                 console.log('Head', value);
-                done()
+                call.cancel();
+                done();
             })
             .onError((err) => {
                 console.warn("err", err);
+                call.cancel();
                 done.fail(err)
-            })
+            });
     });
 
     test('Get block', (done) => {

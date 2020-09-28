@@ -94,23 +94,30 @@ function consHandlers<T>(current: Handler<T> | undefined, additional: Handler<T>
  */
 export class BufferedPublisher<T> implements Publisher<T> {
     private buffer: EmitItem[] = [];
+    private cancelled = false;
 
     private onDataHandler: Handler<T> = undefined;
     private onErrorHandler: Handler<AnyError> = undefined;
     private onFinally: Handler<void> = undefined;
 
     emitData(data: T) {
-        this.buffer.push({type: "data", value: data});
+        if (!this.cancelled) {
+            this.buffer.push({type: "data", value: data});
+        }
         this.execute();
     }
 
     emitError(err: AnyError) {
-        this.buffer.push({type: "error", value: err});
+        if (!this.cancelled) {
+            this.buffer.push({type: "error", value: err});
+        }
         this.execute();
     }
 
     emitClosed() {
-        this.buffer.push({type: "closed"});
+        if (!this.cancelled) {
+            this.buffer.push({type: "closed"});
+        }
         this.execute();
     }
 
@@ -152,6 +159,7 @@ export class BufferedPublisher<T> implements Publisher<T> {
     }
 
     cancel() {
+        this.cancelled = true;
     }
 
     finally(handler: Handler<void>): Publisher<T> {
@@ -243,9 +251,8 @@ export class MappingPublisher<I, O> implements Publisher<O> {
     }
 
     cancel() {
-        if (this.reader) {
-            this.reader.cancel();
-        }
+        this.reader?.cancel();
+        this.buffer?.cancel();
     }
 
     onData(handler: Handler<O>): Publisher<O> {

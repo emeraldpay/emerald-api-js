@@ -72,12 +72,20 @@ export class NativeChannel implements Channel {
 }
 
 class NativeStreamPublisher<T> extends ManagedPublisher<T> implements Publisher<T> {
+    private readonly reader: ClientReadableStream<T>;
+
     constructor(reader: ClientReadableStream<T>) {
         super();
-        reader
+        this.reader = reader;
+        this.reader
             .on("data", (data) => super.emitData(data))
             .on("error", (err) => super.emitError(err))
             .on("end", () => super.emitClosed());
+    }
+
+    cancel() {
+        super.cancel();
+        this.reader.cancel();
     }
 }
 
