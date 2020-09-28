@@ -67,6 +67,7 @@ export interface Utxo {
     txid: string;
     vout: number;
     value: string;
+    spent: boolean;
 }
 
 export class ConvertBlockchain {
@@ -183,7 +184,8 @@ export class ConvertBlockchain {
                     return {
                         txid: it.getTxId(),
                         vout: it.getIndex(),
-                        value: it.getBalance()
+                        value: it.getBalance(),
+                        spent: it.getSpent() || false,
                     }
                 });
             }
