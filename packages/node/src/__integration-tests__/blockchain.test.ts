@@ -137,4 +137,25 @@ describe("BlockchainClient", () => {
             done.fail(err)
         })
     });
+
+    test("Subscribe bitcoin balance for xpub", (done) => {
+        const client = api.blockchain();
+
+        const call = client.subscribeBalance(
+            {
+                asset: {blockchain: Blockchain.TESTNET_BITCOIN, code: "BTC"},
+                address: "vpub5arxPHpfH2FKSNnBqyZJctzBtruGzM4sat7YKcQQNoNGgVZehD1tLiYGvhXBhPzKPcRDRjhGw94Dc9Wwob9BpbAMmkMX7Dzdfd5Ly9LHTGQ",
+                includeUtxo: true
+            }
+        );
+        call.onData((value) => {
+            console.log("Balance", value);
+            call.cancel();
+            done()
+        }).onError((err) => {
+            console.warn("balance failed", err);
+            call.cancel();
+            done.fail(err)
+        })
+    });
 });
