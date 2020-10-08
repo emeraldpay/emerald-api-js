@@ -1,6 +1,6 @@
 {
 	"name": "@emeraldpay/api-web",
-	"version": "0.2.0-beta",
+	"version": "0.2.0-beta.1",
 	"description": "Browser client for Emerald gRPC APIs",
 	"private": false,
 	"license": "Apache-2.0",
@@ -33,7 +33,7 @@
       "prepublishOnly": "npm run clean && npm run build && npm run test"
     },
 	"dependencies": {
-		"@emeraldpay/api": "0.2.0-beta",
+		"@emeraldpay/api": "0.2.0-beta.1",
 		"google-protobuf": "^3.10.0",
 		"protobufjs": "^6.8.8",
 		"text-encoding": "^0.7.0",
