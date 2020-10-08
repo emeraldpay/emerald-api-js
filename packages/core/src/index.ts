@@ -27,7 +27,8 @@ export {
     ChainHead, NativeCallError, NativeCallItem, NativeCallResponse,
     ConvertBlockchain, AddressBalance, BalanceRequest,
     isNativeCallError, isNativeCallResponse,
-    Utxo
+    Utxo,
+    TxStatusRequest, TxStatusResponse,
 } from './typesBlockchain';
 
 export {

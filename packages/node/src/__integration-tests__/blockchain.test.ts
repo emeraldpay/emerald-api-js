@@ -158,4 +158,41 @@ describe("BlockchainClient", () => {
             done.fail(err)
         })
     });
+
+    test("subscribe ethereum tx", (done) => {
+        const client = api.blockchain();
+        const req = client.subscribeTxStatus({
+            txid: "0xf3cfd7cd8f9384744ec91062de6f5a84daba2ea33d978933f297f44e751edc8c",
+            limit: 10,
+            blockchain: 100
+        });
+
+        req.onData((resp) => {
+            expect(resp.mined).toBeTruthy();
+            expect(resp.block.height).toBe(2500001);
+            expect(resp.block.hash).toBe("5038ffc0d84d496fb6669ab0e60df559fa39dbf181f278d508086a82fc72761f");
+            done()
+        });
+        req.onError((err) => {
+            done.fail(err)
+        })
+    });
+
+    test("subscribe bitcoin tx", (done) => {
+        const client = api.blockchain();
+        const req = client.subscribeTxStatus({
+            txid: "9a7870a8bd7805bdb270db77105eb4a811058cfec602107ba1d027b6bf028928",
+            limit: 3,
+            blockchain: 1
+        });
+
+        req.onData((resp) => {
+            expect(resp.mined).toBeTruthy();
+            expect(resp.block.height).toBe(651732);
+            done();
+        });
+        req.onError((err) => {
+            done.fail(err)
+        })
+    });
 });

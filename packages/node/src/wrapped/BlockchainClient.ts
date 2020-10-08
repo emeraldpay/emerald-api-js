@@ -16,7 +16,7 @@ import {
     Publisher,
     publishListToPromise,
     publishToPromise,
-    readOnce
+    readOnce, TxStatusRequest, TxStatusResponse
 } from "@emeraldpay/api";
 import {callSingle, callStream, NativeChannel} from "../channel";
 import {classFactory} from "./Factory";
@@ -69,8 +69,11 @@ export class BlockchainClient {
         return publishListToPromise(readOnce(this.channel, call, protoRequest));
     }
 
-    public subscribeTxStatus(request: blockchain_pb.TxStatusRequest): Publisher<blockchain_pb.TxStatus> {
-        let call = callStream(this.client.subscribeTxStatus, (resp: blockchain_pb.TxStatus) => resp);
-        return readOnce(this.channel, call, request);
+    public subscribeTxStatus(request: TxStatusRequest): Publisher<TxStatusResponse> {
+        let protoRequest = this.convert.txRequest(request);
+        let mapper: DataMapper<blockchain_pb.TxStatus, TxStatusResponse> = this.convert.txResponse();
+
+        let call = callStream(this.client.subscribeTxStatus.bind(this.client), mapper);
+        return readOnce(this.channel, call, protoRequest);
     }
 }

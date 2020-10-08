@@ -70,6 +70,25 @@ export interface Utxo {
     spent: boolean;
 }
 
+export interface TxStatusRequest {
+    blockchain: number;
+    txid: string;
+    limit: number;
+}
+
+export interface TxStatusResponse {
+    txid: string;
+    broadcast: boolean;
+    mined: boolean;
+    block?: {
+        height: number;
+        hash: string;
+        timestamp: Date;
+        weight: string;
+    },
+    confirmations: number
+}
+
 export class ConvertBlockchain {
     private factory: MessageFactory;
 
@@ -198,4 +217,35 @@ export class ConvertBlockchain {
         }
     }
 
+    public txRequest(req: TxStatusRequest): blockchain_pb.TxStatusRequest {
+        let p = this.factory("blockchain_pb.TxStatusRequest");
+        p.setChain(req.blockchain);
+        p.setTxId(req.txid);
+        p.setConfirmationLimit(req.limit < 0 ? 0 : req.limit);
+        return p;
+    }
+
+    public txResponse(): DataMapper<blockchain_pb.TxStatus, TxStatusResponse> {
+        return (resp) => {
+            let block;
+            if (resp.hasBlock()) {
+                const pbBlock = resp.getBlock()!
+                block = {
+                    height: pbBlock.getHeight(),
+                    hash: pbBlock.getBlockId(),
+                    timestamp: new Date(pbBlock.getTimestamp()),
+                    weight: Buffer.from(pbBlock.getWeight_asU8()).toString('hex')
+                }
+            } else {
+                block = undefined;
+            }
+            return {
+                broadcast: resp.getBroadcasted(),
+                confirmations: resp.getConfirmations(),
+                mined: resp.getMined(),
+                txid: resp.getTxId(),
+                block
+            }
+        }
+    }
 }
