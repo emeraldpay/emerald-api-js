@@ -14,9 +14,45 @@ image:https://img.shields.io/npm/v/@emeraldpay/api-web.svg["npm (scoped)",link="
 
 == Development
 
+=== Build Instructions
+
+.Prepare Environment
+----
+yarn install
+----
+
+.Build all
+----
+yarn workspaces run build
+----
+
+.Build individual modules
+----
+yarn workspace @emeraldpay/api run build
+yarn workspace @emeraldpay/api-node run build
+yarn workspace @emeraldpay/api-web run build
+----
+
+.Compile individual modules
+----
+yarn workspace @emeraldpay/api run build:ts
+yarn workspace @emeraldpay/api-node run build:ts
+yarn workspace @emeraldpay/api-web run build:ts
+----
+
+.Test individual modules
+----
+yarn workspace @emeraldpay/api run test
+yarn workspace @emeraldpay/api-node run test
+yarn workspace @emeraldpay/api-web run test
+----
+
+=== Update Protobuf
+
+This Client references Emerald API protobuf through Git Submodules.
 Original Protobuf definitions are located at: https://github.com/emeraldpay/emerald-grpc
 
-.Update Protobuf definitions:
+.Update Protobuf definitions to the latest:
 ----
 git submodule update --remote
 git commit api-definitions

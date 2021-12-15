@@ -282,11 +282,12 @@ export class PromisePublisher<T> implements Publisher<T> {
     }
 
     onData(handler: Handler<T>): Publisher<T> {
+        console.log("value", this.value);
         this.value
             .then((data) => {
                 handler(data);
                 return data
-            })
+            });
         return this;
     }
 

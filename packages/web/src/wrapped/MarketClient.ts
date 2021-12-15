@@ -21,7 +21,7 @@ export class MarketClient {
         const req = this.convert.ratesRequest(request);
         const mapper = this.convert.ratesResponse();
 
-        let call = callPromise(this.client.getRates.bind(this.client), mapper);
+        let call = callSingle(this.client.getRates.bind(this.client), mapper);
         return publishToPromise(readOnce(this.channel, call, req));
     }
 

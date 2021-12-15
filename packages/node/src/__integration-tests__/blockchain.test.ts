@@ -100,7 +100,8 @@ describe("BlockchainClient", () => {
         })
     });
 
-    test("Get bitcoin balance for address", (done) => {
+    //TODO fix bitcoin on server
+    xtest("Get bitcoin balance for address", (done) => {
         const client = api.blockchain();
 
         client.getBalance(
@@ -119,7 +120,8 @@ describe("BlockchainClient", () => {
         })
     });
 
-    test("Get bitcoin balance for xpub", (done) => {
+    //TODO fix bitcoin on server
+    xtest("Get bitcoin balance for xpub", (done) => {
         const client = api.blockchain();
 
         client.getBalance(
@@ -138,7 +140,8 @@ describe("BlockchainClient", () => {
         })
     });
 
-    test("Subscribe bitcoin balance for xpub", (done) => {
+    //TODO fix bitcoin on server
+    xtest("Subscribe bitcoin balance for xpub", (done) => {
         const client = api.blockchain();
 
         const call = client.subscribeBalance(
