@@ -12,6 +12,16 @@ image:https://img.shields.io/npm/v/@emeraldpay/api-node.svg["npm (scoped)",link=
 
 image:https://img.shields.io/npm/v/@emeraldpay/api-web.svg["npm (scoped)",link="https://www.npmjs.com/package/@emeraldpay/api-web"]
 
+== Development
+
+Original Protobuf definitions are located at: https://github.com/emeraldpay/emerald-grpc
+
+.Update Protobuf definitions:
+----
+git submodule update --remote
+git commit api-definitions
+----
+
 == License
 
 Copyright 2020 EmeraldPay, Inc
