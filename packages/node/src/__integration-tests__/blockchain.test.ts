@@ -1,8 +1,8 @@
 import {EmeraldApi} from "../EmeraldApi";
-import {Blockchain} from "@emeraldpay/api";
+import {Blockchain, isBitcoinStdFees, isEthereumExtFees, isEthereumStdFees} from "@emeraldpay/api";
 import {NativeCallResponse} from "@emeraldpay/api";
 
-jest.setTimeout(5000);
+jest.setTimeout(30000);
 
 describe("BlockchainClient", () => {
     let api: EmeraldApi;
@@ -197,5 +197,55 @@ describe("BlockchainClient", () => {
         req.onError((err) => {
             done.fail(err)
         })
+    });
+
+    test("get ethereum fees", async () => {
+        const client = api.blockchain();
+        const resp = await client.estimateFees({
+            blockchain: 100,
+            blocks: 10,
+            mode: "avgLast"
+        });
+
+        console.log("Fees", resp);
+
+        expect(isEthereumExtFees(resp)).toBeTruthy();
+        if (isEthereumExtFees(resp)) {
+            expect(resp.expect.length).toBeGreaterThan(5);
+            expect(parseInt(resp.expect.substr(0, 5))).toBeGreaterThan(0);
+        }
+    });
+
+    test("get ethereum classic fees", async () => {
+        const client = api.blockchain();
+        const resp = await client.estimateFees({
+            blockchain: 101,
+            blocks: 50,
+            mode: "avgLast"
+        });
+
+        console.log("Fees on ETC", resp);
+
+        expect(isEthereumStdFees(resp)).toBeTruthy();
+        if (isEthereumStdFees(resp)) {
+            expect(resp.fee.length).toBeGreaterThan(3);
+            expect(parseInt(resp.fee.substr(0, 3))).toBeGreaterThan(0);
+        }
+    });
+
+    test("get bitcoin fees", async () => {
+        const client = api.blockchain();
+        const resp = await client.estimateFees({
+            blockchain: 1,
+            blocks: 6,
+            mode: "avgLast"
+        });
+
+        console.log("Fees on BTC", resp);
+
+        expect(isBitcoinStdFees(resp)).toBeTruthy();
+        if (isBitcoinStdFees(resp)) {
+            expect(resp.satPerKb).toBeGreaterThan(100);
+        }
     });
 });

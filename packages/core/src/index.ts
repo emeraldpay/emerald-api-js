@@ -29,6 +29,7 @@ export {
     isNativeCallError, isNativeCallResponse,
     Utxo,
     TxStatusRequest, TxStatusResponse,
+    EstimateFeeRequest, EstimateFeeResponse, EstimationMode, isEthereumExtFees, isBitcoinStdFees, isEthereumStdFees
 } from './typesBlockchain';
 
 export {

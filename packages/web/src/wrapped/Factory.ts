@@ -41,6 +41,9 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == "blockchain_pb.TxStatus") {
         return new blockchain_pb.TxStatus();
     }
+    if (id == "blockchain_pb.EstimateFeeRequest") {
+        return new blockchain_pb.EstimateFeeRequest();
+    }
 
     if (id == "market_pb.GetRatesRequest") {
         return new market_pb.GetRatesRequest();

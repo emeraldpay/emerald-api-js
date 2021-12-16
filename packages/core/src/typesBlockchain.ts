@@ -89,6 +89,76 @@ export interface TxStatusResponse {
     confirmations: number
 }
 
+/**
+ * Request for a Fee Estimation
+ */
+export interface EstimateFeeRequest {
+    // blockchain
+    blockchain: number;
+    mode: EstimationMode;
+    blocks: number;
+}
+
+/**
+ * Mode of estimation:
+ *  avgLast - Average over last transaction in each block
+ *  avgTail5 - Average over transaction 5th from the end in each block
+ *  avgTail20 - Average over transaction 20th from the end in each block
+ *  avgTail50 - Average over transaction 50th from the end in each block
+ *  minAlways - Minimal fee that would be accepted by every last block
+ *  avgMiddle - Average over transaction in the middle of each block
+ *  avgTop - Average over transaction in head of each block. Note that for Bitcoin it doesn't count COINBASE tx as top tx.
+ */
+export type EstimationMode = "avgLast" | "avgTail5" | "avgTail20" | "avgTail50" | "minAlways" | "avgMiddle" | "avgTop";
+
+export interface EthereumStdFees {
+    type: "ethereumStd",
+    /**
+     * Fee value in Wei
+     */
+    fee: string;
+}
+export interface EthereumExtFees {
+    type: "ethereumExt";
+    /**
+     * Estimated fee that would be actually paid. I.e. it's the Base Fee + Priority Fee
+     */
+    expect: string;
+    /**
+     * Priority Fee in Wei
+     */
+    priority: string;
+    /**
+     * Max Fee value in Wei. Note that it only indicated current preference and actual Max may be significantly lower, depending on the usage scenario.
+     */
+    max: string;
+}
+export interface BitcoinStdFees {
+    type: "bitcoinStd";
+    /**
+     * Fee in Satoshi per Kilobyte. Note that the actual fee calculation MUST divide it by 1024 at the last step to get a fair fee.
+     */
+    satPerKb: number;
+}
+
+// export interface EstimateFeeResponse {
+//     type: "ethereumStd" | "ethereumExt" | "bitcoinStd";
+// }
+
+type EstimateFeeResponse = EthereumExtFees | EthereumStdFees | BitcoinStdFees;
+
+export function isEthereumStdFees(obj: EstimateFeeResponse): obj is EthereumStdFees {
+    return obj.type == "ethereumStd"
+}
+
+export function isEthereumExtFees(obj: EstimateFeeResponse): obj is EthereumExtFees {
+    return obj.type == "ethereumExt"
+}
+
+export function isBitcoinStdFees(obj: EstimateFeeResponse): obj is BitcoinStdFees {
+    return obj.type == "bitcoinStd"
+}
+
 export class ConvertBlockchain {
     private factory: MessageFactory;
 
@@ -246,6 +316,64 @@ export class ConvertBlockchain {
                 txid: resp.getTxId(),
                 block
             }
+        }
+    }
+
+    public estimationMode(mode: EstimationMode): blockchain_pb.FeeEstimationMode {
+        switch (mode) {
+            case "avgLast":
+                return blockchain_pb.FeeEstimationMode.AVG_LAST;
+            case "avgMiddle":
+                return blockchain_pb.FeeEstimationMode.AVG_MIDDLE;
+            case "avgTop":
+                return blockchain_pb.FeeEstimationMode.AVG_TOP;
+            case "avgTail5":
+                return blockchain_pb.FeeEstimationMode.AVG_T5;
+            case "avgTail20":
+                return blockchain_pb.FeeEstimationMode.AVG_T20;
+            case "avgTail50":
+                return blockchain_pb.FeeEstimationMode.AVG_T50;
+            case "minAlways":
+                return blockchain_pb.FeeEstimationMode.MIN_ALWAYS;
+        }
+        return blockchain_pb.FeeEstimationMode.INVALID;
+    }
+
+    public estimateFeeRequest(req: EstimateFeeRequest): blockchain_pb.EstimateFeeRequest {
+        let p = this.factory("blockchain_pb.EstimateFeeRequest");
+        p.setChain(req.blockchain);
+        p.setMode(this.estimationMode(req.mode));
+        p.setBlocks(req.blocks);
+        return p;
+    }
+
+    public estimateFeeResponse(): DataMapper<blockchain_pb.EstimateFeeResponse, EstimateFeeResponse>  {
+        return (resp) => {
+            if (resp.hasEthereumextended()) {
+                let value = resp.getEthereumextended();
+                let result: EthereumExtFees = {
+                    type: "ethereumExt",
+                    expect: value.getExpect(),
+                    max: value.getMax(),
+                    priority: value.getPriority(),
+                }
+                return result
+            }
+            if (resp.hasEthereumstd()) {
+                let result: EthereumStdFees = {
+                    type: "ethereumStd",
+                    fee: resp.getEthereumstd().getFee()
+                }
+                return result;
+            }
+            if (resp.hasBitcoinstd()) {
+                let result: BitcoinStdFees = {
+                    type: "bitcoinStd",
+                    satPerKb: resp.getBitcoinstd().getSatperkb()
+                }
+                return result;
+            }
+            throw Error("Unsupported EstimateFee response")
         }
     }
 }

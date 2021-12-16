@@ -3,3 +3,5 @@ proto/
 lib/
 *.iml
 package-lock.json
+*.log
+*.tar.gz

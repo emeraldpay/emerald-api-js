@@ -8,7 +8,7 @@ import {
     ChainHead,
     ConnectionListener,
     ConvertBlockchain,
-    DataMapper,
+    DataMapper, EstimateFeeResponse, EstimateFeeRequest,
     MessageFactory,
     NativeCallError,
     NativeCallItem,
@@ -21,7 +21,6 @@ import {
 import {callSingle, callStream, NativeChannel} from "../channel";
 import {classFactory} from "./Factory";
 import {AddressBalance, BalanceRequest} from "@emeraldpay/api";
-
 
 export class BlockchainClient {
     private readonly client: blockchain_grpc_pb.BlockchainClient;
@@ -75,5 +74,12 @@ export class BlockchainClient {
 
         let call = callStream(this.client.subscribeTxStatus.bind(this.client), mapper);
         return readOnce(this.channel, call, protoRequest);
+    }
+
+    public estimateFees(request: EstimateFeeRequest): Promise<EstimateFeeResponse> {
+        let protoRequest = this.convert.estimateFeeRequest(request);
+        let mapper: DataMapper<blockchain_pb.EstimateFeeResponse, EstimateFeeResponse> = this.convert.estimateFeeResponse();
+        let call = callSingle(this.client.estimateFee.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, protoRequest));
     }
 }
