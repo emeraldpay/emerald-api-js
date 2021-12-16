@@ -141,11 +141,7 @@ export interface BitcoinStdFees {
     satPerKb: number;
 }
 
-// export interface EstimateFeeResponse {
-//     type: "ethereumStd" | "ethereumExt" | "bitcoinStd";
-// }
-
-type EstimateFeeResponse = EthereumExtFees | EthereumStdFees | BitcoinStdFees;
+export type EstimateFeeResponse = EthereumExtFees | EthereumStdFees | BitcoinStdFees;
 
 export function isEthereumStdFees(obj: EstimateFeeResponse): obj is EthereumStdFees {
     return obj.type == "ethereumStd"
