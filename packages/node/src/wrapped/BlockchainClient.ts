@@ -1,4 +1,4 @@
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as blockchain_grpc_pb from '../generated/blockchain_grpc_pb';
 import * as blockchain_pb from '../generated/blockchain_pb';
 import * as common_pb from "../generated/common_pb";
@@ -28,7 +28,12 @@ export class BlockchainClient {
     private readonly convert = new ConvertBlockchain(classFactory);
 
     constructor(address: string, credentials: grpc.ChannelCredentials) {
-        this.client = new blockchain_grpc_pb.BlockchainClient(address, credentials);
+        const [host] = address.split(':');
+
+        this.client = new blockchain_grpc_pb.BlockchainClient(address, credentials, {
+            'grpc.default_authority': host,
+            'grpc.ssl_target_name_override': host,
+        });
         this.channel = new NativeChannel(this.client);
     }
 

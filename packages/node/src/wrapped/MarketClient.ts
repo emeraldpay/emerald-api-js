@@ -1,4 +1,4 @@
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as prices_grpc_pb from '../generated/market_grpc_pb';
 import {
     ConnectionListener, ConvertMarket, GetRatesRequest,
@@ -15,7 +15,12 @@ export class MarketClient {
     private readonly convert = new ConvertMarket(classFactory);
 
     constructor(address: string, credentials: grpc.ChannelCredentials) {
-        this.client = new prices_grpc_pb.MarketClient(address, credentials);
+        const [host] = address.split(':');
+
+        this.client = new prices_grpc_pb.MarketClient(address, credentials, {
+            'grpc.default_authority': host,
+            'grpc.ssl_target_name_override': host,
+        });
         this.channel = new NativeChannel(this.client);
     }
 

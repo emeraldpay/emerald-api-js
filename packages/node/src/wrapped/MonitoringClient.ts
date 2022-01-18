@@ -1,4 +1,4 @@
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as monitoring_grpc_pb from '../generated/monitoring_grpc_pb';
 import * as monitoring_pb from '../generated/monitoring_pb';
 import {ConnectionListener, publishToPromise, readOnce} from "@emeraldpay/api";
@@ -9,7 +9,12 @@ export class MonitoringClient {
     readonly channel: NativeChannel;
 
     constructor(address: string, credentials: grpc.ChannelCredentials) {
-        this.client = new monitoring_grpc_pb.MonitoringClient(address, credentials);
+        const [host] = address.split(':');
+
+        this.client = new monitoring_grpc_pb.MonitoringClient(address, credentials, {
+            'grpc.default_authority': host,
+            'grpc.ssl_target_name_override': host,
+        });
         this.channel = new NativeChannel(this.client);
     }
 

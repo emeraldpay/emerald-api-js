@@ -1,7 +1,8 @@
+.idea/
+lib/
 node_modules/
 proto/
-lib/
 *.iml
-package-lock.json
 *.log
 *.tar.gz
+package-lock.json

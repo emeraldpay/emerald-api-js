@@ -1,57 +1,57 @@
 {
-	"name": "@emeraldpay/api-node",
-	"version": "0.2.0-beta.2",
-	"description": "Node client for Emerald gRPC APIs",
-	"private": false,
-	"license": "Apache-2.0",
-	"main": "lib/index.js",
-	"types": "lib/index.d.ts",
-	"files": [
-		"lib/**/*"
-	],
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/emeraldpay/emerald-api-js.git"
-	},
-	"keywords": [
-		"grpc",
-		"api",
-		"emerald",
-		"emerald-pay",
-		"emerald-wallet"
-	],
-	"scripts": {
-		"clean": "rimraf lib && rimraf src/generated",
-		"init": "npm run init:dirs",
-		"init:dirs": "mkdir -p lib/generated",
-		"generate": "npm run generate:js && npm run generate:ts && npm run generate:copy",
-		"generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./lib/generated --grpc_out=./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ../../api-definitions/proto/ ../../api-definitions/proto/*.proto",
-		"generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
-		"generate:copy": "rimraf src/generated && cp -r lib/generated src/",
-		"build": "npm run clean && npm run init && npm run generate && npm run build:ts",
-		"build:ts": "tsc",
-		"test": "jest",
-		"prepublishOnly": "npm run clean && npm run build && npm run test"
-	},
-	"dependencies": {
-		"@emeraldpay/api": "0.2.0-beta.2",
-		"@types/google-protobuf": "^3.7.2",
-		"google-protobuf": "^3.10.0",
-		"grpc": "^1.24.2",
-		"hash.js": "^1.1.7",
-		"protobufjs": "^6.8.8",
-		"text-encoding": "^0.7.0"
-	},
-	"devDependencies": {
-		"@types/jest": "^24.0.23",
-		"@types/node": "^12.0.0",
-		"@types/text-encoding": "0.0.35",
-		"grpc-tools": "1.8.0",
-		"grpc_tools_node_protoc_ts": "2.5.7",
-		"jest": "24.9.0",
-		"uuid": "^3.3.3",
-		"rimraf": "^2.6.3",
-		"ts-jest": "24.1.0",
-		"typescript": "^3.4.2"
-	}
+  "name": "@emeraldpay/api-node",
+  "version": "0.2.0-beta.2",
+  "description": "Node client for Emerald gRPC APIs",
+  "private": false,
+  "license": "Apache-2.0",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib/**/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emeraldpay/emerald-api-js.git"
+  },
+  "keywords": [
+    "grpc",
+    "api",
+    "emerald",
+    "emerald-pay",
+    "emerald-wallet"
+  ],
+  "scripts": {
+    "clean": "rimraf lib && rimraf src/generated",
+    "init": "npm run init:dirs",
+    "init:dirs": "mkdir -p lib/generated",
+    "generate": "npm run generate:js && npm run generate:ts && npm run generate:copy",
+    "generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./lib/generated --grpc_out=grpc_js:./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ../../api-definitions/proto/ ../../api-definitions/proto/*.proto",
+    "generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
+    "generate:copy": "rimraf src/generated && cp -r lib/generated src/",
+    "build": "npm run clean && npm run init && npm run generate && npm run build:ts",
+    "build:ts": "tsc",
+    "test": "jest",
+    "prepublishOnly": "npm run clean && npm run build && npm run test"
+  },
+  "dependencies": {
+    "@emeraldpay/api": "0.2.0-beta.2",
+    "@grpc/grpc-js": "^1.5.1",
+    "@types/google-protobuf": "^3.7.2",
+    "google-protobuf": "^3.10.0",
+    "hash.js": "^1.1.7",
+    "protobufjs": "^6.8.8",
+    "text-encoding": "^0.7.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.23",
+    "@types/node": "^12.0.0",
+    "@types/text-encoding": "0.0.35",
+    "grpc-tools": "1.11.2",
+    "grpc_tools_node_protoc_ts": "5.3.2",
+    "jest": "24.9.0",
+    "uuid": "^3.3.3",
+    "rimraf": "^2.6.3",
+    "ts-jest": "24.1.0",
+    "typescript": "^3.8.3"
+  }
 }

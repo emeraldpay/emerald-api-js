@@ -1,4 +1,4 @@
-import {credentials, Metadata, ChannelCredentials} from "grpc";
+import {credentials, Metadata, ChannelCredentials} from "@grpc/grpc-js";
 import {AuthMetadata, JwtSignature, TokenSignature} from "./signature";
 import {AuthClient} from './wrapped/Auth';
 import {AuthRequest, AuthResponse, TempAuth} from "./generated/auth_pb";

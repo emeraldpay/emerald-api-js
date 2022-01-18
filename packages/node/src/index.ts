@@ -24,7 +24,7 @@ export {IBlockchainClient, BlockchainClient as BlockchainClientPb} from './gener
 
 export {CHAINS, ChainSpec, chainByCode} from './chain';
 
-export {credentials as credentialsPb} from 'grpc';
+export {credentials as credentialsPb} from '@grpc/grpc-js';
 
 export {MarketClient} from './wrapped/MarketClient';
 export {BlockchainClient} from './wrapped/BlockchainClient';
