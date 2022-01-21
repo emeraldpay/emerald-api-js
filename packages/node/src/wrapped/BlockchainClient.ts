@@ -28,12 +28,7 @@ export class BlockchainClient {
     private readonly convert = new ConvertBlockchain(classFactory);
 
     constructor(address: string, credentials: grpc.ChannelCredentials) {
-        const [host] = address.split(':');
-
-        this.client = new blockchain_grpc_pb.BlockchainClient(address, credentials, {
-            'grpc.default_authority': host,
-            'grpc.ssl_target_name_override': host,
-        });
+        this.client = new blockchain_grpc_pb.BlockchainClient(address, credentials);
         this.channel = new NativeChannel(this.client);
     }
 

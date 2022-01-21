@@ -1,7 +1,7 @@
-import {credentials, Metadata, ChannelCredentials} from "@grpc/grpc-js";
-import {AuthMetadata, JwtSignature, TokenSignature} from "./signature";
-import {AuthClient} from './wrapped/Auth';
-import {AuthRequest, AuthResponse, TempAuth} from "./generated/auth_pb";
+import { ChannelCredentials, credentials, Metadata } from "@grpc/grpc-js";
+import { AuthRequest, AuthResponse, TempAuth } from "./generated/auth_pb";
+import { AuthMetadata, JwtSignature, TokenSignature } from "./signature";
+import { AuthClient } from './wrapped/Auth';
 
 const packageJson = require('../package.json');
 
@@ -14,27 +14,22 @@ export enum AuthenticationStatus {
 export type AuthenticationListener = (status: AuthenticationStatus) => void;
 
 export class CredentialsContext {
-    url: string;
-    private readonly ca: Buffer;
-    private readonly ssl: ChannelCredentials;
-    private authentication: EmeraldAuthentication;
-    private token?: AuthMetadata;
+    public url: string;
     private readonly agent: string[];
+    private readonly channelCredentials: ChannelCredentials;
+    private readonly ssl: ChannelCredentials;
     private readonly userId: string;
+    private authentication: EmeraldAuthentication;
     private listener?: AuthenticationListener;
     private status = AuthenticationStatus.AUTHENTICATING;
-    private channelCredentials: ChannelCredentials;
+    private token?: AuthMetadata;
 
-    constructor(url: string, ca: string | Buffer, agent: string[], userId: string) {
-        this.url = url;
-        if (typeof ca == 'string') {
-            this.ca = Buffer.from(ca, 'utf8')
-        } else {
-            this.ca = ca;
-        }
-        this.ssl = credentials.createSsl(this.ca);
+    constructor(url: string, agent: string[], userId: string) {
         this.agent = agent;
+        this.url = url;
         this.userId = userId;
+
+        this.ssl = credentials.createSsl();
 
         const ssl = this.getSsl();
         const callCredentials = credentials.createFromMetadataGenerator(
@@ -55,7 +50,8 @@ export class CredentialsContext {
                     callback(new Error("Unable to get token"));
                 })
             });
-        this.channelCredentials = credentials.combineChannelCredentials(ssl, callCredentials)
+
+        this.channelCredentials = credentials.combineChannelCredentials(ssl, callCredentials);
     }
 
     protected getSsl(): ChannelCredentials {
@@ -93,8 +89,8 @@ export class CredentialsContext {
     }
 }
 
-export function emeraldCredentials(url: string, ca: string | Buffer, agent: string[], userId: string): CredentialsContext {
-    return new CredentialsContext(url, ca, agent, userId);
+export function emeraldCredentials(url: string, agent: string[], userId: string): CredentialsContext {
+    return new CredentialsContext(url, agent, userId);
 }
 
 interface EmeraldAuthentication {

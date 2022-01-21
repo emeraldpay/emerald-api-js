@@ -12,7 +12,7 @@ export enum Blockchain {
     TESTNET_RINKEBY = 10007,
 }
 
-export type AssetCode = 'ETHER' | 'DAI' | 'TETHER' | 'BTC';
+export type AssetCode = string;
 
 export type Asset = {
     blockchain: Blockchain,

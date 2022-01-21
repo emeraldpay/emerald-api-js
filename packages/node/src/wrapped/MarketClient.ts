@@ -15,12 +15,7 @@ export class MarketClient {
     private readonly convert = new ConvertMarket(classFactory);
 
     constructor(address: string, credentials: grpc.ChannelCredentials) {
-        const [host] = address.split(':');
-
-        this.client = new prices_grpc_pb.MarketClient(address, credentials, {
-            'grpc.default_authority': host,
-            'grpc.ssl_target_name_override': host,
-        });
+        this.client = new prices_grpc_pb.MarketClient(address, credentials);
         this.channel = new NativeChannel(this.client);
     }
 
