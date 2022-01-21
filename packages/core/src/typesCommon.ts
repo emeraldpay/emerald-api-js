@@ -12,7 +12,10 @@ export enum Blockchain {
     TESTNET_RINKEBY = 10007,
 }
 
-export type AssetCode = 'ETHER' | 'DAI' | 'TETHER' | 'BTC';
+/**
+ * Asset code supported by server. Could be ETHER, USDC, USDT, DAI, or any custom token configured on server.
+ */
+export type AssetCode = string;
 
 export type Asset = {
     blockchain: Blockchain,
