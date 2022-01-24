@@ -100,6 +100,25 @@ describe("BlockchainClient", () => {
         })
     });
 
+    test("Get erc-20 token balance", (done) => {
+        const client = api.blockchain();
+
+        client.getBalance(
+            {
+                asset: {blockchain: Blockchain.ETHEREUM, code: "USDC"},
+                address: "0xae2d4617c862309a3d75a0ffb358c7a5009c673f"
+            }
+        ).then((value) => {
+            console.log("Balance", value);
+            expect(value.length).toBe(1);
+            expect(value[0].address).toBe("0xae2d4617c862309a3d75a0ffb358c7a5009c673f");
+            done()
+        }).catch((err) => {
+            console.warn("balance failed", err);
+            done.fail(err)
+        })
+    });
+
     //TODO fix bitcoin on server
     xtest("Get bitcoin balance for address", (done) => {
         const client = api.blockchain();
