@@ -1,4 +1,4 @@
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as blockchain_grpc_pb from '../generated/blockchain_grpc_pb';
 import * as blockchain_pb from '../generated/blockchain_pb';
 import * as common_pb from "../generated/common_pb";

@@ -7,8 +7,8 @@ import {
     Publisher, RemoteCall,
     StateListener
 } from "@emeraldpay/api";
-import * as grpc from "grpc";
-import {Call, ClientReadableStream, ClientUnaryCall} from "grpc";
+import * as grpc from "@grpc/grpc-js";
+import {Call, ClientReadableStream, ClientUnaryCall} from "@grpc/grpc-js";
 
 function fromConnectivityState(state: ConnectivityState): grpc.connectivityState {
     if (state === ConnectivityState.CONNECTING) {
@@ -122,7 +122,7 @@ type SingleCallback<T> = (error: grpc.ServiceError | null, response: T) => void
 export function callSingle<R, I, O>(delegate: (req: R, metadata: grpc.Metadata, callback: SingleCallback<I>) => ClientUnaryCall, mapper: DataMapper<I, O>): RemoteCall<R, O> {
     return (req) => {
         let source = new NativeCallPublisher();
-        delegate(req, null, source.handler());
+        delegate(req, new grpc.Metadata(), source.handler());
         return new MappingPublisher(source, mapper)
     }
 }

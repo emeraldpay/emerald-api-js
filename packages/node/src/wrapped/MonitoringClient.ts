@@ -1,4 +1,4 @@
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as monitoring_grpc_pb from '../generated/monitoring_grpc_pb';
 import * as monitoring_pb from '../generated/monitoring_pb';
 import {ConnectionListener, publishToPromise, readOnce} from "@emeraldpay/api";

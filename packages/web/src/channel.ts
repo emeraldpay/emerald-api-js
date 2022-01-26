@@ -1,14 +1,14 @@
 import {
-    AlwaysRepeat,
     Channel,
     ConnectivityState,
     DataMapper,
     ManagedPublisher,
-    MappingPublisher, OnceSuccess,
-    Publisher, PromisePublisher,
-    RemoteCall, Retry, StandardExecutor
+    MappingPublisher,
+    PromisePublisher,
+    Publisher,
+    RemoteCall,
 } from "@emeraldpay/api";
-import {ClientReadableStream} from "grpc-web";
+import { ClientReadableStream } from "grpc-web";
 
 export class WebChannel implements Channel {
     getState(): ConnectivityState {

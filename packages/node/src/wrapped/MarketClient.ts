@@ -1,4 +1,4 @@
-import * as grpc from "grpc";
+import * as grpc from "@grpc/grpc-js";
 import * as prices_grpc_pb from '../generated/market_grpc_pb';
 import {
     ConnectionListener, ConvertMarket, GetRatesRequest,

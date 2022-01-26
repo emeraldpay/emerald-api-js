@@ -1,6 +1,6 @@
 import {hmac, sha256} from "hash.js";
 import {TextEncoder} from 'text-encoding';
-import {Metadata} from "grpc";
+import {Metadata} from "@grpc/grpc-js";
 import {AuthenticationStatus} from "./credentials";
 
 let utf8Encode = new TextEncoder();
