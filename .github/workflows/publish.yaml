@@ -39,6 +39,9 @@ jobs:
       - name: Configure Node.js Path
         run: npm config set scripts-prepend-node-path true
 
+      - name: Build
+        run: yarn workspaces run build
+
       - name: Publish to NPM
         run: npm publish --access=public
         working-directory: packages/${{ matrix.package }}
