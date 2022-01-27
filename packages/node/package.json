@@ -1,6 +1,6 @@
 {
   "name": "@emeraldpay/api-node",
-  "version": "0.3.0-alpha.1",
+  "version": "0.3.0-alpha.2",
   "description": "Node client for Emerald gRPC APIs",
   "private": false,
   "license": "Apache-2.0",
@@ -34,7 +34,7 @@
     "prepublishOnly": "npm run clean && npm run build && npm run test"
   },
   "dependencies": {
-    "@emeraldpay/api": "0.3.0-alpha.1",
+    "@emeraldpay/api": "0.3.0-alpha.2",
     "@grpc/grpc-js": "^1.5.1",
     "@types/google-protobuf": "^3.7.2",
     "google-protobuf": "^3.10.0",
