@@ -6,11 +6,13 @@ on:
     branches:
       - master
       - release/*
+      - ci/*
   # on a pull request
   pull_request:
     branches:
       - master
       - release/*
+      - ci/*
 
 jobs:
 
@@ -25,7 +27,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: "12.x"
+          node-version: "16.x"
       - name: Install Libs
         run: yarn install
       - name: Install gRPC
@@ -37,6 +39,9 @@ jobs:
   tests:
     name: Test All
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        workspace: [ "api", "api-node", "api-web" ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -45,7 +50,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: "12.x"
+          node-version: "16.x"
       - name: Install Libs
         run: yarn install
       - name: Install gRPC
@@ -54,9 +59,5 @@ jobs:
       - name: Build
         run: yarn workspaces run build
 
-      - name: Test (core)
-        run: yarn workspace @emeraldpay/api run test
-      - name: Test (node)
-        run: yarn workspace @emeraldpay/api-node run test
-      - name: Test (web)
-        run: yarn workspace @emeraldpay/api-web run test
+      - name: Test
+        run: yarn workspace @emeraldpay/${{ matrix.workspace }} run test

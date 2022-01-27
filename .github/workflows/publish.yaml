@@ -6,8 +6,15 @@ on:
 
 jobs:
   npm:
-    name: Publish to NPM
+    name: Publish to NPM ${{ matrix.package }}
+    strategy:
+      matrix:
+        # it's a DIRECTORY insides the ./src/
+        package: [ "core", "node", "web" ]
     runs-on: ubuntu-latest
+    # CONTINUE because it can fail for completely irrelevant reason like IO timeout and that would prevent the
+    # whole job from restarting because some part of the packages are already published and would fail anyway
+    continue-on-error: true
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
@@ -18,7 +25,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v1
         with:
-          node-version: "12.x"
+          node-version: "16.x"
           always-auth: true
 
       - name: Configure NPM
@@ -32,14 +39,6 @@ jobs:
       - name: Configure Node.js Path
         run: npm config set scripts-prepend-node-path true
 
-      - name: Publish to NPM (core)
+      - name: Publish to NPM
         run: npm publish --access=public
-        working-directory: packages/core
-
-      - name: Publish to NPM (node)
-        run: npm publish --access=public
-        working-directory: packages/node
-
-      - name: Publish to NPM (web)
-        run: npm publish --access=public
-        working-directory: packages/web
+        working-directory: packages/${{ matrix.package }}
