@@ -37,7 +37,7 @@ jobs:
         run: yarn workspaces run build
 
   tests:
-    name: Test All
+    name: Test ${{ matrix.workspace }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
