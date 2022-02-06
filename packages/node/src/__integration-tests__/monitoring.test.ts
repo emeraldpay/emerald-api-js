@@ -9,8 +9,7 @@ describe("MonitoringClient", () => {
         api = EmeraldApi.devApi();
     });
 
-    //TODO fix on server
-    xtest('Ping', async () => {
+    test('Ping', async () => {
         const client = api.monitoring();
         let act = await client.ping();
         expect(act).toBe(true);
