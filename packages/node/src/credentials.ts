@@ -109,8 +109,7 @@ class JwtUserAuth implements EmeraldAuthentication {
         const tempAuth = new TempAuth();
         tempAuth.setId(userId);
         authRequest.setTempAuth(tempAuth);
-        authRequest.setAgentDetailsList(agent);
-        authRequest.addAgentDetails(`emerald-client-node/${packageJson.version}`);
+        authRequest.setAgentDetailsList([...agent, `emerald-client-node/${packageJson.version}`]);
         authRequest.setCapabilitiesList(["JWT_RS256", "NONCE_HMAC_SHA256"]);
         authRequest.setScopesList(["BASIC_USER"]);
         return this.client.authenticate(authRequest).then((result: AuthResponse) => {
