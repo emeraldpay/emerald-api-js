@@ -7,8 +7,11 @@ export class EmeraldApi {
     private readonly hostname: string;
     private readonly credentials: CredentialsContext;
 
+    static defaultApi(): EmeraldApi {
+        return new EmeraldApi("api.emrld.io:443")
+    }
     static devApi(): EmeraldApi {
-        return new EmeraldApi("api2.emeraldpay.dev:443")
+        return new EmeraldApi("api.emeraldpay.dev:443")
     }
 
     constructor(hostname: string) {
