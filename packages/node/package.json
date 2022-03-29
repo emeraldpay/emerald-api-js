@@ -38,9 +38,7 @@
     "@grpc/grpc-js": "^1.5.1",
     "@types/google-protobuf": "^3.7.2",
     "google-protobuf": "^3.10.0",
-    "hash.js": "^1.1.7",
-    "protobufjs": "^6.8.8",
-    "text-encoding": "^0.7.0"
+    "protobufjs": "^6.8.8"
   },
   "devDependencies": {
     "@types/jest": "^24.0.23",

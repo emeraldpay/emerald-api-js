@@ -1,6 +1,6 @@
 import { ChannelCredentials, credentials, Metadata } from "@grpc/grpc-js";
 import { AuthRequest, AuthResponse, TempAuth } from "./generated/auth_pb";
-import { AuthMetadata, JwtSignature, TokenSignature } from "./signature";
+import { AuthMetadata, JwtSignature } from "./signature";
 import { AuthClient } from './wrapped/Auth';
 
 const packageJson = require('../package.json');
@@ -110,7 +110,7 @@ class JwtUserAuth implements EmeraldAuthentication {
         tempAuth.setId(userId);
         authRequest.setTempAuth(tempAuth);
         authRequest.setAgentDetailsList([...agent, `emerald-client-node/${packageJson.version}`]);
-        authRequest.setCapabilitiesList(["JWT_RS256", "NONCE_HMAC_SHA256"]);
+        authRequest.setCapabilitiesList(["JWT_RS256"]);
         authRequest.setScopesList(["BASIC_USER"]);
         return this.client.authenticate(authRequest).then((result: AuthResponse) => {
             if (!result.getSucceed()) {
@@ -118,8 +118,6 @@ class JwtUserAuth implements EmeraldAuthentication {
             }
             if (result.getType() == "JWT_RS256") {
                 return new JwtSignature(result.getToken(), new Date(result.getExpire()));
-            } else if (result.getType() == "NONCE_HMAC_SHA256") {
-                return new TokenSignature(result.getToken(), result.getSecret());
             } else {
                 throw new Error("Unsupported auth: " + result.getType())
             }
