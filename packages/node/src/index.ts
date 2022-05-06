@@ -29,5 +29,6 @@ export {credentials as credentialsPb} from '@grpc/grpc-js';
 export {MarketClient} from './wrapped/MarketClient';
 export {BlockchainClient} from './wrapped/BlockchainClient';
 export {MonitoringClient} from './wrapped/MonitoringClient';
+export {TransactionClient} from './wrapped/TransactionClient';
 
 export {emeraldCredentials, CredentialsContext, AuthenticationStatus, AuthenticationListener} from './credentials';

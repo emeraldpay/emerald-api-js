@@ -36,6 +36,8 @@ export {
     Blockchain, Asset, SingleAddress, AnyAddress, MultiAddress, AssetCode
 } from './typesCommon';
 
+export * as transaction from './typesTransaction'
+
 export {
     Pair, GetRatesRequest, Rate, GetRatesResponse,
     AnyCurrency, TestCurrency, CountryCurrency, StablecoinCurrency, CryptoCurrency,

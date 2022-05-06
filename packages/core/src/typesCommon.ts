@@ -1,3 +1,6 @@
+import {MessageFactory} from "./convert";
+import * as common_pb from "./generated/common_pb";
+
 export enum Blockchain {
     UNSPECIFIED = 0,
     BITCOIN = 1,
@@ -29,6 +32,12 @@ export interface DetailedXpubAddress {
     start?: number;
     limit?: number;
     unused_limit?: number;
+}
+
+export interface BlockInfo {
+    height: number;
+    hash: string;
+    timestamp: Date;
 }
 
 export function isSingleAddress(address: AnyAddress): address is SingleAddress {
@@ -68,4 +77,75 @@ export function asDetailedXpub(adress: XpubAddress): DetailedXpubAddress {
         }
     }
     return adress
+}
+
+export class ConvertCommon {
+    private readonly factory: MessageFactory;
+
+    constructor(factory: MessageFactory) {
+        this.factory = factory;
+    }
+
+    public chain(blockchain: Blockchain): common_pb.Chain {
+        let result: common_pb.Chain = this.factory("common_pb.Chain");
+        result.setType(blockchain.valueOf());
+        return result
+    }
+
+    public pbAsset(asset: Asset): common_pb.Asset {
+        let protoAsset: common_pb.Asset = this.factory("common_pb.Asset");
+        protoAsset.setChain(asset.blockchain.valueOf());
+        protoAsset.setCode(asset.code);
+        return protoAsset;
+    }
+
+    public asset(asset: common_pb.Asset): Asset {
+        return {
+            blockchain: asset.getChain().valueOf(),
+            // @ts-ignore
+            code: asset.getCode()
+        };
+    }
+
+    public blockInfo(blockInfo: common_pb.BlockInfo): BlockInfo {
+        return {
+            height: blockInfo.getHeight(),
+            hash: blockInfo.getBlockId(),
+            timestamp: new Date(blockInfo.getTimestamp()),
+        }
+    }
+
+    public pbAnyAddress(address: AnyAddress): common_pb.AnyAddress {
+        let protoAnyAddress: common_pb.AnyAddress = this.factory("common_pb.AnyAddress");
+        if (isSingleAddress(address)) {
+            let protoSingleAddress: common_pb.SingleAddress = this.factory("common_pb.SingleAddress");
+            protoSingleAddress.setAddress(address);
+            protoAnyAddress.setAddressSingle(protoSingleAddress);
+        } else if (isXpubAddress(address)) {
+            let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
+            let xpub = asDetailedXpub(address);
+            protoXpubAddress.setXpub(xpub.xpub);
+            if (xpub.start) {
+                protoXpubAddress.setStart(xpub.start);
+            }
+            if (typeof xpub.limit === "number") {
+                protoXpubAddress.setLimit(xpub.limit);
+            } else {
+                protoXpubAddress.setLimit(100);
+            }
+            if (xpub.unused_limit && xpub.unused_limit > 0) {
+                protoXpubAddress.setUnusedLimit(xpub.unused_limit)
+            }
+            protoAnyAddress.setAddressXpub(protoXpubAddress);
+        } else if (isMultiAddress(address)) {
+            let protoMultiAddress: common_pb.MultiAddress = this.factory("common_pb.MultiAddress");
+            address.forEach((address) => {
+                let protoSingleAddress: common_pb.SingleAddress = this.factory("common_pb.SingleAddress");
+                protoSingleAddress.setAddress(address);
+                protoMultiAddress.addAddresses(protoSingleAddress);
+            });
+            protoAnyAddress.setAddressMulti(protoMultiAddress);
+        }
+        return protoAnyAddress;
+    }
 }

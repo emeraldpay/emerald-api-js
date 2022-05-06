@@ -1,16 +1,7 @@
 import * as blockchain_pb from "./generated/blockchain_pb";
 import * as common_pb from "./generated/common_pb";
 import {DataMapper} from "./Publisher";
-import {
-    AnyAddress,
-    Asset,
-    Blockchain,
-    isMultiAddress,
-    isSingleAddress,
-    SingleAddress,
-    isXpubAddress,
-    asDetailedXpub
-} from "./typesCommon";
+import {AnyAddress, Asset, Blockchain, ConvertCommon, SingleAddress} from "./typesCommon";
 import {MessageFactory} from "./convert";
 import {TextDecoder, TextEncoder} from "text-encoding";
 
@@ -84,7 +75,6 @@ export interface TxStatusResponse {
         height: number;
         hash: string;
         timestamp: Date;
-        weight: string;
     },
     confirmations: number
 }
@@ -156,10 +146,12 @@ export function isBitcoinStdFees(obj: EstimateFeeResponse): obj is BitcoinStdFee
 }
 
 export class ConvertBlockchain {
-    private factory: MessageFactory;
+    private readonly factory: MessageFactory;
+    private readonly common: ConvertCommon;
 
-    constructor(factory: MessageFactory) {
+    constructor(factory: MessageFactory, common: ConvertCommon = new ConvertCommon(factory)) {
         this.factory = factory;
+        this.common = common;
     }
 
     public chain(blockchain: Blockchain): common_pb.Chain {
@@ -212,57 +204,20 @@ export class ConvertBlockchain {
 
     public balanceRequest(req: BalanceRequest): blockchain_pb.BalanceRequest {
         let result: blockchain_pb.BalanceRequest = this.factory("blockchain_pb.BalanceRequest");
-        let protoAsset: common_pb.Asset = this.factory("common_pb.Asset");
-        protoAsset.setChain(req.asset.blockchain.valueOf());
-        protoAsset.setCode(req.asset.code);
-        result.setAsset(protoAsset);
+        result.setAsset(this.common.pbAsset(req.asset));
 
         if (typeof req.includeUtxo == "boolean") {
             result.setIncludeUtxo(req.includeUtxo);
         }
 
-        let protoAnyAddress: common_pb.AnyAddress = this.factory("common_pb.AnyAddress");
-        if (isSingleAddress(req.address)) {
-            let protoSingleAddress: common_pb.SingleAddress = this.factory("common_pb.SingleAddress");
-            protoSingleAddress.setAddress(req.address);
-            protoAnyAddress.setAddressSingle(protoSingleAddress);
-        } else if (isXpubAddress(req.address)) {
-            let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
-            let xpub = asDetailedXpub(req.address);
-            protoXpubAddress.setXpub(xpub.xpub);
-            if (xpub.start) {
-                protoXpubAddress.setStart(xpub.start);
-            }
-            if (typeof xpub.limit === "number") {
-                protoXpubAddress.setLimit(xpub.limit);
-            } else {
-                protoXpubAddress.setLimit(100);
-            }
-            if (xpub.unused_limit && xpub.unused_limit > 0) {
-                protoXpubAddress.setUnusedLimit(xpub.unused_limit)
-            }
-            protoAnyAddress.setAddressXpub(protoXpubAddress);
-        } else if (isMultiAddress(req.address)) {
-            let protoMultiAddress: common_pb.MultiAddress = this.factory("common_pb.MultiAddress");
-            req.address.forEach((address) => {
-                let protoSingleAddress: common_pb.SingleAddress = this.factory("common_pb.SingleAddress");
-                protoSingleAddress.setAddress(address);
-                protoMultiAddress.addAddresses(protoSingleAddress);
-            });
-            protoAnyAddress.setAddressMulti(protoMultiAddress);
-        }
-        result.setAddress(protoAnyAddress);
+        result.setAddress(this.common.pbAnyAddress(req.address));
 
         return result
     }
 
     public balanceResponse(): DataMapper<blockchain_pb.AddressBalance, AddressBalance> {
         return (resp: blockchain_pb.AddressBalance) => {
-            let asset: Asset = {
-                blockchain: resp.getAsset().getChain().valueOf(),
-                // @ts-ignore
-                code: resp.getAsset().getCode()
-            };
+            let asset = this.common.asset(resp.getAsset());
             let utxo: Utxo[] | undefined = undefined;
             if (resp.getUtxoList().length > 0) {
                 utxo = resp.getUtxoList().map((it) => {
@@ -295,13 +250,7 @@ export class ConvertBlockchain {
         return (resp) => {
             let block;
             if (resp.hasBlock()) {
-                const pbBlock = resp.getBlock()!
-                block = {
-                    height: pbBlock.getHeight(),
-                    hash: pbBlock.getBlockId(),
-                    timestamp: new Date(pbBlock.getTimestamp()),
-                    weight: Buffer.from(pbBlock.getWeight_asU8()).toString('hex')
-                }
+                block = this.common.blockInfo(resp.getBlock()!)
             } else {
                 block = undefined;
             }
