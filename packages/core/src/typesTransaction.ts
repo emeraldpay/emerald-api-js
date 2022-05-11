@@ -3,6 +3,11 @@ import {MessageFactory} from "./convert";
 import * as transaction_pb from "./generated/transaction_pb";
 import {DataMapper} from "./Publisher";
 
+export enum Direction {
+    EARN = 0,
+    SPEND = 1,
+}
+
 export type BalanceRequest = {
     asset: Asset,
     address: AnyAddress,
@@ -24,6 +29,10 @@ export interface AddressTxRequest {
 }
 
 export interface AddressTxResponse {
+    /** self address */
+    address: SingleAddress;
+    /** index of address in xpub if xpub has been requested */
+    xpubIndex?: number;
     txId: string;
     /** N/A for mempool */
     block?: {
@@ -40,14 +49,14 @@ export interface AddressTxResponse {
 }
 
 export interface Transfer {
-    /** one of the addresses is self address, the second is counterparty address or self address for change */
-    addressFrom?: SingleAddress;
-    addressTo?: SingleAddress;
+    direction: Direction;
     amount: number;
     /** currently unimplemented for Bitcoin */
     fee?: number;
-    /** requested xpub indexes of addresses in transfer if detected */
-    xpubIndeces?: number[];
+    /** counterparty address or self address for change */
+    addresses: SingleAddress[];
+    /** indexes of counterparty addresses in xpub if xpub has been requested if detected */
+    xpubIndexes?: number[];
 }
 
 export class Convert {
@@ -86,11 +95,11 @@ export class Convert {
 
     private static transfer(transfer: transaction_pb.Transfer): Transfer {
         return {
-            addressFrom: transfer.getAddressFrom()?.getAddress(),
-            addressTo: transfer.getAddressTo()?.getAddress(),
+            direction: transfer.getDirection(),
             amount: transfer.getAmount()!,
             fee: transfer.getFee(),
-            xpubIndeces: transfer.getXpubIndexesList(),
+            addresses: transfer.getAddressesList().map( value => value.getAddress() ),
+            xpubIndexes: transfer.getXpubIndexesList(),
         }
     }
 
@@ -104,6 +113,8 @@ export class Convert {
             }
             let transfers = resp.getTransfersList().map(value => Convert.transfer(value))
             return {
+                address: resp.getAddress().getAddress(),
+                xpubIndex: resp.getXpubIndex(),
                 txId: resp.getTxId(),
                 block: block,
                 mempool: resp.getMempool(),
