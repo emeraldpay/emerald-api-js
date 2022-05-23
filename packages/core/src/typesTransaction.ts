@@ -1,6 +1,6 @@
 import {AnyAddress, Asset, Blockchain, ConvertCommon, SingleAddress} from "./typesCommon";
 import {MessageFactory} from "./convert";
-import * as transaction_pb from "./generated/transaction_pb";
+import * as transaction_message_pb from "./generated/transaction.message_pb";
 import {DataMapper} from "./Publisher";
 
 export enum Direction {
@@ -68,13 +68,13 @@ export class Convert {
         this.common = common;
     }
 
-    public balanceRequest(req: BalanceRequest): transaction_pb.BalanceRequest {
-        let result: transaction_pb.BalanceRequest = this.factory("transaction_pb.BalanceRequest");
+    public balanceRequest(req: BalanceRequest): transaction_message_pb.BalanceRequest {
+        let result: transaction_message_pb.BalanceRequest = this.factory("transaction_pb.BalanceRequest");
         return result.setAsset(this.common.pbAsset(req.asset))
             .setAddress(this.common.pbAnyAddress(req.address))
     }
 
-    public balanceResponse(): DataMapper<transaction_pb.BalanceResponse, BalanceResponse> {
+    public balanceResponse(): DataMapper<transaction_message_pb.BalanceResponse, BalanceResponse> {
         return (resp) => {
             return {
                 asset: this.common.asset(resp.getAsset()),
@@ -84,8 +84,8 @@ export class Convert {
         }
     }
 
-    public addressTxRequest(req: AddressTxRequest): transaction_pb.AddressTxRequest {
-        let result: transaction_pb.AddressTxRequest = this.factory("transaction_pb.AddressTxRequest");
+    public addressTxRequest(req: AddressTxRequest): transaction_message_pb.AddressTxRequest {
+        let result: transaction_message_pb.AddressTxRequest = this.factory("transaction_pb.AddressTxRequest");
         return result.setBlockchain(req.blockchain.valueOf())
             .setAddress(this.common.pbAnyAddress(req.address))
             .setCursor(req.cursor)
@@ -93,7 +93,7 @@ export class Convert {
             .setOnlyUnspent(req.onlyUnspent)
     }
 
-    private static transfer(transfer: transaction_pb.Transfer): Transfer {
+    private static transfer(transfer: transaction_message_pb.Transfer): Transfer {
         return {
             direction: transfer.getDirection(),
             amount: transfer.getAmount()!,
@@ -103,7 +103,7 @@ export class Convert {
         }
     }
 
-    public addressTxResponse(): DataMapper<transaction_pb.AddressTxResponse, AddressTxResponse> {
+    public addressTxResponse(): DataMapper<transaction_message_pb.AddressTxResponse, AddressTxResponse> {
         return (resp) => {
             let block;
             if (resp.hasBlock()) {
