@@ -2,6 +2,7 @@ import {BlockchainClient} from "./wrapped/BlockchainClient";
 import {CredentialsContext, emeraldCredentials} from "./credentials";
 import {MonitoringClient} from "./wrapped/MonitoringClient";
 import {MarketClient} from "./wrapped/MarketClient";
+import {TransactionClient} from "./wrapped/TransactionClient";
 
 export class EmeraldApi {
     private readonly hostname: string;
@@ -29,5 +30,9 @@ export class EmeraldApi {
 
     market(): MarketClient {
         return new MarketClient(this.hostname, this.credentials.getChannelCredentials());
+    }
+
+    transaction(): TransactionClient {
+        return new TransactionClient(this.hostname, this.credentials.getChannelCredentials());
     }
 }

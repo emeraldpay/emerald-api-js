@@ -2,6 +2,7 @@ import {WebChannel} from "./channel";
 import {InsightsClient} from "./wrapped/InsightsClient";
 import {BlockchainClient} from "./wrapped/BlockchainClient";
 import {MarketClient} from "./wrapped/MarketClient";
+import {TransactionClient} from "./wrapped/TransactionClient";
 
 const DEFAULT_HOSTNAME="https://api.emrld.io";
 
@@ -24,6 +25,10 @@ export class EmeraldApi {
 
     market(): MarketClient {
         return new MarketClient(this.hostname, this.channel);
+    }
+
+    transaction(): TransactionClient {
+        return new TransactionClient(this.hostname, this.channel);
     }
 
 }
