@@ -58,9 +58,9 @@ jobs:
 
       - name: Upload to GCP
         run: |
-          gsutil cp -n packages/api/*.tgz gs://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/
-          gsutil cp -n packages/api-node/*.tgz gs://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/
-          gsutil cp -n packages/api-web/*.tgz gs://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/
+          gsutil cp -n packages/core/*.tgz gs://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/
+          gsutil cp -n packages/node/*.tgz gs://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/
+          gsutil cp -n packages/web/*.tgz gs://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/
 
       - name: Links to published artifacts
         run: |
