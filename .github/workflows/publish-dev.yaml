@@ -65,6 +65,6 @@ jobs:
       - name: Links to published artifacts
         run: |
           echo "Publishing artifacts to:"
-          echo "  https://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/api-v${{ steps.package.outputs.version }}.tgz"
-          echo "  https://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/api-node-v${{ steps.package.outputs.version }}.tgz"
-          echo "  https://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/api-web-v${{ steps.package.outputs.version }}.tgz"
+          echo "  https://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/emeraldpay-api-v${{ steps.package.outputs.version }}.tgz"
+          echo "  https://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/emeraldpay-api-node-v${{ steps.package.outputs.version }}.tgz"
+          echo "  https://artifacts.emerald.cash/builds/emerald-api-js/${GITHUB_SHA::8}/emeraldpay-api-web-v${{ steps.package.outputs.version }}.tgz"
