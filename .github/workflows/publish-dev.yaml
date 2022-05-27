@@ -42,7 +42,7 @@ jobs:
         run: npm config set scripts-prepend-node-path true
 
       - name: Build all
-        run: yarn yarn workspaces run build
+        run: yarn workspaces run build
 
       - name: Pack - core
         run: yarn workspace @emeraldpay/api pack
