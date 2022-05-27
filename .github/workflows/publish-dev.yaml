@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout the code
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Setup GCP
         uses: google-github-actions/setup-gcloud@v0
@@ -33,11 +35,14 @@ jobs:
       - name: Configure NPM
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
-      - name: Instal JS dependencies
+      - name: Install JS dependencies
         run: yarn install
 
       - name: Configure Node.js Path
         run: npm config set scripts-prepend-node-path true
+
+      - name: Build all
+        run: yarn yarn workspaces run build
 
       - name: Pack - core
         run: yarn workspace @emeraldpay/api pack
