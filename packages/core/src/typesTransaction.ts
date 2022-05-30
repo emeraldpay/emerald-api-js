@@ -85,7 +85,7 @@ export class Convert {
     }
 
     public addressTxRequest(req: AddressTxRequest): transaction_message_pb.AddressTxRequest {
-        let result: transaction_message_pb.AddressTxRequest = this.factory("transaction_pb.AddressTxRequest");
+        let result: transaction_message_pb.AddressTxRequest = this.factory("transaction_message_pb.AddressTxRequest");
         return result.setBlockchain(req.blockchain.valueOf())
             .setAddress(this.common.pbAnyAddress(req.address))
             .setCursor(req.cursor)
