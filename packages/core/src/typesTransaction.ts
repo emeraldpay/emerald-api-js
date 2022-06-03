@@ -40,23 +40,26 @@ export interface AddressTxResponse {
         hash: string;
         timestamp: Date;
     },
-    mempool?: boolean;
+    mempool: boolean;
     /** N/A for mempool and last blocks (unconfirmed) */
-    cursor?: string;
-    /** rue if transaction is removed from blockchain */
-    removed?: boolean;
+    cursor: string;
+    /** True if transaction is removed from blockchain */
+    removed: boolean;
     transfers: Transfer[];
 }
 
 export interface Transfer {
     direction: Direction;
-    amount: number;
-    /** currently unimplemented for Bitcoin */
-    fee?: number;
+    /** unsigned amount */
+    amount: string;
+    /** unsigned amount, currently unimplemented for Bitcoin */
+    fee: string;
     /** counterparty address or self address for change */
     addresses: SingleAddress[];
     /** indexes of counterparty addresses in xpub if xpub has been requested if detected */
-    xpubIndexes?: number[];
+    xpubIndexes: number[];
+    /** e.g. ERC-20 token address, optional, empty string for blockchain native token */
+    contractAddress: string;
 }
 
 export class Convert {
@@ -96,10 +99,11 @@ export class Convert {
     private static transfer(transfer: transaction_message_pb.Transfer): Transfer {
         return {
             direction: transfer.getDirection(),
-            amount: transfer.getAmount()!,
+            amount: transfer.getAmount(),
             fee: transfer.getFee(),
             addresses: transfer.getAddressesList().map( value => value.getAddress() ),
             xpubIndexes: transfer.getXpubIndexesList(),
+            contractAddress: transfer.getContractaddress(),
         }
     }
 
@@ -111,10 +115,11 @@ export class Convert {
             } else {
                 block = undefined;
             }
+            let xpubIndex = (resp.hasXpubIndex()) ? resp.getXpubIndex().getValue() : undefined;
             let transfers = resp.getTransfersList().map(value => Convert.transfer(value))
             return {
                 address: resp.getAddress().getAddress(),
-                xpubIndex: resp.getXpubIndex(),
+                xpubIndex: xpubIndex,
                 txId: resp.getTxId(),
                 block: block,
                 mempool: resp.getMempool(),
