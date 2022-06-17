@@ -2,7 +2,7 @@ import * as transaction_grpc_pb from "../generated/transaction_grpc_pb";
 import {callStream, NativeChannel} from "../channel";
 import {classFactory} from "./Factory";
 import * as grpc from "@grpc/grpc-js";
-import {alwaysRetry, ConnectionListener, Publisher, publishListToPromise, readOnce, transaction} from "@emeraldpay/api";
+import {ConnectionListener, Publisher, publishListToPromise, readOnce, transaction} from "@emeraldpay/api";
 
 export class TransactionClient {
     readonly client: transaction_grpc_pb.TransactionClient;
@@ -26,12 +26,12 @@ export class TransactionClient {
         return publishListToPromise(readOnce(this.channel, call, protoRequest));
     }
 
-    public getAddressTx(request: transaction.AddressTxRequest): Promise<Array<transaction.AddressTxResponse>> {
+    public getAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
         let protoRequest = this.convert.addressTxRequest(request);
         let mapper = this.convert.addressTxResponse();
 
         let call = callStream(this.client.getAddressTx.bind(this.client), mapper);
-        return publishListToPromise(readOnce(this.channel, call, protoRequest));
+        return readOnce(this.channel, call, protoRequest);
     }
 
     public subscribeAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
@@ -39,7 +39,7 @@ export class TransactionClient {
         let mapper = this.convert.addressTxResponse();
 
         let call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
-        return alwaysRetry(this.channel, call, protoRequest);
+        return readOnce(this.channel, call, protoRequest);
     }
 
 }

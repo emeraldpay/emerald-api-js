@@ -1,4 +1,4 @@
-import { MessageFactory } from "@emeraldpay/api";
+import {MessageFactory} from "@emeraldpay/api";
 import transaction_message_pb from '../../lib/generated/transaction.message_pb';
 import * as blockchain_pb from "../generated/blockchain_pb";
 import * as common_pb from "../generated/common_pb";
@@ -55,6 +55,9 @@ export const classFactory: MessageFactory = (id: string) => {
 
     if (id == "transaction_message_pb.AddressTxRequest") {
         return new transaction_message_pb.AddressTxRequest();
+    }
+    if (id == "transaction_message_pb.BalanceRequest") {
+        return new transaction_message_pb.BalanceRequest();
     }
 
     throw Error("Unsupported type: " + id)
