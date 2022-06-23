@@ -50,7 +50,7 @@ export interface AddressTxResponse {
 }
 
 export interface AddressAmount {
-    address: SingleAddress;
+    address?: SingleAddress;
     /** unsigned amount */
     amount: string;
 }
@@ -67,9 +67,9 @@ export interface EthereumTransfer extends GenericTransfer {
     /** unsigned fee amount */
     fee: string;
     /** counterparty address */
-    address?: SingleAddress;
-    /** e.g. ERC-20 token address, optional, empty string for blockchain native token */
-    contractAddress: string;
+    address: SingleAddress;
+    /** e.g. ERC-20 token address, optional, undefined for blockchain native token */
+    contractAddress?: string;
 }
 
 export interface BitcoinTransfer extends GenericTransfer {
@@ -120,7 +120,7 @@ export class Convert {
                 amount: transfer.getAmount(),
                 addressAmounts: transfer.getAddressAmountsList().map(value => {
                     return {
-                        address: value.getAddress().getAddress(),
+                        address: value.getAddress()?.getAddress(),
                         amount: value.getAmount(),
                     }
                 }),
@@ -128,13 +128,17 @@ export class Convert {
             }
         }
         if (blockchainType(blockchain) == BlockchainType.ETHEREUM) {
+            const [firstAddressAmount] = transfer.getAddressAmountsList()
+            if (firstAddressAmount == null) {
+                throw new Error("Address of ETHEREUM transfer is empty")
+            }
             return {
                 direction: transfer.getDirection(),
                 amount: transfer.getAmount(),
                 fee: transfer.getFee(),
-                address: transfer.getAddressAmountsList()[0]?.getAddress()?.getAddress(),
+                address: firstAddressAmount.getAddress().getAddress(),
                 xpubIndexes: transfer.getXpubIndexesList(),
-                contractAddress: transfer.getContractaddress(),
+                contractAddress: transfer.getContractaddress() != "" ? transfer.getContractaddress() : undefined,
             }
         }
         return {
