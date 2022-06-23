@@ -1,5 +1,5 @@
 import {MessageFactory} from "@emeraldpay/api";
-import transaction_message_pb from '../../lib/generated/transaction.message_pb';
+import * as transaction_message_pb from '../generated/transaction.message_pb';
 import * as blockchain_pb from "../generated/blockchain_pb";
 import * as common_pb from "../generated/common_pb";
 import * as market_pb from "../generated/market_pb";

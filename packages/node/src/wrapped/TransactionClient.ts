@@ -22,7 +22,7 @@ export class TransactionClient {
         let protoRequest = this.convert.balanceRequest(request);
         let mapper = this.convert.balanceResponse();
 
-        let call = callStream(this.client.getAddressTx.bind(this.client), mapper);
+        let call = callStream(this.client.getBalance.bind(this.client), mapper);
         return publishListToPromise(readOnce(this.channel, call, protoRequest));
     }
 
