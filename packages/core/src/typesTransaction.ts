@@ -46,6 +46,8 @@ export interface AddressTxResponse {
     cursor: string;
     /** True if transaction is removed from blockchain */
     removed: boolean;
+    /** True if transaction is failed */
+    failed: boolean;
     transfers: AnyTransfer[];
 }
 
@@ -168,6 +170,7 @@ export class Convert {
                 mempool: resp.getMempool(),
                 cursor: resp.getCursor(),
                 removed: resp.getRemoved(),
+                failed: resp.getFailed(),
                 transfers: transfers,
             }
         }

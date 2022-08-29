@@ -10,7 +10,7 @@ describe("TransactionClient", () => {
         api = EmeraldApi.devApi();
     });
 
-    test('GetBalance', (done) => {
+    test.skip('GetBalance', (done) => {
         const client = api.transaction();
         const call = client.getBalance(
             {
@@ -44,7 +44,8 @@ describe("TransactionClient", () => {
         );
         call.onData((value) => {
             expect(value.address).toBe("0x7af963cf6d228e564e2a0aa0ddbf06210b38615d");
-            // expect(value.blockchain).toBe(Blockchain.TESTNET_GOERLI);
+            expect(value.blockchain).toBe(Blockchain.TESTNET_GOERLI);
+            expect(value.failed).toBe(false);
             console.log('GetAddressTx', value);
             done()
         })
