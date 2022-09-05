@@ -4,8 +4,13 @@ import * as transaction_message_pb from "./generated/transaction.message_pb";
 import {DataMapper} from "./Publisher";
 
 export enum Direction {
-    EARN = 0,
-    SPEND = 1,
+    RECEIVE = 0,
+    SEND = 1,
+}
+
+export enum ChangeType {
+    CHANGE = 0,
+    FEE = 1,
 }
 
 export type BalanceRequest = {
@@ -48,6 +53,8 @@ export interface AddressTxResponse {
     removed: boolean;
     /** True if transaction is failed */
     failed: boolean;
+    changes: Change[];
+    /** TODO: deprecated */
     transfers: AnyTransfer[];
 }
 
@@ -55,6 +62,20 @@ export interface AddressAmount {
     address?: SingleAddress;
     /** unsigned amount */
     amount: string;
+}
+
+export interface Change {
+    direction: Direction;
+    /** change address if detected, could be empty */
+    address?: SingleAddress;
+    /** unsigned amount */
+    amount: string;
+
+    type: ChangeType;
+    /** ERC-20 token address, optional, undefined for blockchain native token */
+    contractAddress?: string;
+    /** index of address in xpub if detected */
+    xpubIndex?: number;
 }
 
 export interface GenericTransfer {
@@ -115,6 +136,17 @@ export class Convert {
             .setOnlyUnspent(req.onlyUnspent)
     }
 
+    private static change(change: transaction_message_pb.Change): Change {
+        return {
+            direction: change.getDirection(),
+            address: (change.hasAddress()) ? change.getAddress().getAddress() : undefined,
+            amount: change.getAmount(),
+            type: change.getType(),
+            contractAddress: (change.hasContractAddress()) ? change.getContractAddress().getAddress() : undefined,
+            xpubIndex: (change.hasXpubIndex()) ? change.getXpubIndex().getValue() : undefined,
+        }
+    }
+
     private static transfer(blockchain: Blockchain, transfer: transaction_message_pb.Transfer): AnyTransfer {
         if (blockchainType(blockchain) == BlockchainType.BITCOIN) {
             return {
@@ -161,6 +193,7 @@ export class Convert {
             let blockchain = resp.getBlockchain().valueOf()
             let xpubIndex = (resp.hasXpubIndex()) ? resp.getXpubIndex().getValue() : undefined;
             let transfers = resp.getTransfersList().map(value => Convert.transfer(blockchain, value))
+            let changes = resp.getChangesList().map(value => Convert.change(value))
             return {
                 blockchain: blockchain,
                 address: resp.getAddress().getAddress(),
@@ -172,6 +205,7 @@ export class Convert {
                 removed: resp.getRemoved(),
                 failed: resp.getFailed(),
                 transfers: transfers,
+                changes: changes,
             }
         }
     }
