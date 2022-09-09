@@ -1,8 +1,8 @@
 import * as transaction_grpc_pb from "../generated/transaction_grpc_pb";
-import {callStream, NativeChannel} from "../channel";
+import {callSingle, callStream, NativeChannel} from "../channel";
 import {classFactory} from "./Factory";
 import * as grpc from "@grpc/grpc-js";
-import {ConnectionListener, Publisher, publishListToPromise, readOnce, transaction} from "@emeraldpay/api";
+import {ConnectionListener, Publisher, publishListToPromise, publishToPromise, readOnce, transaction} from "@emeraldpay/api";
 
 export class TransactionClient {
     readonly client: transaction_grpc_pb.TransactionClient;
@@ -24,6 +24,14 @@ export class TransactionClient {
 
         let call = callStream(this.client.getBalance.bind(this.client), mapper);
         return publishListToPromise(readOnce(this.channel, call, protoRequest));
+    }
+
+    public getXpubState(request: transaction.XpubStateRequest): Promise<transaction.XpubState> {
+        let protoRequest = this.convert.xpubStateRequest(request);
+        let mapper = this.convert.xpubState();
+
+        let call = callSingle(this.client.getXpubState.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, protoRequest));
     }
 
     public getAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {

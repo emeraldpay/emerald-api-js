@@ -1,4 +1,4 @@
-import {AnyAddress, Asset, Blockchain, BlockchainType, blockchainType, ConvertCommon, SingleAddress} from "./typesCommon";
+import {AnyAddress, Asset, Blockchain, BlockchainType, blockchainType, ConvertCommon, SingleAddress, XpubAddress} from "./typesCommon";
 import {MessageFactory} from "./convert";
 import * as transaction_message_pb from "./generated/transaction.message_pb";
 import {DataMapper} from "./Publisher";
@@ -22,6 +22,18 @@ export interface BalanceResponse {
     asset: Asset;
     address: SingleAddress[];
     balance: string;
+}
+
+export type XpubStateRequest = {
+    blockchain: Blockchain;
+    address: XpubAddress,
+}
+
+export interface XpubState {
+    blockchain: Blockchain;
+    address: XpubAddress,
+    lastAddress?: SingleAddress,
+    lastIndex?: number
 }
 
 export interface AddressTxRequest {
@@ -123,6 +135,23 @@ export class Convert {
                 asset: this.common.asset(resp.getAsset()),
                 address: resp.getAddressList()?.map( value => value.getAddress() ),
                 balance: resp.getBalance(),
+            }
+        }
+    }
+
+    public xpubStateRequest(req: XpubStateRequest): transaction_message_pb.XpubStateRequest {
+        let result: transaction_message_pb.XpubStateRequest = this.factory("transaction_message_pb.XpubStateRequest");
+        return result.setBlockchain(req.blockchain.valueOf())
+            .setAddress(this.common.pbXpubAddress(req.address))
+    }
+
+    public xpubState(): DataMapper<transaction_message_pb.XpubState, XpubState> {
+        return (resp) => {
+            return {
+                blockchain:  resp.getBlockchain().valueOf(),
+                address: resp.getAddress().getXpub(),
+                lastAddress: (resp.hasLastAddress()) ? resp.getLastAddress().getAddress() : undefined,
+                lastIndex: (resp.hasLastIndex()) ? resp.getLastIndex().getValue() : undefined,
             }
         }
     }

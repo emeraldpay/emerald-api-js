@@ -1,6 +1,6 @@
 import * as transaction_rpc from "../generated/TransactionServiceClientPb";
-import {callStream, WebChannel} from "../channel";
-import {Publisher, publishListToPromise, readOnce, transaction} from "@emeraldpay/api";
+import {callSingle, callStream, WebChannel} from "../channel";
+import {Publisher, publishListToPromise, publishToPromise, readOnce, transaction} from "@emeraldpay/api";
 import {classFactory} from "./Factory";
 
 export class TransactionClient {
@@ -20,6 +20,14 @@ export class TransactionClient {
 
         let call = callStream(this.client.getAddressTx.bind(this.client), mapper);
         return publishListToPromise(readOnce(this.channel, call, protoRequest));
+    }
+
+    public getXpubState(request: transaction.XpubStateRequest): Promise<transaction.XpubState> {
+        let protoRequest = this.convert.xpubStateRequest(request);
+        let mapper = this.convert.xpubState();
+
+        let call = callSingle(this.client.getXpubState.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, protoRequest));
     }
 
     public getAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {

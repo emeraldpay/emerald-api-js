@@ -151,20 +151,7 @@ export class ConvertCommon {
             protoSingleAddress.setAddress(address);
             protoAnyAddress.setAddressSingle(protoSingleAddress);
         } else if (isXpubAddress(address)) {
-            let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
-            let xpub = asDetailedXpub(address);
-            protoXpubAddress.setXpub(xpub.xpub);
-            if (xpub.start) {
-                protoXpubAddress.setStart(xpub.start);
-            }
-            if (typeof xpub.limit === "number") {
-                protoXpubAddress.setLimit(xpub.limit);
-            } else {
-                protoXpubAddress.setLimit(100);
-            }
-            if (xpub.unused_limit && xpub.unused_limit > 0) {
-                protoXpubAddress.setUnusedLimit(xpub.unused_limit)
-            }
+            let protoXpubAddress = this.pbXpubAddress(address);
             protoAnyAddress.setAddressXpub(protoXpubAddress);
         } else if (isMultiAddress(address)) {
             let protoMultiAddress: common_pb.MultiAddress = this.factory("common_pb.MultiAddress");
@@ -176,5 +163,23 @@ export class ConvertCommon {
             protoAnyAddress.setAddressMulti(protoMultiAddress);
         }
         return protoAnyAddress;
+    }
+
+    public pbXpubAddress(address: XpubAddress) {
+        let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
+        let xpub = asDetailedXpub(address);
+        protoXpubAddress.setXpub(xpub.xpub);
+        if (xpub.start) {
+            protoXpubAddress.setStart(xpub.start);
+        }
+        if (typeof xpub.limit === "number") {
+            protoXpubAddress.setLimit(xpub.limit);
+        } else {
+            protoXpubAddress.setLimit(100);
+        }
+        if (xpub.unused_limit && xpub.unused_limit > 0) {
+            protoXpubAddress.setUnusedLimit(xpub.unused_limit)
+        }
+        return protoXpubAddress;
     }
 }

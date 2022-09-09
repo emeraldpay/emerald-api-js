@@ -33,6 +33,26 @@ describe("TransactionClient", () => {
         })
     });
 
+    test('GetXpubState', (done) => {
+        const client = api.transaction();
+        const call = client.getXpubState(
+            {
+                blockchain: Blockchain.TESTNET_BITCOIN,
+                address: "vpub5bGr72An7v5pmqBZecLVnd74Kpip5t9GSPX7ULe9LazdvWq1ECkJTpsf6YGFcD4T1McCvcaVdmuHZoo1qaNsddqREiheeFfzUuJ1vMjLFWE",
+            }
+        );
+        call.then((value) => {
+            // expect(value).toBe("0x7af963cf6d228e564e2a0aa0ddbf06210b38615d");
+            // expect(value.blockchain).toBe(Blockchain.TESTNET_GOERLI);
+            console.log('GetXpubState', value);
+            done()
+        })
+        call.catch((err) => {
+            console.warn("GetXpubState failed", err);
+            done.fail(err)
+        })
+    });
+
     test('GetAddressTx', (done) => {
         const client = api.transaction();
         const call = client.getAddressTx(

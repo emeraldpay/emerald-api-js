@@ -59,6 +59,9 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == "transaction_message_pb.BalanceRequest") {
         return new transaction_message_pb.BalanceRequest();
     }
+    if (id == "transaction_message_pb.XpubStateRequest") {
+        return new transaction_message_pb.XpubStateRequest();
+    }
 
     throw Error("Unsupported type: " + id)
 };
