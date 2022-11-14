@@ -1,7 +1,17 @@
-import {AnyAddress, Asset, Blockchain, BlockchainType, blockchainType, ConvertCommon, SingleAddress, XpubAddress} from "./typesCommon";
-import {MessageFactory} from "./convert";
+import { MessageFactory } from "./convert";
 import * as transaction_message_pb from "./generated/transaction.message_pb";
-import {DataMapper} from "./Publisher";
+import { DataMapper } from "./Publisher";
+import {
+    AnyAddress,
+    Asset,
+    Blockchain,
+    BlockchainType,
+    BlockInfo,
+    ConvertCommon,
+    SingleAddress,
+    XpubAddress,
+    blockchainType,
+} from "./typesCommon";
 
 export enum Direction {
     RECEIVE = 0,
@@ -53,14 +63,10 @@ export interface AddressTxResponse {
     xpubIndex?: number;
     txId: string;
     /** N/A for mempool */
-    block?: {
-        height: number;
-        hash: string;
-        timestamp: Date;
-    },
+    block?: BlockInfo,
     mempool: boolean;
     /** N/A for mempool and last blocks (unconfirmed) */
-    cursor: string;
+    cursor?: string;
     /** True if transaction is removed from blockchain */
     removed: boolean;
     /** True if transaction is failed */
@@ -213,28 +219,31 @@ export class Convert {
 
     public addressTxResponse(): DataMapper<transaction_message_pb.AddressTxResponse, AddressTxResponse> {
         return (resp) => {
-            let block;
+            let block: BlockInfo | undefined;
+
             if (resp.hasBlock()) {
-                block = this.common.blockInfo(resp.getBlock()!)
-            } else {
-                block = undefined;
+                block = this.common.blockInfo(resp.getBlock());
             }
-            let blockchain = resp.getBlockchain().valueOf()
-            let xpubIndex = (resp.hasXpubIndex()) ? resp.getXpubIndex().getValue() : undefined;
-            let transfers = resp.getTransfersList().map(value => Convert.transfer(blockchain, value))
-            let changes = resp.getChangesList().map(value => Convert.change(value))
+
+            const blockchain = resp.getBlockchain().valueOf()
+            const changes = resp.getChangesList().map(value => Convert.change(value))
+            const cursor = resp.getCursor();
+            const mempool = resp.getMempool();
+            const transfers = resp.getTransfersList().map(value => Convert.transfer(blockchain, value))
+            const xpubIndex = resp.hasXpubIndex() ? resp.getXpubIndex().getValue() : undefined;
+
             return {
-                blockchain: blockchain,
+                block,
+                blockchain,
+                changes,
+                mempool,
+                transfers,
+                xpubIndex,
                 address: resp.getAddress().getAddress(),
-                xpubIndex: xpubIndex,
-                txId: resp.getTxId(),
-                block: block,
-                mempool: resp.getMempool(),
-                cursor: resp.getCursor(),
-                removed: resp.getRemoved(),
+                cursor: cursor.length > 0 ? cursor : undefined,
                 failed: resp.getFailed(),
-                transfers: transfers,
-                changes: changes,
+                removed: resp.getRemoved(),
+                txId: resp.getTxId(),
             }
         }
     }
