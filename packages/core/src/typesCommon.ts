@@ -1,6 +1,13 @@
 import {MessageFactory} from "./convert";
 import * as common_pb from "./generated/common_pb";
 
+export enum BlockchainType {
+    UNSPECIFIED = 0,
+    BITCOIN = 1,
+    GRIN = 2,
+    ETHEREUM = 100,
+}
+
 export enum Blockchain {
     UNSPECIFIED = 0,
     BITCOIN = 1,
@@ -14,6 +21,7 @@ export enum Blockchain {
     TESTNET_ROPSTEN = 10006,
     TESTNET_RINKEBY = 10007,
 }
+
 
 export type AssetCode = string;
 
@@ -70,13 +78,34 @@ export function isDetailedXpubAddress(address: AnyAddress): address is DetailedX
             );
 }
 
-export function asDetailedXpub(adress: XpubAddress): DetailedXpubAddress {
-    if (typeof adress == "string") {
+export function asDetailedXpub(address: XpubAddress): DetailedXpubAddress {
+    if (typeof address == "string") {
         return {
-            xpub: adress
+            xpub: address
         }
     }
-    return adress
+    return address
+}
+
+export function blockchainType(blockchain: Blockchain): BlockchainType {
+    switch (blockchain) {
+        case Blockchain.BITCOIN:
+        case Blockchain.TESTNET_BITCOIN:
+            return BlockchainType.BITCOIN;
+        case Blockchain.GRIN:
+        case Blockchain.TESTNET_FLOONET:
+            return BlockchainType.GRIN;
+        case Blockchain.ETHEREUM:
+        case Blockchain.ETHEREUM_CLASSIC:
+        case Blockchain.TESTNET_KOVAN:
+        case Blockchain.TESTNET_GOERLI:
+        case Blockchain.TESTNET_ROPSTEN:
+        case Blockchain.TESTNET_RINKEBY:
+            return BlockchainType.ETHEREUM;
+        case Blockchain.UNSPECIFIED:
+        default:
+            return BlockchainType.UNSPECIFIED;
+    }
 }
 
 export class ConvertCommon {
@@ -122,20 +151,7 @@ export class ConvertCommon {
             protoSingleAddress.setAddress(address);
             protoAnyAddress.setAddressSingle(protoSingleAddress);
         } else if (isXpubAddress(address)) {
-            let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
-            let xpub = asDetailedXpub(address);
-            protoXpubAddress.setXpub(xpub.xpub);
-            if (xpub.start) {
-                protoXpubAddress.setStart(xpub.start);
-            }
-            if (typeof xpub.limit === "number") {
-                protoXpubAddress.setLimit(xpub.limit);
-            } else {
-                protoXpubAddress.setLimit(100);
-            }
-            if (xpub.unused_limit && xpub.unused_limit > 0) {
-                protoXpubAddress.setUnusedLimit(xpub.unused_limit)
-            }
+            let protoXpubAddress = this.pbXpubAddress(address);
             protoAnyAddress.setAddressXpub(protoXpubAddress);
         } else if (isMultiAddress(address)) {
             let protoMultiAddress: common_pb.MultiAddress = this.factory("common_pb.MultiAddress");
@@ -147,5 +163,23 @@ export class ConvertCommon {
             protoAnyAddress.setAddressMulti(protoMultiAddress);
         }
         return protoAnyAddress;
+    }
+
+    public pbXpubAddress(address: XpubAddress) {
+        let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
+        let xpub = asDetailedXpub(address);
+        protoXpubAddress.setXpub(xpub.xpub);
+        if (xpub.start) {
+            protoXpubAddress.setStart(xpub.start);
+        }
+        if (typeof xpub.limit === "number") {
+            protoXpubAddress.setLimit(xpub.limit);
+        } else {
+            protoXpubAddress.setLimit(100);
+        }
+        if (xpub.unused_limit && xpub.unused_limit > 0) {
+            protoXpubAddress.setUnusedLimit(xpub.unused_limit)
+        }
+        return protoXpubAddress;
     }
 }

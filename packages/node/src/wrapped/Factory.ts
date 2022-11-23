@@ -1,6 +1,7 @@
 import {MessageFactory} from "@emeraldpay/api";
-import * as common_pb from "../generated/common_pb";
+import * as transaction_message_pb from '../generated/transaction.message_pb';
 import * as blockchain_pb from "../generated/blockchain_pb";
+import * as common_pb from "../generated/common_pb";
 import * as market_pb from "../generated/market_pb";
 
 export const classFactory: MessageFactory = (id: string) => {
@@ -50,6 +51,16 @@ export const classFactory: MessageFactory = (id: string) => {
     }
     if (id == "market_pb.Pair") {
         return new market_pb.Pair();
+    }
+
+    if (id == "transaction_message_pb.AddressTxRequest") {
+        return new transaction_message_pb.AddressTxRequest();
+    }
+    if (id == "transaction_message_pb.BalanceRequest") {
+        return new transaction_message_pb.BalanceRequest();
+    }
+    if (id == "transaction_message_pb.XpubStateRequest") {
+        return new transaction_message_pb.XpubStateRequest();
     }
 
     throw Error("Unsupported type: " + id)

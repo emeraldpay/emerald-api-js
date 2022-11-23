@@ -1,6 +1,6 @@
 import * as transaction_rpc from "../generated/TransactionServiceClientPb";
-import {callStream, WebChannel} from "../channel";
-import {alwaysRetry, Publisher, publishListToPromise, readOnce, transaction} from "@emeraldpay/api";
+import {callSingle, callStream, WebChannel} from "../channel";
+import {Publisher, publishListToPromise, publishToPromise, readOnce, transaction} from "@emeraldpay/api";
 import {classFactory} from "./Factory";
 
 export class TransactionClient {
@@ -22,12 +22,20 @@ export class TransactionClient {
         return publishListToPromise(readOnce(this.channel, call, protoRequest));
     }
 
-    public getAddressTx(request: transaction.AddressTxRequest): Promise<Array<transaction.AddressTxResponse>> {
+    public getXpubState(request: transaction.XpubStateRequest): Promise<transaction.XpubState> {
+        let protoRequest = this.convert.xpubStateRequest(request);
+        let mapper = this.convert.xpubState();
+
+        let call = callSingle(this.client.getXpubState.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, protoRequest));
+    }
+
+    public getAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
         let protoRequest = this.convert.addressTxRequest(request);
         let mapper = this.convert.addressTxResponse();
 
         let call = callStream(this.client.getAddressTx.bind(this.client), mapper);
-        return publishListToPromise(readOnce(this.channel, call, protoRequest));
+        return readOnce(this.channel, call, protoRequest);
     }
 
     public subscribeAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
@@ -35,7 +43,7 @@ export class TransactionClient {
         let mapper = this.convert.addressTxResponse();
 
         let call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
-        return alwaysRetry(this.channel, call, protoRequest);
+        return readOnce(this.channel, call, protoRequest);
     }
 
 }

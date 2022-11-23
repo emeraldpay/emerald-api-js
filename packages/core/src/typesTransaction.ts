@@ -1,11 +1,26 @@
-import {AnyAddress, Asset, Blockchain, ConvertCommon, SingleAddress} from "./typesCommon";
-import {MessageFactory} from "./convert";
+import { MessageFactory } from "./convert";
 import * as transaction_message_pb from "./generated/transaction.message_pb";
-import {DataMapper} from "./Publisher";
+import { DataMapper } from "./Publisher";
+import {
+    AnyAddress,
+    Asset,
+    Blockchain,
+    BlockchainType,
+    BlockInfo,
+    ConvertCommon,
+    SingleAddress,
+    XpubAddress,
+    blockchainType,
+} from "./typesCommon";
 
 export enum Direction {
-    EARN = 0,
-    SPEND = 1,
+    RECEIVE = 0,
+    SEND = 1,
+}
+
+export enum ChangeType {
+    CHANGE = 0,
+    FEE = 1,
 }
 
 export type BalanceRequest = {
@@ -19,6 +34,18 @@ export interface BalanceResponse {
     balance: string;
 }
 
+export type XpubStateRequest = {
+    blockchain: Blockchain;
+    address: XpubAddress,
+}
+
+export interface XpubState {
+    blockchain: Blockchain;
+    address: XpubAddress,
+    lastAddress?: SingleAddress,
+    lastIndex?: number
+}
+
 export interface AddressTxRequest {
     blockchain: Blockchain;
     address: AnyAddress;
@@ -29,35 +56,69 @@ export interface AddressTxRequest {
 }
 
 export interface AddressTxResponse {
+    blockchain: Blockchain;
     /** self address */
     address: SingleAddress;
     /** index of address in xpub if xpub has been requested */
     xpubIndex?: number;
     txId: string;
     /** N/A for mempool */
-    block?: {
-        height: number;
-        hash: string;
-        timestamp: Date;
-    },
-    mempool?: boolean;
+    block?: BlockInfo,
+    mempool: boolean;
     /** N/A for mempool and last blocks (unconfirmed) */
     cursor?: string;
-    /** rue if transaction is removed from blockchain */
-    removed?: boolean;
-    transfers: Transfer[];
+    /** True if transaction is removed from blockchain */
+    removed: boolean;
+    /** True if transaction is failed */
+    failed: boolean;
+    changes: Change[];
+    /** TODO: deprecated */
+    transfers: AnyTransfer[];
 }
 
-export interface Transfer {
-    direction: Direction;
-    amount: number;
-    /** currently unimplemented for Bitcoin */
-    fee?: number;
-    /** counterparty address or self address for change */
-    addresses: SingleAddress[];
-    /** indexes of counterparty addresses in xpub if xpub has been requested if detected */
-    xpubIndexes?: number[];
+export interface AddressAmount {
+    address?: SingleAddress;
+    /** unsigned amount */
+    amount: string;
 }
+
+export interface Change {
+    direction: Direction;
+    /** change address if detected, could be empty */
+    address?: SingleAddress;
+    /** unsigned amount */
+    amount: string;
+
+    type: ChangeType;
+    /** ERC-20 token address, optional, undefined for blockchain native token */
+    contractAddress?: string;
+    /** index of address in xpub if detected */
+    xpubIndex?: number;
+}
+
+export interface GenericTransfer {
+    direction: Direction;
+    /** unsigned amount */
+    amount: string;
+    /** indexes of counterparty addresses in xpub if xpub has been requested if detected */
+    xpubIndexes: number[];
+}
+
+export interface EthereumTransfer extends GenericTransfer {
+    /** unsigned fee amount */
+    fee: string;
+    /** counterparty address */
+    address: SingleAddress;
+    /** e.g. ERC-20 token address, optional, undefined for blockchain native token */
+    contractAddress?: string;
+}
+
+export interface BitcoinTransfer extends GenericTransfer {
+    /** counterparty address or self address for change */
+    addressAmounts: AddressAmount[];
+}
+
+export type AnyTransfer = GenericTransfer | EthereumTransfer | BitcoinTransfer
 
 export class Convert {
     private readonly factory: MessageFactory;
@@ -69,7 +130,7 @@ export class Convert {
     }
 
     public balanceRequest(req: BalanceRequest): transaction_message_pb.BalanceRequest {
-        let result: transaction_message_pb.BalanceRequest = this.factory("transaction_pb.BalanceRequest");
+        let result: transaction_message_pb.BalanceRequest = this.factory("transaction_message_pb.BalanceRequest");
         return result.setAsset(this.common.pbAsset(req.asset))
             .setAddress(this.common.pbAnyAddress(req.address))
     }
@@ -84,8 +145,25 @@ export class Convert {
         }
     }
 
+    public xpubStateRequest(req: XpubStateRequest): transaction_message_pb.XpubStateRequest {
+        let result: transaction_message_pb.XpubStateRequest = this.factory("transaction_message_pb.XpubStateRequest");
+        return result.setBlockchain(req.blockchain.valueOf())
+            .setAddress(this.common.pbXpubAddress(req.address))
+    }
+
+    public xpubState(): DataMapper<transaction_message_pb.XpubState, XpubState> {
+        return (resp) => {
+            return {
+                blockchain:  resp.getBlockchain().valueOf(),
+                address: resp.getAddress().getXpub(),
+                lastAddress: (resp.hasLastAddress()) ? resp.getLastAddress().getAddress() : undefined,
+                lastIndex: (resp.hasLastIndex()) ? resp.getLastIndex().getValue() : undefined,
+            }
+        }
+    }
+
     public addressTxRequest(req: AddressTxRequest): transaction_message_pb.AddressTxRequest {
-        let result: transaction_message_pb.AddressTxRequest = this.factory("transaction_pb.AddressTxRequest");
+        let result: transaction_message_pb.AddressTxRequest = this.factory("transaction_message_pb.AddressTxRequest");
         return result.setBlockchain(req.blockchain.valueOf())
             .setAddress(this.common.pbAnyAddress(req.address))
             .setCursor(req.cursor)
@@ -93,34 +171,79 @@ export class Convert {
             .setOnlyUnspent(req.onlyUnspent)
     }
 
-    private static transfer(transfer: transaction_message_pb.Transfer): Transfer {
+    private static change(change: transaction_message_pb.Change): Change {
+        return {
+            direction: change.getDirection(),
+            address: (change.hasAddress()) ? change.getAddress().getAddress() : undefined,
+            amount: change.getAmount(),
+            type: change.getType(),
+            contractAddress: (change.hasContractAddress()) ? change.getContractAddress().getAddress() : undefined,
+            xpubIndex: (change.hasXpubIndex()) ? change.getXpubIndex().getValue() : undefined,
+        }
+    }
+
+    private static transfer(blockchain: Blockchain, transfer: transaction_message_pb.Transfer): AnyTransfer {
+        if (blockchainType(blockchain) == BlockchainType.BITCOIN) {
+            return {
+                direction: transfer.getDirection(),
+                amount: transfer.getAmount(),
+                addressAmounts: transfer.getAddressAmountsList().map(value => {
+                    return {
+                        address: value.getAddress()?.getAddress(),
+                        amount: value.getAmount(),
+                    }
+                }),
+                xpubIndexes: transfer.getXpubIndexesList(),
+            }
+        }
+        if (blockchainType(blockchain) == BlockchainType.ETHEREUM) {
+            const [firstAddressAmount] = transfer.getAddressAmountsList()
+            if (firstAddressAmount == null) {
+                throw new Error("Address of ETHEREUM transfer is empty")
+            }
+            return {
+                direction: transfer.getDirection(),
+                amount: transfer.getAmount(),
+                fee: transfer.getFee(),
+                address: firstAddressAmount.getAddress().getAddress(),
+                xpubIndexes: transfer.getXpubIndexesList(),
+                contractAddress: transfer.getContractaddress() != "" ? transfer.getContractaddress() : undefined,
+            }
+        }
         return {
             direction: transfer.getDirection(),
-            amount: transfer.getAmount()!,
-            fee: transfer.getFee(),
-            addresses: transfer.getAddressesList().map( value => value.getAddress() ),
+            amount: transfer.getAmount(),
             xpubIndexes: transfer.getXpubIndexesList(),
         }
     }
 
     public addressTxResponse(): DataMapper<transaction_message_pb.AddressTxResponse, AddressTxResponse> {
         return (resp) => {
-            let block;
+            let block: BlockInfo | undefined;
+
             if (resp.hasBlock()) {
-                block = this.common.blockInfo(resp.getBlock()!)
-            } else {
-                block = undefined;
+                block = this.common.blockInfo(resp.getBlock());
             }
-            let transfers = resp.getTransfersList().map(value => Convert.transfer(value))
+
+            const blockchain = resp.getBlockchain().valueOf()
+            const changes = resp.getChangesList().map(value => Convert.change(value))
+            const cursor = resp.getCursor();
+            const mempool = resp.getMempool();
+            const transfers = resp.getTransfersList().map(value => Convert.transfer(blockchain, value))
+            const xpubIndex = resp.hasXpubIndex() ? resp.getXpubIndex().getValue() : undefined;
+
             return {
+                block,
+                blockchain,
+                changes,
+                mempool,
+                transfers,
+                xpubIndex,
                 address: resp.getAddress().getAddress(),
-                xpubIndex: resp.getXpubIndex(),
-                txId: resp.getTxId(),
-                block: block,
-                mempool: resp.getMempool(),
-                cursor: resp.getCursor(),
+                cursor: cursor.length > 0 ? cursor : undefined,
+                failed: resp.getFailed(),
                 removed: resp.getRemoved(),
-                transfers: transfers,
+                txId: resp.getTxId(),
             }
         }
     }
