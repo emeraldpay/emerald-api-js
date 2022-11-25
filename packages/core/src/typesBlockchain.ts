@@ -3,7 +3,6 @@ import * as common_pb from "./generated/common_pb";
 import {DataMapper} from "./Publisher";
 import {AnyAddress, Asset, Blockchain, ConvertCommon, SingleAddress} from "./typesCommon";
 import {MessageFactory} from "./convert";
-import {TextDecoder, TextEncoder} from "text-encoding";
 
 const textDecoder = new TextDecoder("utf-8");
 const textEncoder = new TextEncoder();
