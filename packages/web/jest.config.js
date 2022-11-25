@@ -1,5 +1,6 @@
 module.exports = {
     preset: 'ts-jest',
+    setupFiles: ['./jest.setup.js'],
     testEnvironment: 'jsdom',
     testEnvironmentOptions: {
         url: "http://insights.emerald.test"
