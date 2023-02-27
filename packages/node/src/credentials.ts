@@ -45,7 +45,7 @@ export class CredentialsContext {
                     }
                     this.notify(AuthenticationStatus.AUTHENTICATED);
                     callback(null, meta);
-                }).catch((err) => {
+                }).catch(() => {
                     this.notify(AuthenticationStatus.ERROR);
                     callback(new Error("Unable to get token"));
                 })
@@ -109,7 +109,7 @@ class JwtUserAuth implements EmeraldAuthentication {
         const tempAuth = new TempAuth();
         tempAuth.setId(userId);
         authRequest.setTempAuth(tempAuth);
-        authRequest.setAgentDetailsList([...agent, `emerald-client-node/${packageJson.version}`]);
+        authRequest.setAgentDetailsList([`emerald-client-node/${packageJson.version}`, ...agent]);
         authRequest.setCapabilitiesList(["JWT_RS256"]);
         authRequest.setScopesList(["BASIC_USER"]);
         return this.client.authenticate(authRequest).then((result: AuthResponse) => {
