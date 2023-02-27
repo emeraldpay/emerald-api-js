@@ -1,22 +1,27 @@
-import * as grpc from "@grpc/grpc-js";
-import * as prices_grpc_pb from '../generated/market_grpc_pb';
 import {
-    ConnectionListener, ConvertMarket, GetRatesRequest,
+    ConnectionListener,
+    ConvertMarket,
+    GetRatesRequest,
     GetRatesResponse,
     publishToPromise,
-    readOnce
+    readOnce,
 } from "@emeraldpay/api";
-import {callSingle, NativeChannel} from "../channel";
-import {classFactory} from "./Factory";
+import * as grpc from "@grpc/grpc-js";
+import { callSingle, NativeChannel } from "../channel";
+import * as prices_grpc_pb from '../generated/market_grpc_pb';
+import { classFactory } from "./Factory";
 
 export class MarketClient {
     readonly client: prices_grpc_pb.MarketClient;
     readonly channel: NativeChannel;
+    readonly retries: number;
+
     private readonly convert = new ConvertMarket(classFactory);
 
-    constructor(address: string, credentials: grpc.ChannelCredentials) {
+    constructor(address: string, credentials: grpc.ChannelCredentials, retries = 3) {
         this.client = new prices_grpc_pb.MarketClient(address, credentials);
         this.channel = new NativeChannel(this.client);
+        this.retries = retries;
     }
 
     public setConnectionListener(listener: ConnectionListener) {
@@ -25,9 +30,9 @@ export class MarketClient {
 
     public getRates(request: GetRatesRequest): Promise<GetRatesResponse> {
         const req = this.convert.ratesRequest(request);
-        let mapper = this.convert.ratesResponse();
+        const mapper = this.convert.ratesResponse();
 
-        let call = callSingle(this.client.getRates.bind(this.client), mapper);
-        return publishToPromise(readOnce(this.channel, call, req));
+        const call = callSingle(this.client.getRates.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, req, this.retries));
     }
 }

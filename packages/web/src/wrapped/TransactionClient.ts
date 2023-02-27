@@ -1,49 +1,51 @@
+import { Publisher, publishListToPromise, publishToPromise, readOnce, transaction } from "@emeraldpay/api";
+import { callSingle, callStream, WebChannel } from "../channel";
 import * as transaction_rpc from "../generated/TransactionServiceClientPb";
-import {callSingle, callStream, WebChannel} from "../channel";
-import {Publisher, publishListToPromise, publishToPromise, readOnce, transaction} from "@emeraldpay/api";
-import {classFactory} from "./Factory";
+import { classFactory } from "./Factory";
 
 export class TransactionClient {
-    private readonly client: transaction_rpc.TransactionClient;
-    private readonly channel: WebChannel;
-    private readonly convert: transaction.Convert;
+    readonly client: transaction_rpc.TransactionClient;
+    readonly channel: WebChannel;
+    readonly retries: number;
 
-    constructor(hostname: string, channel: WebChannel) {
+    private readonly convert: transaction.Convert = new transaction.Convert(classFactory);
+
+    constructor(hostname: string, channel: WebChannel, retries = 3) {
         this.client = new transaction_rpc.TransactionClient(hostname);
         this.channel = channel;
-        this.convert = new transaction.Convert(classFactory)
+        this.retries = retries;
     }
 
     public getBalance(request: transaction.BalanceRequest): Promise<Array<transaction.BalanceResponse>> {
-        let protoRequest = this.convert.balanceRequest(request);
-        let mapper = this.convert.balanceResponse();
+        const protoRequest = this.convert.balanceRequest(request);
+        const mapper = this.convert.balanceResponse();
 
-        let call = callStream(this.client.getAddressTx.bind(this.client), mapper);
-        return publishListToPromise(readOnce(this.channel, call, protoRequest));
+        const call = callStream(this.client.getAddressTx.bind(this.client), mapper);
+        return publishListToPromise(readOnce(this.channel, call, protoRequest, this.retries));
     }
 
     public getXpubState(request: transaction.XpubStateRequest): Promise<transaction.XpubState> {
-        let protoRequest = this.convert.xpubStateRequest(request);
-        let mapper = this.convert.xpubState();
+        const protoRequest = this.convert.xpubStateRequest(request);
+        const mapper = this.convert.xpubState();
 
-        let call = callSingle(this.client.getXpubState.bind(this.client), mapper);
-        return publishToPromise(readOnce(this.channel, call, protoRequest));
+        const call = callSingle(this.client.getXpubState.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, protoRequest, this.retries));
     }
 
     public getAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
-        let protoRequest = this.convert.addressTxRequest(request);
-        let mapper = this.convert.addressTxResponse();
+        const protoRequest = this.convert.addressTxRequest(request);
+        const mapper = this.convert.addressTxResponse();
 
-        let call = callStream(this.client.getAddressTx.bind(this.client), mapper);
-        return readOnce(this.channel, call, protoRequest);
+        const call = callStream(this.client.getAddressTx.bind(this.client), mapper);
+        return readOnce(this.channel, call, protoRequest, this.retries);
     }
 
     public subscribeAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
-        let protoRequest = this.convert.addressTxRequest(request);
-        let mapper = this.convert.addressTxResponse();
+        const protoRequest = this.convert.addressTxRequest(request);
+        const mapper = this.convert.addressTxResponse();
 
-        let call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
-        return readOnce(this.channel, call, protoRequest);
+        const call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
+        return readOnce(this.channel, call, protoRequest, this.retries);
     }
 
 }

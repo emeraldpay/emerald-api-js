@@ -1,40 +1,46 @@
-import * as blockchain_rpc from '../generated/BlockchainServiceClientPb';
 import {
-    alwaysRetry, Blockchain,
-    ChainHead, ConvertBlockchain, DataMapper, NativeCallError,
+    alwaysRetry,
+    Blockchain,
+    ChainHead,
+    ConvertBlockchain,
+    DataMapper,
+    NativeCallError,
     NativeCallItem,
     NativeCallResponse,
     Publisher,
-    readOnce
+    readOnce,
 } from "@emeraldpay/api";
-import {WebChannel, callStream} from "../channel";
-import {classFactory} from "./Factory";
+import { callStream, WebChannel } from "../channel";
+import * as blockchain_rpc from '../generated/BlockchainServiceClientPb';
+import { classFactory } from "./Factory";
 
 export class BlockchainClient {
-    private readonly client: blockchain_rpc.BlockchainClient;
-    private readonly channel: WebChannel;
+    readonly client: blockchain_rpc.BlockchainClient;
+    readonly channel: WebChannel;
+    readonly retries: number;
+
     private readonly convert = new ConvertBlockchain(classFactory);
 
-    constructor(hostname: string, channel: WebChannel) {
+    constructor(hostname: string, channel: WebChannel, retries = 3) {
         this.client = new blockchain_rpc.BlockchainClient(hostname);
         this.channel = channel;
+        this.retries = retries;
     }
 
     subscribeHead(blockchain: Blockchain): Publisher<ChainHead> {
         const req = this.convert.chain(blockchain);
-        let mapper: DataMapper<any, ChainHead> = this.convert.headResponse();
+        const mapper: DataMapper<any, ChainHead> = this.convert.headResponse();
 
-        let call = callStream(this.client.subscribeHead.bind(this.client), mapper);
+        const call = callStream(this.client.subscribeHead.bind(this.client), mapper);
         return alwaysRetry(this.channel, call, req);
     }
 
     nativeCall(chain: Blockchain, calls: NativeCallItem[]): Publisher<NativeCallResponse | NativeCallError> {
-        let req = this.convert.nativeCallRequest(chain, calls);
-        let mapper: DataMapper<any, NativeCallResponse | NativeCallError> = this.convert.nativeCallResponse();
+        const req = this.convert.nativeCallRequest(chain, calls);
+        const mapper: DataMapper<any, NativeCallResponse | NativeCallError> = this.convert.nativeCallResponse();
 
-        let call = callStream(this.client.nativeCall.bind(this.client), mapper);
-        return readOnce(this.channel, call, req);
+        const call = callStream(this.client.nativeCall.bind(this.client), mapper);
+        return readOnce(this.channel, call, req, this.retries);
     }
 
 }
-

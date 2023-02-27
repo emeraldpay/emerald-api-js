@@ -5,7 +5,9 @@ import {ContinueCheck} from "./Retry";
 export type RemoteCall<T, R> = (req: T) => Publisher<R>;
 
 export interface MethodExecutor {
-    execute(reconnect: () => void);
+    execute(reconnect: () => void): void;
+    cancel(): void;
+    terminate(): void;
 }
 
 type Logger = (msg: string) => void;
@@ -91,5 +93,10 @@ export class StandardExecutor<T, R> extends ManagedPublisher<R> implements Metho
         if (this.upstream) {
             this.upstream.cancel();
         }
+    }
+
+    terminate(): void {
+        this.cancel();
+        this.emitError(new Error('execution terminated'));
     }
 }

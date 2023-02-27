@@ -1,26 +1,36 @@
-import {EmeraldApi} from "../EmeraldApi";
-import {Blockchain} from "@emeraldpay/api";
+import { Blockchain } from '@emeraldpay/api';
+import { EmeraldApi } from '../EmeraldApi';
 
 jest.setTimeout(30000);
 
-describe("Auth", () => {
-    let api: EmeraldApi;
-
-    beforeAll(() => {
-        api = EmeraldApi.defaultApi();
-    });
-
+describe('Auth', () => {
     test('auth and get balance', async () => {
-        const client = api.blockchain();
+        const client = EmeraldApi.defaultApi().blockchain();
 
-        const call = await client.getBalance(
+        const balance = await client.getBalance(
             {
-                asset: {blockchain: Blockchain.ETHEREUM, code: "ETHER"},
-                address: "0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE"
-            }
+                asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
+                address: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
+            },
         );
-        expect(call).toBeDefined();
+
+        expect(balance).toBeDefined();
     });
 
+    test('terminate connection after timeout', async () => {
+        const client = EmeraldApi.incorrectApi().blockchain();
 
+        try {
+            const balance = await client.getBalance(
+                {
+                    asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
+                    address: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
+                },
+            );
+
+            expect(balance).toBeUndefined();
+        } catch (exception) {
+            expect(exception).toBeDefined();
+        }
+    })
 });

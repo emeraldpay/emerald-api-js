@@ -1,17 +1,27 @@
-import * as transaction_grpc_pb from "../generated/transaction_grpc_pb";
-import {callSingle, callStream, NativeChannel} from "../channel";
-import {classFactory} from "./Factory";
+import {
+    ConnectionListener,
+    Publisher,
+    publishListToPromise,
+    publishToPromise,
+    readOnce,
+    transaction,
+} from "@emeraldpay/api";
 import * as grpc from "@grpc/grpc-js";
-import {ConnectionListener, Publisher, publishListToPromise, publishToPromise, readOnce, transaction} from "@emeraldpay/api";
+import { callSingle, callStream, NativeChannel } from "../channel";
+import * as transaction_grpc_pb from "../generated/transaction_grpc_pb";
+import { classFactory } from "./Factory";
 
 export class TransactionClient {
     readonly client: transaction_grpc_pb.TransactionClient;
     readonly channel: NativeChannel;
-    readonly convert: transaction.Convert = new transaction.Convert(classFactory);
+    readonly retries: number;
 
-    constructor(address: string, credentials: grpc.ChannelCredentials) {
+    private readonly convert: transaction.Convert = new transaction.Convert(classFactory);
+
+    constructor(address: string, credentials: grpc.ChannelCredentials, retries = 3) {
         this.client = new transaction_grpc_pb.TransactionClient(address, credentials);
         this.channel = new NativeChannel(this.client);
+        this.retries = retries;
     }
 
     public setConnectionListener(listener: ConnectionListener) {
@@ -19,35 +29,35 @@ export class TransactionClient {
     }
 
     public getBalance(request: transaction.BalanceRequest): Promise<Array<transaction.BalanceResponse>> {
-        let protoRequest = this.convert.balanceRequest(request);
-        let mapper = this.convert.balanceResponse();
+        const protoRequest = this.convert.balanceRequest(request);
+        const mapper = this.convert.balanceResponse();
 
-        let call = callStream(this.client.getBalance.bind(this.client), mapper);
-        return publishListToPromise(readOnce(this.channel, call, protoRequest));
+        const call = callStream(this.client.getBalance.bind(this.client), mapper);
+        return publishListToPromise(readOnce(this.channel, call, protoRequest, this.retries));
     }
 
     public getXpubState(request: transaction.XpubStateRequest): Promise<transaction.XpubState> {
-        let protoRequest = this.convert.xpubStateRequest(request);
-        let mapper = this.convert.xpubState();
+        const protoRequest = this.convert.xpubStateRequest(request);
+        const mapper = this.convert.xpubState();
 
-        let call = callSingle(this.client.getXpubState.bind(this.client), mapper);
-        return publishToPromise(readOnce(this.channel, call, protoRequest));
+        const call = callSingle(this.client.getXpubState.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, protoRequest, this.retries));
     }
 
     public getAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
-        let protoRequest = this.convert.addressTxRequest(request);
-        let mapper = this.convert.addressTxResponse();
+        const protoRequest = this.convert.addressTxRequest(request);
+        const mapper = this.convert.addressTxResponse();
 
-        let call = callStream(this.client.getAddressTx.bind(this.client), mapper);
-        return readOnce(this.channel, call, protoRequest);
+        const call = callStream(this.client.getAddressTx.bind(this.client), mapper);
+        return readOnce(this.channel, call, protoRequest, this.retries);
     }
 
     public subscribeAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
-        let protoRequest = this.convert.addressTxRequest(request);
-        let mapper = this.convert.addressTxResponse();
+        const protoRequest = this.convert.addressTxRequest(request);
+        const mapper = this.convert.addressTxResponse();
 
-        let call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
-        return readOnce(this.channel, call, protoRequest);
+        const call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
+        return readOnce(this.channel, call, protoRequest, this.retries);
     }
 
 }
