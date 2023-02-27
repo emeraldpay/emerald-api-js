@@ -1,5 +1,5 @@
-import {MethodExecutor} from "./Executor";
-import {ConnectionListener, ConnectionStatus, ConnectivityState, Channel} from "./Channel";
+import { MethodExecutor } from "./Executor";
+import { ConnectionListener, ConnectionStatus, ConnectivityState, Channel } from "./Channel";
 
 export class Retry<T, R> {
 
@@ -28,6 +28,11 @@ export class Retry<T, R> {
     public callWhenReady() {
         if (!this.sc.shouldContinue()) {
             this.notify(ConnectionStatus.CLOSED);
+
+            if (this.sc.failed === true) {
+                this.executor.terminate();
+            }
+
             return;
         }
         this.notify(ConnectionStatus.CONNECTING);
@@ -35,7 +40,9 @@ export class Retry<T, R> {
         const isReady = (state: ConnectivityState, retry: boolean): boolean => {
             // console.warn("state", state);
             if (state === ConnectivityState.TRANSIENT_FAILURE) {
-                if (retry) setTimeout(this.callWhenReady.bind(this), 5000, this.executor, this.sc);
+                if (retry) {
+                    setTimeout(this.callWhenReady.bind(this), 5000, this.executor, this.sc);
+                }
                 return false;
             } else if (state === ConnectivityState.READY) {
                 return true;
@@ -43,7 +50,9 @@ export class Retry<T, R> {
                 this.sc.onClose();
                 return false;
             } else {
-                if (retry) setTimeout(this.callWhenReady.bind(this), 250, this.executor, this.sc);
+                if (retry) {
+                    setTimeout(this.callWhenReady.bind(this), 250, this.executor, this.sc);
+                }
                 return false;
             }
         };
@@ -69,6 +78,11 @@ export class Retry<T, R> {
         }
     }
 
+    public setConnectionListener(listener: ConnectionListener) {
+        this.statusListener = listener;
+        listener(this.status);
+    }
+
     protected notify(status: ConnectionStatus) {
         if (status != this.status) {
             this.status = status;
@@ -77,15 +91,11 @@ export class Retry<T, R> {
             this.statusListener(status);
         }
     }
-
-    public setConnectionListener(listener: ConnectionListener) {
-        this.statusListener = listener;
-        listener(this.status);
-    }
 }
 
-
 export interface ContinueCheck {
+    failed?: boolean;
+
     shouldContinue(): boolean;
 
     onSuccess();
@@ -114,10 +124,23 @@ export class AlwaysRepeat implements ContinueCheck {
 }
 
 export class OnceSuccess implements ContinueCheck {
+    readonly retries: number;
+
+    counter = 0;
+
     succeed: boolean = false;
     closed: boolean = false;
 
+    constructor(retries: number) {
+        this.retries = retries;
+    }
+
+    get failed() {
+        return this.counter >= this.retries;
+    }
+
     onFail() {
+        this.counter += 1;
     }
 
     onSuccess() {
@@ -129,7 +152,7 @@ export class OnceSuccess implements ContinueCheck {
     }
 
     shouldContinue(): boolean {
-        return !this.succeed && !this.closed;
+        return !this.failed && !this.succeed && !this.closed;
     }
 
 }

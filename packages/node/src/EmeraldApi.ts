@@ -11,8 +11,13 @@ export class EmeraldApi {
     static defaultApi(): EmeraldApi {
         return new EmeraldApi("api.emrld.io:443")
     }
+
     static devApi(): EmeraldApi {
         return new EmeraldApi("api.emeraldpay.dev:443")
+    }
+
+    static incorrectApi(): EmeraldApi {
+        return new EmeraldApi("api.emeraldpay.dev:344")
     }
 
     constructor(hostname: string) {

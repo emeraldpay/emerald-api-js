@@ -40,8 +40,8 @@ export function alwaysRetry<T, R>(channel: Channel, call: RemoteCall<R, T>, req:
     return executor;
 }
 
-export function readOnce<T, R>(channel: Channel, call: RemoteCall<R, T>, req: R): Publisher<T> {
-    const once = new OnceSuccess();
+export function readOnce<T, R>(channel: Channel, call: RemoteCall<R, T>, req: R, retries: number): Publisher<T> {
+    const once = new OnceSuccess(retries);
     const executor = new StandardExecutor(once, call, req);
     const retry = new Retry(channel, executor, once);
     retry.callWhenReady();
