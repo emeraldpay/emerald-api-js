@@ -4,33 +4,29 @@ import { EmeraldApi } from '../EmeraldApi';
 jest.setTimeout(30000);
 
 describe('Auth', () => {
-    test('auth and get balance', async () => {
-        const client = EmeraldApi.defaultApi().blockchain();
+  test('auth and get balance', async () => {
+    const client = EmeraldApi.defaultApi().blockchain();
 
-        const balance = await client.getBalance(
-            {
-                asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
-                address: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
-            },
-        );
-
-        expect(balance).toBeDefined();
+    const balance = await client.getBalance({
+      asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
+      address: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
     });
 
-    test('terminate connection after timeout', async () => {
-        const client = EmeraldApi.incorrectApi().blockchain();
+    expect(balance).toBeDefined();
+  });
 
-        try {
-            const balance = await client.getBalance(
-                {
-                    asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
-                    address: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
-                },
-            );
+  test('terminate connection after timeout', async () => {
+    const client = EmeraldApi.fakeApi().blockchain();
 
-            expect(balance).toBeUndefined();
-        } catch (exception) {
-            expect(exception).toBeDefined();
-        }
-    })
+    try {
+      const balance = await client.getBalance({
+        asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
+        address: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
+      });
+
+      expect(balance).toBeUndefined();
+    } catch (exception) {
+      expect(exception).toBeDefined();
+    }
+  });
 });

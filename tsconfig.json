@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "moduleResolution": "Node",
     "declaration": true,
-    "target": "ES2015",
     "esModuleInterop": true,
-    "module": "CommonJS"
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "sourceMap": true,
+    "target": "ES2015"
   }
 }

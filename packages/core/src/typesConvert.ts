@@ -8,4 +8,5 @@
  * @param id class name. Ex. `blockchain_pb.NativeCallRequest`
  * @return instance of a fresh object for the specified name. I.e. `return new blockchain_pb.NativeCallRequest()`
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type MessageFactory = (id: string) => any;
