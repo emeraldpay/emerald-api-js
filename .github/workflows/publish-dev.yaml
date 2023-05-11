@@ -45,13 +45,13 @@ jobs:
         run: yarn workspaces foreach run build
 
       - name: Pack - core
-        run: yarn workspace @emeraldpay/api pack
+        run: yarn workspace @emeraldpay/api pack -o emeraldpay-api-v%v.tgz
 
       - name: Pack - native
-        run: yarn workspace @emeraldpay/api-node pack
+        run: yarn workspace @emeraldpay/api-node pack -o emeraldpay-api-node-v%v.tgz
 
       - name: Pack - web
-        run: yarn workspace @emeraldpay/api-web pack
+        run: yarn workspace @emeraldpay/api-web pack -o emeraldpay-api-web-v%v.tgz
         env:
           NO_NPM_BINARY: "true"
 
