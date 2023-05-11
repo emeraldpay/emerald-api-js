@@ -40,6 +40,7 @@ export class Retry<T, R> {
         const isReady = (state: ConnectivityState, retry: boolean): boolean => {
             // console.warn("state", state);
             if (state === ConnectivityState.TRANSIENT_FAILURE) {
+                this.sc.onFail();
                 if (retry) {
                     setTimeout(this.callWhenReady.bind(this), 5000, this.executor, this.sc);
                 }
