@@ -38,11 +38,8 @@ jobs:
       - name: Install JS dependencies
         run: yarn install
 
-      - name: Configure Node.js Path
-        run: npm config set scripts-prepend-node-path true
-
-      - name: Build all
-        run: yarn workspaces run build
+      - name: Build
+        run: yarn workspaces foreach run build
 
       - name: Pack - core
         run: yarn workspace @emeraldpay/api pack
@@ -50,7 +47,7 @@ jobs:
       - name: Pack - native
         run: yarn workspace @emeraldpay/api-node pack
 
-      - name: Pack - native
+      - name: Pack - web
         run: yarn workspace @emeraldpay/api-web pack
         env:
           NO_NPM_BINARY: "true"

@@ -34,11 +34,11 @@ jobs:
       - name: Install JS dependencies
         run: yarn install
 
-      - name: Configure Node.js Path
-        run: npm config set scripts-prepend-node-path true
+      - name: Install gRPC
+        run: npm install -g protoc-gen-grpc-web
 
       - name: Build
-        run: yarn workspaces run build
+        run: yarn workspaces foreach run build
 
       - name: Publish to NPM
         run: npm publish --access=public
