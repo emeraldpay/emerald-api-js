@@ -22,7 +22,7 @@ describe('TransactionClient', () => {
         },
       })
       .then(() => done())
-      .catch((error) => done.fail(error));
+      .catch((error) => done(error));
   });
 
   test('GetXpubState', (done) => {
@@ -43,7 +43,7 @@ describe('TransactionClient', () => {
 
         done();
       })
-      .catch((error) => done.fail(error));
+      .catch((error) => done(error));
   });
 
   test('GetAddressTx', (done) => {
@@ -62,6 +62,6 @@ describe('TransactionClient', () => {
 
         done();
       })
-      .onError((error) => done.fail(error));
+      .onError((error) => done(error));
   });
 });

@@ -33,7 +33,7 @@ describe('BlockchainClient', () => {
       .onError((error) => {
         call.cancel();
 
-        done.fail(error);
+        done(error);
       });
   });
 
@@ -57,7 +57,7 @@ describe('BlockchainClient', () => {
 
         done();
       })
-      .onError((error) => done.fail(error));
+      .onError((error) => done(error));
   });
 
   test('Make few requests', (done) => {
@@ -91,7 +91,7 @@ describe('BlockchainClient', () => {
           done();
         }
       })
-      .onError((error) => done.fail(error));
+      .onError((error) => done(error));
   });
 
   test('Get ethereum balance', (done) => {
@@ -108,7 +108,7 @@ describe('BlockchainClient', () => {
 
         done();
       })
-      .catch((error) => done.fail(error));
+      .catch((error) => done(error));
   });
 
   test('Get erc-20 token balance', (done) => {
@@ -125,7 +125,7 @@ describe('BlockchainClient', () => {
 
         done();
       })
-      .catch((error) => done.fail(error));
+      .catch((error) => done(error));
   });
 
   // TODO Fix bitcoin on server
@@ -143,7 +143,7 @@ describe('BlockchainClient', () => {
 
         done();
       })
-      .catch((error) => done.fail(error));
+      .catch((error) => done(error));
   });
 
   // TODO Fix bitcoin on server
@@ -163,7 +163,7 @@ describe('BlockchainClient', () => {
 
         done();
       })
-      .catch((error) => done.fail(error));
+      .catch((error) => done(error));
   });
 
   // TODO Fix bitcoin on server
@@ -187,7 +187,7 @@ describe('BlockchainClient', () => {
       .onError((error) => {
         call.cancel();
 
-        done.fail(error);
+        done(error);
       });
   });
 
@@ -207,7 +207,7 @@ describe('BlockchainClient', () => {
 
         done();
       })
-      .onError((error) => done.fail(error));
+      .onError((error) => done(error));
   });
 
   test('subscribe bitcoin tx', (done) => {
@@ -225,7 +225,7 @@ describe('BlockchainClient', () => {
 
         done();
       })
-      .onError((error) => done.fail(error));
+      .onError((error) => done(error));
   });
 
   test('get ethereum fees', async () => {
@@ -241,7 +241,7 @@ describe('BlockchainClient', () => {
 
     if (isEthereumExtFees(response)) {
       expect(response.expect.length).toBeGreaterThan(5);
-      expect(parseInt(response.expect.substr(0, 5))).toBeGreaterThan(0);
+      expect(parseInt(response.expect.substring(0, 5))).toBeGreaterThan(0);
     }
   });
 
@@ -258,7 +258,7 @@ describe('BlockchainClient', () => {
 
     if (isEthereumStdFees(response)) {
       expect(response.fee.length).toBeGreaterThan(3);
-      expect(parseInt(response.fee.substr(0, 3))).toBeGreaterThan(0);
+      expect(parseInt(response.fee.substring(0, 3))).toBeGreaterThan(0);
     }
   });
 
@@ -278,7 +278,7 @@ describe('BlockchainClient', () => {
     }
   });
 
-  test('native call with unacceptable raw transaction', async (done) => {
+  test('native call with unacceptable raw transaction', (done) => {
     const client = api.blockchain();
 
     client
@@ -297,10 +297,10 @@ describe('BlockchainClient', () => {
 
         done();
       })
-      .onError((error) => done.fail(error));
+      .onError((error) => done(error));
   });
 
-  test('native call terminated after connection failed', async (done) => {
+  test('native call terminated after connection failed', (done) => {
     const server = new grpc.Server();
 
     server.bindAsync('localhost:0', grpc.ServerCredentials.createInsecure(), (error) => {
@@ -332,7 +332,7 @@ describe('BlockchainClient', () => {
       timeout = setTimeout(() => {
         call.cancel();
 
-        server.tryShutdown(() => done.fail('Connection closed incorrectly'));
+        server.tryShutdown(() => done('Connection closed incorrectly'));
       }, 20 * 1000);
     });
   });

@@ -1,6 +1,6 @@
 import * as console from 'console';
 import { ManagedPublisher, Publisher } from './Publisher';
-import { ContinueCheck } from './Retry';
+import { ContinueCheck, isContinueCheck } from './Retry';
 import * as grpc from './typesGrpc';
 
 export type RemoteCall<T, R> = (request: T) => Publisher<R>;
@@ -9,6 +9,12 @@ export interface MethodExecutor {
   cancel(): void;
   execute(reconnect: () => void): void;
   terminate(): void;
+}
+
+export function isMethodExecutor(executor: unknown): executor is MethodExecutor {
+  return (
+    typeof executor === 'object' && executor != null && 'execute' in executor && typeof executor.execute === 'function'
+  );
 }
 
 type Logger = typeof console | undefined;
@@ -25,6 +31,18 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
 
   constructor(call: RemoteCall<T, R>, checker: ContinueCheck, request: T) {
     super();
+
+    if (call == null || typeof call !== 'function') {
+      throw new Error('Call is not provided');
+    }
+
+    if (checker == null || !isContinueCheck(checker)) {
+      throw new Error('Continue checker is not provided');
+    }
+
+    if (request == null) {
+      throw new Error('Request is not provided');
+    }
 
     this.call = call;
     this.checker = checker;
@@ -57,10 +75,11 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
       .onData((data: R) => {
         this.logger?.log(`gRPC request ${callId} data`);
 
+        this.checker.onSuccess?.();
         this.emitData(data);
       })
       .onError((error) => {
-        this.checker.onFail();
+        this.checker.onFail?.();
 
         if (typeof error === 'object' && 'code' in error && typeof error.code === 'number') {
           const grpcError = error as grpc.Error;
@@ -74,7 +93,7 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
               `gRPC connection for ${callId} lost with code ${grpcError.code}: ${grpcError.message}. Reconnecting...`,
             );
 
-            setTimeout(reconnect.bind(this), 1000);
+            setTimeout(reconnect.bind(this), 100);
           } else {
             this.logger?.error(
               `gRPC connection for ${callId} lost with code ${grpcError.code}: ${grpcError.message}. Closing...`,
@@ -102,6 +121,6 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
 
   terminate(): void {
     this.cancel();
-    this.emitError(new Error('execution terminated'));
+    this.emitError(new Error('Execution terminated'));
   }
 }

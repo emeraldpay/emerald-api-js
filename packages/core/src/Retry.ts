@@ -1,5 +1,23 @@
-import { Channel, ConnectionListener, ConnectionStatus, ConnectivityState } from './Channel';
-import { MethodExecutor } from './Executor';
+import { Channel, ConnectionListener, ConnectionStatus, ConnectivityState, isChannel } from './Channel';
+import { MethodExecutor, isMethodExecutor } from './Executor';
+
+export interface ContinueCheck {
+  failed?: boolean;
+  shouldContinue(): boolean;
+  onConnected?(): void;
+  onSuccess?(): void;
+  onFail?(): void;
+  onClose(): void;
+}
+
+export function isContinueCheck(checker: unknown): checker is ContinueCheck {
+  return (
+    typeof checker === 'object' &&
+    checker != null &&
+    'shouldContinue' in checker &&
+    typeof checker.shouldContinue === 'function'
+  );
+}
 
 export class Retry {
   private status: ConnectionStatus = ConnectionStatus.PENDING;
@@ -11,6 +29,18 @@ export class Retry {
   private readonly executor: MethodExecutor;
 
   constructor(channel: Channel, executor: MethodExecutor, checker: ContinueCheck) {
+    if (channel == null || !isChannel(channel)) {
+      throw new Error('Channel is not provided');
+    }
+
+    if (executor == null || !isMethodExecutor(executor)) {
+      throw new Error('Executor is not provided');
+    }
+
+    if (checker == null || !isContinueCheck(checker)) {
+      throw new Error('Continue checker is not provided');
+    }
+
     this.channel = channel;
     this.checker = checker;
     this.executor = executor;
@@ -33,6 +63,8 @@ export class Retry {
 
     const isReady = (state: ConnectivityState, retry: boolean): boolean => {
       if (state === ConnectivityState.READY) {
+        this.checker.onConnected?.();
+
         return true;
       }
 
@@ -43,13 +75,7 @@ export class Retry {
       }
 
       if (state === ConnectivityState.TRANSIENT_FAILURE) {
-        this.checker.onFail();
-
-        if (retry) {
-          setTimeout(this.callWhenReady.bind(this), 1000, this.executor, this.checker);
-        }
-
-        return false;
+        this.checker.onFail?.();
       }
 
       if (retry) {
@@ -75,7 +101,7 @@ export class Retry {
 
       this.channel.watch(connection, 5000, (error, state) => {
         if (error != null) {
-          this.checker.onFail();
+          this.checker.onFail?.();
         }
 
         if (isReady(state, true)) {
@@ -100,27 +126,11 @@ export class Retry {
   }
 }
 
-export interface ContinueCheck {
-  failed?: boolean;
-  shouldContinue(): boolean;
-  onSuccess(): void;
-  onFail(): void;
-  onClose(): void;
-}
-
 export class AlwaysRepeat implements ContinueCheck {
   closed = false;
 
   shouldContinue(): boolean {
     return !this.closed;
-  }
-
-  onSuccess(): void {
-    // Nothing
-  }
-
-  onFail(): void {
-    // Nothing
   }
 
   onClose(): void {

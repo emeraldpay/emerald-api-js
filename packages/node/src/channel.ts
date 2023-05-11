@@ -69,10 +69,10 @@ export class NativeChannel implements Channel {
 class NativeCallPublisher<T> extends ManagedPublisher<T> implements Publisher<T> {
   handler(): SingleCallback<T> {
     return (error, data) => {
-      if (error) {
-        this.emitError(error);
-      } else {
+      if (error == null) {
         this.emitData(data);
+      } else {
+        this.emitError(error);
       }
 
       this.emitClosed();
@@ -101,7 +101,7 @@ class NativeStreamPublisher<T> extends ManagedPublisher<T> implements Publisher<
 }
 
 export function callSingle<R, I, O>(
-  delegate: (req: R, metadata: grpc.Metadata, callback: SingleCallback<I>) => ClientUnaryCall,
+  delegate: (request: R, metadata: grpc.Metadata, callback: SingleCallback<I>) => ClientUnaryCall,
   mapper: DataMapper<I, O>,
 ): RemoteCall<R, O> {
   return (request) => {

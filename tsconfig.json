@@ -4,6 +4,7 @@
     "esModuleInterop": true,
     "module": "CommonJS",
     "moduleResolution": "Node",
+    "skipLibCheck": true,
     "sourceMap": true,
     "target": "ES2015"
   }
