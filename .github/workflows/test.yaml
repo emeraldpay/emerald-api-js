@@ -20,19 +20,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
+
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
+
       - name: Install Libs
         run: yarn install
-      - name: Install gRPC
-        run: npm install -g protoc-gen-grpc-web
+
       - name: Build
-        run: yarn workspaces run build
+        run: yarn workspaces foreach run build
   tests:
     name: Test ${{ matrix.workspace }}
     continue-on-error: ${{ matrix.workspace == 'api-web' }}
@@ -42,18 +43,20 @@ jobs:
         workspace: [ "api", "api-node", "api-web" ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: true
+
       - name: Setup Node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: "18.x"
+
       - name: Install Libs
         run: yarn install
-      - name: Install gRPC
-        run: npm install -g protoc-gen-grpc-web
+
       - name: Build
-        run: yarn workspaces run build
+        run: yarn workspaces foreach run build
+
       - name: Test
         run: yarn workspace @emeraldpay/${{ matrix.workspace }} run test
