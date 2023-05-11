@@ -27,7 +27,7 @@
     "generate": "npm run generate:js && npm run generate:ts && npm run generate:copy",
     "generate:copy": "rimraf src/generated && cp -r lib/generated src/",
     "generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./lib/generated --grpc_out=grpc_js:./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ../../api-definitions/proto/ ../../api-definitions/proto/*.proto",
-    "generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
+    "generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/.bin/protoc-gen-ts --ts_out=grpc_js:./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
     "init": "npm run init:dirs",
     "init:dirs": "mkdir -p lib/generated",
     "test": "jest"

@@ -34,9 +34,6 @@ jobs:
       - name: Install JS dependencies
         run: yarn install
 
-      - name: Install gRPC
-        run: npm install -g protoc-gen-grpc-web
-
       - name: Build
         run: yarn workspaces foreach run build
 

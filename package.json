@@ -4,6 +4,7 @@
   "scripts": {
     "build": "yarn workspaces foreach run build",
     "clean": "yarn workspaces foreach run clean",
+    "clean:modules": "rimraf node_modules packages/*/node_modules",
     "test": "yarn workspaces foreach run test"
   },
   "devDependencies": {
