@@ -1,6 +1,6 @@
 {
   "name": "@emeraldpay/api-web",
-  "version": "0.3.2",
+  "version": "0.4.0-dev",
   "description": "Browser client for Emerald gRPC APIs",
   "license": "Apache-2.0",
   "main": "lib/index.js",
@@ -32,7 +32,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@emeraldpay/api": "0.3.2",
+    "@emeraldpay/api": "0.4.0-dev",
     "google-protobuf": "^3.21.2",
     "grpc-web": "^1.4.2",
     "protobufjs": "^7.2.3"
@@ -40,7 +40,6 @@
   "devDependencies": {
     "@types/google-protobuf": "^3.15.6",
     "@types/jest": "^29.5.1",
-    "@types/node": "^20.1.2",
     "grpc-tools": "^1.12.4",
     "grpc_tools_node_protoc_ts": "^5.3.3",
     "jest": "^29.5.0",

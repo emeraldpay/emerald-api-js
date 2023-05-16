@@ -11,5 +11,7 @@ yarn-error.log
 .idea/
 *.iml
 
+generated/
 lib/
+proto/
 *.tgz
