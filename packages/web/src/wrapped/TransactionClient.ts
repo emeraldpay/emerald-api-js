@@ -1,7 +1,7 @@
-import { Publisher, publishListToPromise, publishToPromise, readOnce, transaction } from "@emeraldpay/api";
-import { callSingle, callStream, WebChannel } from "../channel";
+import {Publisher, publishListToPromise, publishToPromise, readOnce, transaction} from "@emeraldpay/api";
+import {callSingle, callStream, WebChannel} from "../channel";
 import * as transaction_rpc from "../generated/TransactionServiceClientPb";
-import { classFactory } from "./Factory";
+import {classFactory} from "./Factory";
 
 export class TransactionClient {
     readonly client: transaction_rpc.TransactionClient;
@@ -45,6 +45,14 @@ export class TransactionClient {
         const mapper = this.convert.addressTxResponse();
 
         const call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
+        return readOnce(this.channel, call, protoRequest, this.retries);
+    }
+
+    public getAddressTokens(request: transaction.AddressTokenRequest): Publisher<transaction.AddressTokenResponse> {
+        const protoRequest = this.convert.addressTokenRequest(request);
+        const mapper = this.convert.addressTokenResponse();
+
+        const call = callStream(this.client.getAddressTokens.bind(this.client), mapper);
         return readOnce(this.channel, call, protoRequest, this.retries);
     }
 

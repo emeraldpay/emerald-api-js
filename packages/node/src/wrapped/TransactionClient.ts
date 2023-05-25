@@ -1,15 +1,8 @@
-import {
-    ConnectionListener,
-    Publisher,
-    publishListToPromise,
-    publishToPromise,
-    readOnce,
-    transaction,
-} from "@emeraldpay/api";
+import {ConnectionListener, Publisher, publishListToPromise, publishToPromise, readOnce, transaction,} from "@emeraldpay/api";
 import * as grpc from "@grpc/grpc-js";
-import { callSingle, callStream, NativeChannel } from "../channel";
+import {callSingle, callStream, NativeChannel} from "../channel";
 import * as transaction_grpc_pb from "../generated/transaction_grpc_pb";
-import { classFactory } from "./Factory";
+import {classFactory} from "./Factory";
 
 export class TransactionClient {
     readonly client: transaction_grpc_pb.TransactionClient;
@@ -57,6 +50,14 @@ export class TransactionClient {
         const mapper = this.convert.addressTxResponse();
 
         const call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
+        return readOnce(this.channel, call, protoRequest, this.retries);
+    }
+
+    public getAddressTokens(request: transaction.AddressTokenRequest): Publisher<transaction.AddressTokenResponse> {
+        const protoRequest = this.convert.addressTokenRequest(request);
+        const mapper = this.convert.addressTokenResponse();
+
+        const call = callStream(this.client.getAddressTokens.bind(this.client), mapper);
         return readOnce(this.channel, call, protoRequest, this.retries);
     }
 
