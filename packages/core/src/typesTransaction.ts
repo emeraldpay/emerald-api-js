@@ -1,7 +1,17 @@
-import {MessageFactory} from "./convert";
+import { MessageFactory } from "./convert";
 import * as transaction_message_pb from "./generated/transaction.message_pb";
-import {DataMapper} from "./Publisher";
-import {AnyAddress, Asset, Blockchain, BlockchainType, blockchainType, BlockInfo, ConvertCommon, SingleAddress, XpubAddress,} from "./typesCommon";
+import { DataMapper } from "./Publisher";
+import {
+    AnyAddress,
+    Asset,
+    Blockchain,
+    BlockchainType,
+    BlockInfo,
+    ConvertCommon,
+    SingleAddress,
+    XpubAddress,
+    blockchainType,
+} from "./typesCommon";
 
 export enum Direction {
     RECEIVE = 0,
@@ -64,17 +74,6 @@ export interface AddressTxResponse {
     changes: Change[];
     /** TODO: deprecated */
     transfers: AnyTransfer[];
-}
-
-export interface AddressTokenRequest {
-    blockchain: Blockchain;
-    address: AnyAddress;
-}
-
-export interface AddressTokenResponse {
-    blockchain: Blockchain;
-    address: AnyAddress;
-    contractAddresses: string[];
 }
 
 export interface AddressAmount {
@@ -245,25 +244,6 @@ export class Convert {
                 failed: resp.getFailed(),
                 removed: resp.getRemoved(),
                 txId: resp.getTxId(),
-            }
-        }
-    }
-
-    public addressTokenRequest(req: AddressTokenRequest): transaction_message_pb.AddressTokenRequest {
-        let result: transaction_message_pb.AddressTokenRequest = this.factory("transaction_message_pb.AddressTokenRequest");
-        return result.setBlockchain(req.blockchain.valueOf())
-            .setAddress(this.common.pbAnyAddress(req.address))
-    }
-
-    public addressTokenResponse(): DataMapper<transaction_message_pb.AddressTokenResponse, AddressTokenResponse> {
-        return (resp ) => {
-
-            const contractAddresses = resp.getContractAddressesList().map(value => value.getAddress())
-
-            return {
-                blockchain: resp.getBlockchain().valueOf(),
-                address: resp.getAddress().getAddress(),
-                contractAddresses: contractAddresses,
             }
         }
     }
