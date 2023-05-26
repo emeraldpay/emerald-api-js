@@ -29,7 +29,7 @@ import {
 } from '../generated/blockchain_pb';
 import { classFactory } from './Factory';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { version: clientVersion } = require('../package.json');
+const { version: clientVersion } = require('../../package.json');
 
 export class BlockchainClient {
   readonly client: ProtoBlockchainClient;
