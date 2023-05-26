@@ -4,7 +4,7 @@ import { NativeChannel, callSingle } from '../channel';
 import { AuthClient as ProtoAuthClient } from '../generated/auth_grpc_pb';
 import { AuthRequest as ProtoAuthRequest, AuthResponse as ProtoAuthResponse } from '../generated/auth_pb';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { version: clientVersion } = require('../package.json');
+const { version: clientVersion } = require('../../package.json');
 
 export class AuthClient {
   readonly client: ProtoAuthClient;

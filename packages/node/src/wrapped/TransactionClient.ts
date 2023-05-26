@@ -11,7 +11,7 @@ import { NativeChannel, callSingle, callStream } from '../channel';
 import { TransactionClient as ProtoTransactionClient } from '../generated/transaction_grpc_pb';
 import { classFactory } from './Factory';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { version: clientVersion } = require('../package.json');
+const { version: clientVersion } = require('../../package.json');
 
 export class TransactionClient {
   readonly client: ProtoTransactionClient;
