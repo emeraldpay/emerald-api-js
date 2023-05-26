@@ -7,10 +7,11 @@ import {
   transaction,
 } from '@emeraldpay/api';
 import * as grpc from '@grpc/grpc-js';
-import { version as clientVersion } from '../../package.json';
 import { NativeChannel, callSingle, callStream } from '../channel';
 import { TransactionClient as ProtoTransactionClient } from '../generated/transaction_grpc_pb';
 import { classFactory } from './Factory';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { version: clientVersion } = require('../package.json');
 
 export class TransactionClient {
   readonly client: ProtoTransactionClient;
