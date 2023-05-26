@@ -20,15 +20,14 @@
     "emerald-wallet"
   ],
   "scripts": {
-    "prepublishOnly": "npm run clean && npm run build && npm run test",
+    "prepublishOnly": "npm run clean && npm run build && npm test",
     "build": "npm run clean && npm run init && npm run generate && npm run build:ts",
     "build:ts": "tsc",
-    "clean": "rimraf lib && rimraf src/generated",
+    "clean": "rimraf lib src/generated",
     "generate": "npm run generate:js && npm run generate:copy",
     "generate:copy": "rimraf src/generated && cp -r lib/generated src/",
     "generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs:./lib/generated --grpc-web_out=import_style=typescript,mode=grpcwebtext:./lib/generated --plugin=protoc-gen-grpc=`which grpc_tools_node_protoc_plugin` -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
-    "init": "npm run init:dirs",
-    "init:dirs": "mkdir -p lib/generated",
+    "init": "mkdir -p lib/generated",
     "test": "jest"
   },
   "dependencies": {
