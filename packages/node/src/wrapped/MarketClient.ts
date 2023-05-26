@@ -7,19 +7,22 @@ import {
   readOnce,
 } from '@emeraldpay/api';
 import * as grpc from '@grpc/grpc-js';
+import { version as clientVersion } from '../../package.json';
 import { NativeChannel, callSingle } from '../channel';
-import * as prices_grpc_pb from '../generated/market_grpc_pb';
+import { MarketClient as ProtoMarketClient } from '../generated/market_grpc_pb';
 import { classFactory } from './Factory';
 
 export class MarketClient {
-  readonly client: prices_grpc_pb.MarketClient;
+  readonly client: ProtoMarketClient;
   readonly channel: NativeChannel;
   readonly retries: number;
 
   private readonly convert = new ConvertMarket(classFactory);
 
-  constructor(address: string, credentials: grpc.ChannelCredentials, retries = 3) {
-    this.client = new prices_grpc_pb.MarketClient(address, credentials);
+  constructor(address: string, credentials: grpc.ChannelCredentials, agent: string[], retries = 3) {
+    agent.push(`emerald-client-node/${clientVersion}`);
+
+    this.client = new ProtoMarketClient(address, credentials, { 'grpc.primary_user_agent': agent.join(' ') });
     this.channel = new NativeChannel(this.client);
     this.retries = retries;
   }

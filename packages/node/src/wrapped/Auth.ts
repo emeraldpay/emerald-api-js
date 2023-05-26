@@ -1,16 +1,19 @@
 import { ConnectionListener, publishToPromise, readOnce } from '@emeraldpay/api';
 import * as grpc from '@grpc/grpc-js';
+import { version as clientVersion } from '../../package.json';
 import { NativeChannel, callSingle } from '../channel';
-import * as auth_grpc_pb from '../generated/auth_grpc_pb';
-import * as auth_pb from '../generated/auth_pb';
+import { AuthClient as ProtoAuthClient } from '../generated/auth_grpc_pb';
+import { AuthRequest as ProtoAuthRequest, AuthResponse as ProtoAuthResponse } from '../generated/auth_pb';
 
 export class AuthClient {
-  readonly client: auth_grpc_pb.AuthClient;
+  readonly client: ProtoAuthClient;
   readonly channel: NativeChannel;
   readonly retries: number;
 
-  constructor(address: string, credentials: grpc.ChannelCredentials, retries = 3) {
-    this.client = new auth_grpc_pb.AuthClient(address, credentials);
+  constructor(address: string, credentials: grpc.ChannelCredentials, agent: string[], retries = 3) {
+    agent.push(`emerald-client-node/${clientVersion}`);
+
+    this.client = new ProtoAuthClient(address, credentials, { 'grpc.primary_user_agent': agent.join(' ') });
     this.channel = new NativeChannel(this.client);
     this.retries = retries;
   }
@@ -19,8 +22,8 @@ export class AuthClient {
     this.channel.setListener(listener);
   }
 
-  public authenticate(request: auth_pb.AuthRequest): Promise<auth_pb.AuthResponse> {
-    const call = callSingle(this.client.authenticate.bind(this.client), (resp: auth_pb.AuthResponse) => resp);
+  public authenticate(request: ProtoAuthRequest): Promise<ProtoAuthResponse> {
+    const call = callSingle(this.client.authenticate.bind(this.client), (resp: ProtoAuthResponse) => resp);
     return publishToPromise(readOnce(this.channel, call, request, this.retries));
   }
 }
