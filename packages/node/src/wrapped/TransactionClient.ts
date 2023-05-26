@@ -7,19 +7,22 @@ import {
   transaction,
 } from '@emeraldpay/api';
 import * as grpc from '@grpc/grpc-js';
+import { version as clientVersion } from '../../package.json';
 import { NativeChannel, callSingle, callStream } from '../channel';
-import * as transaction_grpc_pb from '../generated/transaction_grpc_pb';
+import { TransactionClient as ProtoTransactionClient } from '../generated/transaction_grpc_pb';
 import { classFactory } from './Factory';
 
 export class TransactionClient {
-  readonly client: transaction_grpc_pb.TransactionClient;
+  readonly client: ProtoTransactionClient;
   readonly channel: NativeChannel;
   readonly retries: number;
 
   private readonly convert: transaction.Convert = new transaction.Convert(classFactory);
 
-  constructor(address: string, credentials: grpc.ChannelCredentials, retries = 3) {
-    this.client = new transaction_grpc_pb.TransactionClient(address, credentials);
+  constructor(address: string, credentials: grpc.ChannelCredentials, agent: string[], retries = 3) {
+    agent.push(`emerald-client-node/${clientVersion}`);
+
+    this.client = new ProtoTransactionClient(address, credentials, { 'grpc.primary_user_agent': agent.join(' ') });
     this.channel = new NativeChannel(this.client);
     this.retries = retries;
   }

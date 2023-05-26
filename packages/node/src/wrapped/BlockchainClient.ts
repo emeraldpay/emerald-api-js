@@ -20,20 +20,27 @@ import {
   readOnce,
 } from '@emeraldpay/api';
 import * as grpc from '@grpc/grpc-js';
+import { version as clientVersion } from '../../package.json';
 import { NativeChannel, callSingle, callStream } from '../channel';
-import * as blockchain_grpc_pb from '../generated/blockchain_grpc_pb';
-import * as blockchain_pb from '../generated/blockchain_pb';
+import { BlockchainClient as ProtoBlockchainClient } from '../generated/blockchain_grpc_pb';
+import {
+  AddressBalance as ProtoAddressBalance,
+  EstimateFeeResponse as ProtoEstimateFeeResponse,
+  TxStatus as ProtoTxStatus,
+} from '../generated/blockchain_pb';
 import { classFactory } from './Factory';
 
 export class BlockchainClient {
-  readonly client: blockchain_grpc_pb.BlockchainClient;
+  readonly client: ProtoBlockchainClient;
   readonly channel: NativeChannel;
   readonly retries: number;
 
   private readonly convert = new ConvertBlockchain(classFactory);
 
-  constructor(address: string, credentials: grpc.ChannelCredentials, retries = 3) {
-    this.client = new blockchain_grpc_pb.BlockchainClient(address, credentials);
+  constructor(address: string, credentials: grpc.ChannelCredentials, agent: string[], retries = 3) {
+    agent.push(`emerald-client-node/${clientVersion}`);
+
+    this.client = new ProtoBlockchainClient(address, credentials, { 'grpc.primary_user_agent': agent.join(' ') });
     this.channel = new NativeChannel(this.client);
     this.retries = retries;
   }
@@ -62,7 +69,7 @@ export class BlockchainClient {
 
   public subscribeBalance(request: BalanceRequest): Publisher<AddressBalance> {
     const protoRequest = this.convert.balanceRequest(request);
-    const mapper: DataMapper<blockchain_pb.AddressBalance, AddressBalance> = this.convert.balanceResponse();
+    const mapper: DataMapper<ProtoAddressBalance, AddressBalance> = this.convert.balanceResponse();
 
     const call = callStream(this.client.subscribeBalance.bind(this.client), mapper);
     return alwaysRetry(this.channel, call, protoRequest);
@@ -70,7 +77,7 @@ export class BlockchainClient {
 
   public getBalance(request: BalanceRequest): Promise<Array<AddressBalance>> {
     const protoRequest = this.convert.balanceRequest(request);
-    const mapper: DataMapper<blockchain_pb.AddressBalance, AddressBalance> = this.convert.balanceResponse();
+    const mapper: DataMapper<ProtoAddressBalance, AddressBalance> = this.convert.balanceResponse();
 
     const call = callStream(this.client.getBalance.bind(this.client), mapper);
     return publishListToPromise(readOnce(this.channel, call, protoRequest, this.retries));
@@ -78,7 +85,7 @@ export class BlockchainClient {
 
   public subscribeTxStatus(request: TxStatusRequest): Publisher<TxStatusResponse> {
     const protoRequest = this.convert.txRequest(request);
-    const mapper: DataMapper<blockchain_pb.TxStatus, TxStatusResponse> = this.convert.txResponse();
+    const mapper: DataMapper<ProtoTxStatus, TxStatusResponse> = this.convert.txResponse();
 
     const call = callStream(this.client.subscribeTxStatus.bind(this.client), mapper);
     return readOnce(this.channel, call, protoRequest, this.retries);
@@ -86,8 +93,7 @@ export class BlockchainClient {
 
   public estimateFees(request: EstimateFeeRequest): Promise<EstimateFeeResponse> {
     const protoRequest = this.convert.estimateFeeRequest(request);
-    const mapper: DataMapper<blockchain_pb.EstimateFeeResponse, EstimateFeeResponse> =
-      this.convert.estimateFeeResponse();
+    const mapper: DataMapper<ProtoEstimateFeeResponse, EstimateFeeResponse> = this.convert.estimateFeeResponse();
 
     const call = callSingle(this.client.estimateFee.bind(this.client), mapper);
     return publishToPromise(readOnce(this.channel, call, protoRequest, this.retries));
