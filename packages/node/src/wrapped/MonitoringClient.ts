@@ -1,9 +1,10 @@
 import { ConnectionListener, publishToPromise, readOnce } from '@emeraldpay/api';
 import * as grpc from '@grpc/grpc-js';
-import { version as clientVersion } from '../../package.json';
 import { NativeChannel, callSingle } from '../channel';
 import { MonitoringClient as ProtoMonitoringClient } from '../generated/monitoring_grpc_pb';
 import { PingRequest as ProtoPingRequest } from '../generated/monitoring_pb';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { version: clientVersion } = require('../package.json');
 
 export class MonitoringClient {
   readonly client: ProtoMonitoringClient;

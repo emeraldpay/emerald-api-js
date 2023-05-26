@@ -1,8 +1,9 @@
 import { ChannelCredentials, Metadata, credentials } from '@grpc/grpc-js';
-import { version as clientVersion } from '../package.json';
 import { AuthRequest, AuthResponse, TempAuth } from './generated/auth_pb';
 import { AuthMetadata, JwtSignature } from './signature';
 import { AuthClient } from './wrapped/Auth';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { version: clientVersion } = require('../package.json');
 
 export enum AuthenticationStatus {
   AUTHENTICATING,
