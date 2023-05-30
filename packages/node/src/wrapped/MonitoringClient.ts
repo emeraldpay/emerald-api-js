@@ -9,6 +9,7 @@ const { version: clientVersion } = require('../../package.json');
 export class MonitoringClient {
   readonly client: ProtoMonitoringClient;
   readonly channel: NativeChannel;
+  readonly credentials: ChannelCredentials;
   readonly retries: number;
 
   constructor(address: string, credentials: ChannelCredentials, agents: string[], retries = 3) {
@@ -16,6 +17,7 @@ export class MonitoringClient {
 
     this.client = new ProtoMonitoringClient(address, credentials, { 'grpc.primary_user_agent': agent });
     this.channel = new NativeChannel(this.client);
+    this.credentials = credentials;
     this.retries = retries;
   }
 

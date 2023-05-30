@@ -16,6 +16,7 @@ const { version: clientVersion } = require('../../package.json');
 export class MarketClient {
   readonly client: ProtoMarketClient;
   readonly channel: NativeChannel;
+  readonly credentials: ChannelCredentials;
   readonly retries: number;
 
   private readonly convert = new ConvertMarket(classFactory);
@@ -25,6 +26,7 @@ export class MarketClient {
 
     this.client = new ProtoMarketClient(address, credentials, { 'grpc.primary_user_agent': agent });
     this.channel = new NativeChannel(this.client);
+    this.credentials = credentials;
     this.retries = retries;
   }
 
