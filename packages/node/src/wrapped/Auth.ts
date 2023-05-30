@@ -1,5 +1,5 @@
 import { ConnectionListener, publishToPromise, readOnce } from '@emeraldpay/api';
-import * as grpc from '@grpc/grpc-js';
+import { ChannelCredentials } from '@grpc/grpc-js';
 import { NativeChannel, callSingle } from '../channel';
 import { AuthClient as ProtoAuthClient } from '../generated/auth_grpc_pb';
 import { AuthRequest as ProtoAuthRequest, AuthResponse as ProtoAuthResponse } from '../generated/auth_pb';
@@ -11,10 +11,10 @@ export class AuthClient {
   readonly channel: NativeChannel;
   readonly retries: number;
 
-  constructor(address: string, credentials: grpc.ChannelCredentials, agent: string[], retries = 3) {
-    agent.push(`emerald-client-node/${clientVersion}`);
+  constructor(address: string, credentials: ChannelCredentials, agents: string[], retries = 3) {
+    const agent = [...agents, `emerald-client-node/${clientVersion}`].join(' ');
 
-    this.client = new ProtoAuthClient(address, credentials, { 'grpc.primary_user_agent': agent.join(' ') });
+    this.client = new ProtoAuthClient(address, credentials, { 'grpc.primary_user_agent': agent });
     this.channel = new NativeChannel(this.client);
     this.retries = retries;
   }
