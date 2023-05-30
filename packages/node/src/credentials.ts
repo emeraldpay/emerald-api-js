@@ -11,24 +11,33 @@ export enum AuthenticationStatus {
   ERROR,
 }
 
-export type AuthenticationListener = (status: AuthenticationStatus) => void;
+export enum TokenStatus {
+  REQUIRED,
+  REQUESTED,
+  SUCCESS,
+  ERROR,
+}
+
+export type AuthenticationListener = (status: AuthenticationStatus, tokenStatus: TokenStatus) => void;
 
 export class CredentialsContext {
-  public url: string;
-
   private readonly agents: string[];
   private readonly channelCredentials: ChannelCredentials;
   private readonly ssl: ChannelCredentials;
   private readonly userId: string;
 
-  private authentication: EmeraldAuthentication;
-  private listener?: AuthenticationListener;
-  private status = AuthenticationStatus.AUTHENTICATING;
-  private token?: AuthMetadata;
+  private authenticationStatus = AuthenticationStatus.AUTHENTICATING;
+  private tokenStatus = TokenStatus.REQUIRED;
 
-  constructor(url: string, agents: string[], userId: string) {
+  private authentication: EmeraldAuthentication | undefined;
+  private listener: AuthenticationListener | undefined;
+  private token: AuthMetadata | undefined;
+
+  readonly address: string;
+
+  constructor(address: string, agents: string[], userId: string) {
+    this.address = address;
     this.agents = agents;
-    this.url = url;
     this.userId = userId;
 
     this.ssl = credentials.createSsl();
@@ -36,7 +45,7 @@ export class CredentialsContext {
     const ssl = this.getSsl();
 
     const callCredentials = credentials.createFromMetadataGenerator(
-      (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) => {
+      (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) =>
         this.getSigner()
           .then((auth) => {
             const meta = new Metadata();
@@ -59,47 +68,78 @@ export class CredentialsContext {
             this.notify(AuthenticationStatus.ERROR);
 
             callback(new Error('Unable to get token'));
-          });
-      },
+          }),
     );
 
     this.channelCredentials = credentials.combineChannelCredentials(ssl, callCredentials);
   }
 
-  public getChannelCredentials(): ChannelCredentials {
+  getChannelCredentials(): ChannelCredentials {
     return this.channelCredentials;
   }
 
-  public setListener(listener: AuthenticationListener): void {
+  setAuthentication(authentication: EmeraldAuthentication): void {
+    this.authentication = authentication;
+  }
+
+  setListener(listener: AuthenticationListener): void {
     this.listener = listener;
 
-    listener(this.status);
+    listener(this.authenticationStatus, this.tokenStatus);
+  }
+
+  protected getSigner(): Promise<AuthMetadata> {
+    if (this.tokenStatus === TokenStatus.REQUESTED) {
+      return new Promise((resolve, reject) => {
+        const awaitToken = (): void => {
+          switch (this.tokenStatus) {
+            case TokenStatus.ERROR:
+              return reject();
+            case TokenStatus.SUCCESS:
+              return resolve(this.token);
+            default:
+              setTimeout(awaitToken, 50);
+          }
+        };
+
+        awaitToken();
+      });
+    }
+
+    if (this.authentication == null) {
+      this.authentication = new JwtUserAuth(this.address, this.getSsl(), this.agents);
+    }
+
+    if (this.token == null) {
+      this.tokenStatus = TokenStatus.REQUESTED;
+
+      return this.authentication
+        .authenticate(this.agents, this.userId)
+        .then((token) => {
+          this.token = token;
+          this.tokenStatus = TokenStatus.SUCCESS;
+
+          return token;
+        })
+        .catch((error) => {
+          this.tokenStatus = TokenStatus.ERROR;
+
+          throw error;
+        });
+    }
+
+    return Promise.resolve(this.token);
   }
 
   protected getSsl(): ChannelCredentials {
     return this.ssl;
   }
 
-  protected getSigner(): Promise<AuthMetadata> {
-    if (!this.authentication) {
-      this.authentication = new JwtUserAuth(this.url, this.getSsl(), this.agents);
-    }
-
-    if (this.token == null) {
-      return this.authentication.authenticate(this.agents, this.userId).then((token) => {
-        this.token = token;
-
-        return token;
-      });
-    }
-
-    return Promise.resolve(this.token);
-  }
-
   protected notify(status: AuthenticationStatus): void {
-    if (this.listener && status != this.status) {
-      this.status = status;
-      this.listener(status);
+    if (status != this.authenticationStatus) {
+      this.authenticationStatus = status;
+
+      this.listener?.(status, this.tokenStatus);
     }
   }
 }
@@ -108,7 +148,7 @@ export function emeraldCredentials(url: string, agents: string[], userId: string
   return new CredentialsContext(url, agents, userId);
 }
 
-interface EmeraldAuthentication {
+export interface EmeraldAuthentication {
   authenticate(agents: string[], userId: string): Promise<AuthMetadata>;
 }
 
@@ -125,10 +165,10 @@ class JwtUserAuth implements EmeraldAuthentication {
 
     tempAuth.setId(userId);
 
-    authRequest.setTempAuth(tempAuth);
     authRequest.setAgentDetailsList([...agents, `emerald-client-node/${clientVersion}`]);
     authRequest.setCapabilitiesList(['JWT_RS256']);
     authRequest.setScopesList(['BASIC_USER']);
+    authRequest.setTempAuth(tempAuth);
 
     return this.client.authenticate(authRequest).then((result: AuthResponse) => {
       if (!result.getSucceed()) {
