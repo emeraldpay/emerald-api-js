@@ -10,22 +10,28 @@ import {
   StateListener,
   asStatus,
 } from '@emeraldpay/api';
-import * as grpc from '@grpc/grpc-js';
-import { ClientReadableStream, ClientUnaryCall } from '@grpc/grpc-js';
+import {
+  Client,
+  ClientReadableStream,
+  ClientUnaryCall,
+  connectivityState as GrpcConnectivityState,
+  Metadata,
+  ServiceError,
+} from '@grpc/grpc-js';
 
-type SingleCallback<T> = (error: grpc.ServiceError | null, response: T) => void;
+type SingleCallback<T> = (error: ServiceError | null, response: T) => void;
 
-function toConnectivityState(state: grpc.connectivityState): ConnectivityState {
+function toConnectivityState(state: GrpcConnectivityState): ConnectivityState {
   switch (state) {
-    case grpc.connectivityState.CONNECTING:
+    case GrpcConnectivityState.CONNECTING:
       return ConnectivityState.CONNECTING;
-    case grpc.connectivityState.IDLE:
+    case GrpcConnectivityState.IDLE:
       return ConnectivityState.IDLE;
-    case grpc.connectivityState.READY:
+    case GrpcConnectivityState.READY:
       return ConnectivityState.READY;
-    case grpc.connectivityState.SHUTDOWN:
+    case GrpcConnectivityState.SHUTDOWN:
       return ConnectivityState.SHUTDOWN;
-    case grpc.connectivityState.TRANSIENT_FAILURE:
+    case GrpcConnectivityState.TRANSIENT_FAILURE:
       return ConnectivityState.TRANSIENT_FAILURE;
     default:
       throw Error(`Unsupported state: ${state}`);
@@ -33,11 +39,11 @@ function toConnectivityState(state: grpc.connectivityState): ConnectivityState {
 }
 
 export class NativeChannel implements Channel {
-  private readonly client: grpc.Client;
+  private readonly client: Client;
 
   private listener: NodeJS.Timeout;
 
-  constructor(client: grpc.Client) {
+  constructor(client: Client) {
     this.client = client;
   }
 
@@ -101,13 +107,13 @@ class NativeStreamPublisher<T> extends ManagedPublisher<T> implements Publisher<
 }
 
 export function callSingle<R, I, O>(
-  delegate: (request: R, metadata: grpc.Metadata, callback: SingleCallback<I>) => ClientUnaryCall,
+  delegate: (request: R, metadata: Metadata, callback: SingleCallback<I>) => ClientUnaryCall,
   mapper: DataMapper<I, O>,
 ): RemoteCall<R, O> {
   return (request) => {
     const source = new NativeCallPublisher();
 
-    delegate(request, new grpc.Metadata(), source.handler());
+    delegate(request, new Metadata(), source.handler());
 
     return new MappingPublisher(source, mapper);
   };

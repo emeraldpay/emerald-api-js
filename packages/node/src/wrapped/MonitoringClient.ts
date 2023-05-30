@@ -1,5 +1,5 @@
 import { ConnectionListener, publishToPromise, readOnce } from '@emeraldpay/api';
-import * as grpc from '@grpc/grpc-js';
+import { ChannelCredentials } from '@grpc/grpc-js';
 import { NativeChannel, callSingle } from '../channel';
 import { MonitoringClient as ProtoMonitoringClient } from '../generated/monitoring_grpc_pb';
 import { PingRequest as ProtoPingRequest } from '../generated/monitoring_pb';
@@ -11,10 +11,10 @@ export class MonitoringClient {
   readonly channel: NativeChannel;
   readonly retries: number;
 
-  constructor(address: string, credentials: grpc.ChannelCredentials, agent: string[], retries = 3) {
-    agent.push(`emerald-client-node/${clientVersion}`);
+  constructor(address: string, credentials: ChannelCredentials, agents: string[], retries = 3) {
+    const agent = [...agents, `emerald-client-node/${clientVersion}`].join(' ');
 
-    this.client = new ProtoMonitoringClient(address, credentials, { 'grpc.primary_user_agent': agent.join(' ') });
+    this.client = new ProtoMonitoringClient(address, credentials, { 'grpc.primary_user_agent': agent });
     this.channel = new NativeChannel(this.client);
     this.retries = retries;
   }

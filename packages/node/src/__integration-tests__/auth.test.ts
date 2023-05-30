@@ -5,7 +5,7 @@ jest.setTimeout(30000);
 
 describe('Auth', () => {
   test('auth and get balance', async () => {
-    const client = EmeraldApi.defaultApi().blockchain();
+    const client = EmeraldApi.productionApi().blockchain();
 
     const balance = await client.getBalance({
       asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
@@ -16,7 +16,7 @@ describe('Auth', () => {
   });
 
   test('terminate connection after timeout', async () => {
-    const client = EmeraldApi.fakeApi().blockchain();
+    const client = EmeraldApi.localApi().blockchain();
 
     try {
       const balance = await client.getBalance({

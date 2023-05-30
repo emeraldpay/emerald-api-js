@@ -16,7 +16,7 @@ export type AuthenticationListener = (status: AuthenticationStatus) => void;
 export class CredentialsContext {
   public url: string;
 
-  private readonly agent: string[];
+  private readonly agents: string[];
   private readonly channelCredentials: ChannelCredentials;
   private readonly ssl: ChannelCredentials;
   private readonly userId: string;
@@ -26,8 +26,8 @@ export class CredentialsContext {
   private status = AuthenticationStatus.AUTHENTICATING;
   private token?: AuthMetadata;
 
-  constructor(url: string, agent: string[], userId: string) {
-    this.agent = agent;
+  constructor(url: string, agents: string[], userId: string) {
+    this.agents = agents;
     this.url = url;
     this.userId = userId;
 
@@ -82,11 +82,11 @@ export class CredentialsContext {
 
   protected getSigner(): Promise<AuthMetadata> {
     if (!this.authentication) {
-      this.authentication = new JwtUserAuth(this.url, this.getSsl(), this.agent);
+      this.authentication = new JwtUserAuth(this.url, this.getSsl(), this.agents);
     }
 
-    if (typeof this.token == 'undefined') {
-      return this.authentication.authenticate(this.agent, this.userId).then((token) => {
+    if (this.token == null) {
+      return this.authentication.authenticate(this.agents, this.userId).then((token) => {
         this.token = token;
 
         return token;
@@ -104,29 +104,29 @@ export class CredentialsContext {
   }
 }
 
-export function emeraldCredentials(url: string, agent: string[], userId: string): CredentialsContext {
-  return new CredentialsContext(url, agent, userId);
+export function emeraldCredentials(url: string, agents: string[], userId: string): CredentialsContext {
+  return new CredentialsContext(url, agents, userId);
 }
 
 interface EmeraldAuthentication {
-  authenticate(agent: string[], userId: string): Promise<AuthMetadata>;
+  authenticate(agents: string[], userId: string): Promise<AuthMetadata>;
 }
 
 class JwtUserAuth implements EmeraldAuthentication {
   client: AuthClient;
 
-  constructor(url: string, credentials: ChannelCredentials, agent: string[]) {
-    this.client = new AuthClient(url, credentials, agent);
+  constructor(url: string, credentials: ChannelCredentials, agents: string[]) {
+    this.client = new AuthClient(url, credentials, agents);
   }
 
-  authenticate(agent: string[], userId: string): Promise<AuthMetadata> {
+  authenticate(agents: string[], userId: string): Promise<AuthMetadata> {
     const authRequest = new AuthRequest();
     const tempAuth = new TempAuth();
 
     tempAuth.setId(userId);
 
     authRequest.setTempAuth(tempAuth);
-    authRequest.setAgentDetailsList([...agent, `emerald-client-node/${clientVersion}`]);
+    authRequest.setAgentDetailsList([...agents, `emerald-client-node/${clientVersion}`]);
     authRequest.setCapabilitiesList(['JWT_RS256']);
     authRequest.setScopesList(['BASIC_USER']);
 
