@@ -15,6 +15,7 @@ enum TokenStatus {
   REQUIRED,
   REQUESTED,
   SUCCESS,
+  ERROR,
 }
 
 export type AuthenticationListener = (status: AuthenticationStatus) => void;
@@ -89,12 +90,15 @@ export class CredentialsContext {
 
   protected getSigner(): Promise<AuthMetadata> {
     if (this.tokenStatus === TokenStatus.REQUESTED) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const awaitToken = (): void => {
-          if (this.tokenStatus === TokenStatus.SUCCESS) {
-            resolve(this.token);
-          } else {
-            setTimeout(awaitToken, 250);
+          switch (this.tokenStatus) {
+            case TokenStatus.ERROR:
+              return reject();
+            case TokenStatus.SUCCESS:
+              return resolve(this.token);
+            default:
+              setTimeout(awaitToken, 50);
           }
         };
 
@@ -109,13 +113,19 @@ export class CredentialsContext {
     if (this.token == null) {
       this.tokenStatus = TokenStatus.REQUESTED;
 
-      return this.authentication.authenticate(this.agents, this.userId).then((token) => {
-        this.tokenStatus = TokenStatus.SUCCESS;
+      return this.authentication
+        .authenticate(this.agents, this.userId)
+        .then((token) => {
+          this.token = token;
+          this.tokenStatus = TokenStatus.SUCCESS;
 
-        this.token = token;
+          return token;
+        })
+        .catch((error) => {
+          this.tokenStatus = TokenStatus.ERROR;
 
-        return token;
-      });
+          throw error;
+        });
     }
 
     return Promise.resolve(this.token);
