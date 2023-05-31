@@ -1,19 +1,19 @@
-import {Metadata} from "@grpc/grpc-js";
+import { Metadata } from '@grpc/grpc-js';
 
 export interface AuthMetadata {
-    add(meta: Metadata)
+  add(meta: Metadata);
 }
 
 export class JwtSignature implements AuthMetadata {
-    readonly token: string;
-    readonly expire: Date;
+  readonly token: string;
+  readonly expire: Date;
 
-    constructor(token: string, expire: Date) {
-        this.token = token;
-        this.expire = expire;
-    }
+  constructor(token: string, expire: Date) {
+    this.token = token;
+    this.expire = expire;
+  }
 
-    add(meta: Metadata) {
-        meta.add("Authorization", "Bearer " + this.token);
-    }
+  add(meta: Metadata): void {
+    meta.add('Authorization', `Bearer ${this.token}`);
+  }
 }

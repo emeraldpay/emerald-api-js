@@ -56,13 +56,20 @@ describe('Auth', () => {
 
     expect(results.length).toEqual(4);
 
-    const blockchainMetadata = blockchainClient.credentials._getCallCredentials();
-    const marketMetadata = marketClient.credentials._getCallCredentials();
-    const monitoringMetadata = monitoringClient.credentials._getCallCredentials();
-    const transactionMetadata = transactionClient.credentials._getCallCredentials();
+    const options = { service_url: '' };
 
-    expect(blockchainMetadata._equals(marketMetadata)).toBeTruthy();
-    expect(marketMetadata._equals(monitoringMetadata)).toBeTruthy();
-    expect(monitoringMetadata._equals(transactionMetadata)).toBeTruthy();
+    const blockchainMetadata = await blockchainClient.credentials._getCallCredentials().generateMetadata(options);
+    const marketMetadata = await marketClient.credentials._getCallCredentials().generateMetadata(options);
+    const monitoringMetadata = await monitoringClient.credentials._getCallCredentials().generateMetadata(options);
+    const transactionMetadata = await transactionClient.credentials._getCallCredentials().generateMetadata(options);
+
+    const [blockchainAuthorization] = blockchainMetadata.get('authorization');
+    const [marketAuthorization] = marketMetadata.get('authorization');
+    const [monitoringAuthorization] = monitoringMetadata.get('authorization');
+    const [transactionAuthorization] = transactionMetadata.get('authorization');
+
+    expect(blockchainAuthorization).toEqual(marketAuthorization);
+    expect(marketAuthorization).toEqual(monitoringAuthorization);
+    expect(monitoringAuthorization).toEqual(transactionAuthorization);
   });
 });
