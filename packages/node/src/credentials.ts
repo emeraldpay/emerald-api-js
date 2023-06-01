@@ -11,14 +11,14 @@ export enum AuthenticationStatus {
   ERROR,
 }
 
-enum TokenStatus {
+export enum TokenStatus {
   REQUIRED,
   REQUESTED,
   SUCCESS,
   ERROR,
 }
 
-export type AuthenticationListener = (status: AuthenticationStatus) => void;
+export type AuthenticationListener = (status: AuthenticationStatus, tokenStatus: TokenStatus) => void;
 
 export class CredentialsContext {
   private readonly agents: string[];
@@ -74,18 +74,18 @@ export class CredentialsContext {
     this.channelCredentials = credentials.combineChannelCredentials(ssl, callCredentials);
   }
 
-  public getChannelCredentials(): ChannelCredentials {
+  getChannelCredentials(): ChannelCredentials {
     return this.channelCredentials;
   }
 
-  public setListener(listener: AuthenticationListener): void {
-    this.listener = listener;
-
-    listener(this.authenticationStatus);
+  setAuthentication(authentication: EmeraldAuthentication): void {
+    this.authentication = authentication;
   }
 
-  protected getSsl(): ChannelCredentials {
-    return this.ssl;
+  setListener(listener: AuthenticationListener): void {
+    this.listener = listener;
+
+    listener(this.authenticationStatus, this.tokenStatus);
   }
 
   protected getSigner(): Promise<AuthMetadata> {
@@ -131,10 +131,15 @@ export class CredentialsContext {
     return Promise.resolve(this.token);
   }
 
+  protected getSsl(): ChannelCredentials {
+    return this.ssl;
+  }
+
   protected notify(status: AuthenticationStatus): void {
     if (status != this.authenticationStatus) {
       this.authenticationStatus = status;
-      this.listener?.(status);
+
+      this.listener?.(status, this.tokenStatus);
     }
   }
 }
@@ -143,7 +148,7 @@ export function emeraldCredentials(url: string, agents: string[], userId: string
   return new CredentialsContext(url, agents, userId);
 }
 
-interface EmeraldAuthentication {
+export interface EmeraldAuthentication {
   authenticate(agents: string[], userId: string): Promise<AuthMetadata>;
 }
 
