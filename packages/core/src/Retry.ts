@@ -1,159 +1,172 @@
-import { MethodExecutor } from "./Executor";
-import { ConnectionListener, ConnectionStatus, ConnectivityState, Channel } from "./Channel";
-
-export class Retry<T, R> {
-
-    private status: ConnectionStatus = ConnectionStatus.PENDING;
-    private statusListener?: ConnectionListener;
-
-    private readonly channel: Channel;
-    private readonly executor: MethodExecutor;
-    private readonly sc: ContinueCheck;
-
-    constructor(channel: Channel, executor: MethodExecutor, sc: ContinueCheck) {
-        if (typeof channel == 'undefined') {
-            throw new Error("channel is not provided");
-        }
-        if (typeof executor == 'undefined') {
-            throw new Error("executor is not provided");
-        }
-        if (typeof sc == 'undefined') {
-            throw new Error('sc is not provided');
-        }
-        this.channel = channel;
-        this.executor = executor;
-        this.sc = sc;
-    }
-
-    public callWhenReady() {
-        if (!this.sc.shouldContinue()) {
-            this.notify(ConnectionStatus.CLOSED);
-
-            if (this.sc.failed === true) {
-                this.executor.terminate();
-            }
-
-            return;
-        }
-        this.notify(ConnectionStatus.CONNECTING);
-        const connState = this.channel.getState();
-        const isReady = (state: ConnectivityState, retry: boolean): boolean => {
-            // console.warn("state", state);
-            if (state === ConnectivityState.TRANSIENT_FAILURE) {
-                this.sc.onFail();
-                if (retry) {
-                    setTimeout(this.callWhenReady.bind(this), 5000, this.executor, this.sc);
-                }
-                return false;
-            } else if (state === ConnectivityState.READY) {
-                return true;
-            } else if (state === ConnectivityState.SHUTDOWN) {
-                this.sc.onClose();
-                return false;
-            } else {
-                if (retry) {
-                    setTimeout(this.callWhenReady.bind(this), 250, this.executor, this.sc);
-                }
-                return false;
-            }
-        };
-        const execute = () => {
-            this.executor.execute(() => {
-                this.notify(ConnectionStatus.CONNECTING);
-                setTimeout(this.callWhenReady.bind(this), 1000, this.executor, this.sc);
-            });
-        };
-        if (isReady(connState, false)) {
-            this.notify(ConnectionStatus.CONNECTED);
-            execute();
-        } else {
-            this.notify(ConnectionStatus.CONNECTING);
-            this.channel.watch(connState, 5000, (err, connStateNew) => {
-                if (err) {
-                    this.sc.onFail();
-                }
-                if (isReady(connStateNew, true)) {
-                    execute()
-                }
-            });
-        }
-    }
-
-    public setConnectionListener(listener: ConnectionListener) {
-        this.statusListener = listener;
-        listener(this.status);
-    }
-
-    protected notify(status: ConnectionStatus) {
-        if (status != this.status) {
-            this.status = status;
-        }
-        if (this.statusListener) {
-            this.statusListener(status);
-        }
-    }
-}
+import { Channel, ConnectionListener, ConnectionStatus, ConnectivityState, isChannel } from './Channel';
+import { MethodExecutor, isMethodExecutor } from './Executor';
 
 export interface ContinueCheck {
-    failed?: boolean;
+  failed?: boolean;
+  shouldContinue(): boolean;
+  onConnected?(): void;
+  onSuccess?(): void;
+  onFail?(): void;
+  onClose(): void;
+}
 
-    shouldContinue(): boolean;
+export function isContinueCheck(checker: unknown): checker is ContinueCheck {
+  return (
+    typeof checker === 'object' &&
+    checker != null &&
+    'shouldContinue' in checker &&
+    typeof checker.shouldContinue === 'function'
+  );
+}
 
-    onSuccess();
+export class Retry {
+  private status: ConnectionStatus = ConnectionStatus.PENDING;
 
-    onFail();
+  private statusListener: ConnectionListener | undefined;
 
-    onClose();
+  private readonly channel: Channel;
+  private readonly checker: ContinueCheck;
+  private readonly executor: MethodExecutor;
+
+  constructor(channel: Channel, executor: MethodExecutor, checker: ContinueCheck) {
+    if (channel == null || !isChannel(channel)) {
+      throw new Error('Channel is not provided');
+    }
+
+    if (executor == null || !isMethodExecutor(executor)) {
+      throw new Error('Executor is not provided');
+    }
+
+    if (checker == null || !isContinueCheck(checker)) {
+      throw new Error('Continue checker is not provided');
+    }
+
+    this.channel = channel;
+    this.checker = checker;
+    this.executor = executor;
+  }
+
+  public callWhenReady(): void {
+    if (!this.checker.shouldContinue()) {
+      this.notify(ConnectionStatus.CLOSED);
+
+      if (this.checker.failed === true) {
+        this.executor.terminate();
+      }
+
+      return;
+    }
+
+    this.notify(ConnectionStatus.CONNECTING);
+
+    const connection = this.channel.getState();
+
+    const isReady = (state: ConnectivityState, retry: boolean): boolean => {
+      if (state === ConnectivityState.READY) {
+        this.checker.onConnected?.();
+
+        return true;
+      }
+
+      if (state === ConnectivityState.SHUTDOWN) {
+        this.checker.onClose();
+
+        return false;
+      }
+
+      if (state === ConnectivityState.TRANSIENT_FAILURE) {
+        this.checker.onFail?.();
+      }
+
+      if (retry) {
+        setTimeout(this.callWhenReady.bind(this), 1000, this.executor, this.checker);
+      }
+
+      return false;
+    };
+
+    const execute = (): void =>
+      this.executor.execute(() => {
+        this.notify(ConnectionStatus.CONNECTING);
+
+        setTimeout(this.callWhenReady.bind(this), 1000, this.executor, this.checker);
+      });
+
+    if (isReady(connection, false)) {
+      this.notify(ConnectionStatus.CONNECTED);
+
+      execute();
+    } else {
+      this.notify(ConnectionStatus.CONNECTING);
+
+      this.channel.watch(connection, 5000, (error, state) => {
+        if (error != null) {
+          this.checker.onFail?.();
+        }
+
+        if (isReady(state, true)) {
+          execute();
+        }
+      });
+    }
+  }
+
+  public setConnectionListener(listener: ConnectionListener): void {
+    this.statusListener = listener;
+
+    listener(this.status);
+  }
+
+  protected notify(status: ConnectionStatus): void {
+    if (status != this.status) {
+      this.status = status;
+    }
+
+    this.statusListener?.(status);
+  }
 }
 
 export class AlwaysRepeat implements ContinueCheck {
-    closed: boolean = false;
+  closed = false;
 
-    onFail() {
-    }
+  shouldContinue(): boolean {
+    return !this.closed;
+  }
 
-    onSuccess() {
-    }
-
-    onClose() {
-        this.closed = true;
-    }
-
-    shouldContinue(): boolean {
-        return !this.closed;
-    }
+  onClose(): void {
+    this.closed = true;
+  }
 }
 
 export class OnceSuccess implements ContinueCheck {
-    readonly retries: number;
+  readonly retries: number;
 
-    counter = 0;
+  counter = 0;
 
-    succeed: boolean = false;
-    closed: boolean = false;
+  succeed = false;
+  closed = false;
 
-    constructor(retries: number) {
-        this.retries = retries;
-    }
+  constructor(retries: number) {
+    this.retries = retries;
+  }
 
-    get failed() {
-        return this.counter >= this.retries;
-    }
+  get failed(): boolean {
+    return this.counter >= this.retries;
+  }
 
-    onFail() {
-        this.counter += 1;
-    }
+  shouldContinue(): boolean {
+    return !this.failed && !this.succeed && !this.closed;
+  }
 
-    onSuccess() {
-        this.succeed = true;
-    }
+  onSuccess(): void {
+    this.succeed = true;
+  }
 
-    onClose() {
-        this.closed = true;
-    }
+  onFail(): void {
+    this.counter += 1;
+  }
 
-    shouldContinue(): boolean {
-        return !this.failed && !this.succeed && !this.closed;
-    }
-
+  onClose(): void {
+    this.closed = true;
+  }
 }

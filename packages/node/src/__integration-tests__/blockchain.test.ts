@@ -1,270 +1,339 @@
-import {EmeraldApi} from "../EmeraldApi";
-import {Blockchain, isBitcoinStdFees, isEthereumExtFees, isEthereumStdFees} from "@emeraldpay/api";
-import {NativeCallResponse} from "@emeraldpay/api";
+import {
+  Blockchain,
+  NativeCallResponse,
+  isBitcoinStdFees,
+  isEthereumExtFees,
+  isEthereumStdFees,
+} from '@emeraldpay/api';
+import * as grpc from '@grpc/grpc-js';
+import { EmeraldApi } from '../EmeraldApi';
 
 jest.setTimeout(30000);
 
-describe("BlockchainClient", () => {
-    let api: EmeraldApi;
+describe('BlockchainClient', () => {
+  let api: EmeraldApi;
 
-    beforeAll(() => {
-        api = EmeraldApi.devApi();
-    });
+  beforeAll(() => {
+    api = EmeraldApi.devApi();
+  });
 
-    test('Get head', (done) => {
-        const client = api.blockchain();
+  test('Get head', (done) => {
+    const client = api.blockchain();
 
-        const call = client.subscribeHead(Blockchain.ETHEREUM);
-        call
-            .onData((value) => {
-                console.log('Head', value);
-                call.cancel();
-                done();
-            })
-            .onError((err) => {
-                console.warn("err", err);
-                call.cancel();
-                done.fail(err)
-            });
-    });
+    const call = client.subscribeHead(Blockchain.ETHEREUM);
 
-    test('Get block', (done) => {
-        const client = api.blockchain();
+    call
+      .onData(({ height }) => {
+        expect(height).toBeGreaterThan(0);
 
-        client.nativeCall(Blockchain.ETHEREUM, [
-            {
-                id: 1,
-                method: "eth_getBlockByNumber",
-                payload: ["0x1", false]
-            }
-        ]).onData((value) => {
-            expect(value.success).toBeTruthy();
-            let act = value as NativeCallResponse;
-            expect(act.payload).toBeDefined();
-            console.log('Block', act.payload);
-            done()
-        })
-            .onError((err) => {
-                console.warn("err", err);
-                done.fail(err)
-            })
-    });
+        call.cancel();
 
-    test('Make few requests', (done) => {
-        const client = api.blockchain();
-        let exp = 0;
+        done();
+      })
+      .onError((error) => {
+        call.cancel();
 
-        client.nativeCall(Blockchain.ETHEREUM, [
-            {
-                id: 1,
-                method: "eth_getBlockByNumber",
-                payload: ["0x1", false]
-            },
-            {
-                id: 1,
-                method: "eth_gasPrice",
-                payload: []
-            }
-        ]).onData((value) => {
-            expect(value.success).toBeTruthy();
-            let act = value as NativeCallResponse;
-            expect(act.payload).toBeDefined();
-            console.log('Resp #' + exp, act.payload);
-            exp++;
-            if (exp == 2) {
-                done()
-            }
-        })
-            .onError((err) => {
-                console.warn("requsts err", err);
-                done.fail(err)
-            })
-    });
+        done(error);
+      });
+  });
 
-    test("Get ethereum balance", (done) => {
-        const client = api.blockchain();
+  test('Get block', (done) => {
+    const client = api.blockchain();
 
-        client.getBalance(
-            {
-                asset: {blockchain: Blockchain.ETHEREUM, code: "ETHER"},
-                address: "0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE"
-            }
-        ).then((value) => {
-            console.log("Balance", value);
-            expect(value.length).toBe(1);
-            expect(value[0].address).toBe("0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be");
-            done()
-        }).catch((err) => {
-            console.warn("balance failed", err);
-            done.fail(err)
-        })
-    });
+    client
+      .nativeCall(Blockchain.ETHEREUM, [
+        {
+          id: 1,
+          method: 'eth_getBlockByNumber',
+          payload: ['0x1', false],
+        },
+      ])
+      .onData((value) => {
+        expect(value.success).toBeTruthy();
 
-    test("Get erc-20 token balance", (done) => {
-        const client = api.blockchain();
+        const { payload } = value as NativeCallResponse;
 
-        client.getBalance(
-            {
-                asset: {blockchain: Blockchain.ETHEREUM, code: "USDC"},
-                address: "0xae2d4617c862309a3d75a0ffb358c7a5009c673f"
-            }
-        ).then((value) => {
-            console.log("Balance", value);
-            expect(value.length).toBe(1);
-            expect(value[0].address).toBe("0xae2d4617c862309a3d75a0ffb358c7a5009c673f");
-            done()
-        }).catch((err) => {
-            console.warn("balance failed", err);
-            done.fail(err)
-        })
-    });
+        expect(payload).toBeDefined();
 
-    //TODO fix bitcoin on server
-    xtest("Get bitcoin balance for address", (done) => {
-        const client = api.blockchain();
+        done();
+      })
+      .onError((error) => done(error));
+  });
 
-        client.getBalance(
-            {
-                asset: {blockchain: Blockchain.BITCOIN, code: "BTC"},
-                address: "bc1qmh07ff738tnennr6xz5lkcy3478v2v6k0aacwc"
-            }
-        ).then((value) => {
-            console.log("Balance", value);
-            expect(value.length).toBe(1);
-            expect(value[0].address).toBe("bc1qmh07ff738tnennr6xz5lkcy3478v2v6k0aacwc");
-            done()
-        }).catch((err) => {
-            console.warn("balance failed", err);
-            done.fail(err)
-        })
-    });
+  test('Make few requests', (done) => {
+    const client = api.blockchain();
 
-    //TODO fix bitcoin on server
-    xtest("Get bitcoin balance for xpub", (done) => {
-        const client = api.blockchain();
+    let counter = 0;
 
-        client.getBalance(
-            {
-                asset: {blockchain: Blockchain.TESTNET_BITCOIN, code: "BTC"},
-                address: "vpub5ab1RDcpFBvgxMWxKfvVLLHtC6JfF784F6zBdKhoWJhcrS8Mu8LbhMWRWoXHDAgWtWfAAuF6DWLJqy7kLNn69wvyXQwdYJ4ehsTFhW65Qkp",
-                includeUtxo: true
-            }
-        ).then((value) => {
-            console.log("Balance", value);
-            expect(value.length > 0).toBeTruthy();
-            done()
-        }).catch((err) => {
-            console.warn("balance failed", err);
-            done.fail(err)
-        })
-    });
+    client
+      .nativeCall(Blockchain.ETHEREUM, [
+        {
+          id: 1,
+          method: 'eth_getBlockByNumber',
+          payload: ['0x1', false],
+        },
+        {
+          id: 1,
+          method: 'eth_gasPrice',
+          payload: [],
+        },
+      ])
+      .onData((value) => {
+        expect(value.success).toBeTruthy();
 
-    //TODO fix bitcoin on server
-    xtest("Subscribe bitcoin balance for xpub", (done) => {
-        const client = api.blockchain();
+        const { payload } = value as NativeCallResponse;
 
-        const call = client.subscribeBalance(
-            {
-                asset: {blockchain: Blockchain.TESTNET_BITCOIN, code: "BTC"},
-                address: "vpub5arxPHpfH2FKSNnBqyZJctzBtruGzM4sat7YKcQQNoNGgVZehD1tLiYGvhXBhPzKPcRDRjhGw94Dc9Wwob9BpbAMmkMX7Dzdfd5Ly9LHTGQ",
-                includeUtxo: true
-            }
-        );
-        call.onData((value) => {
-            console.log("Balance", value);
-            call.cancel();
-            done()
-        }).onError((err) => {
-            console.warn("balance failed", err);
-            call.cancel();
-            done.fail(err)
-        })
-    });
+        expect(payload).toBeDefined();
 
-    test("subscribe ethereum tx", (done) => {
-        const client = api.blockchain();
-        const req = client.subscribeTxStatus({
-            txid: "0xf3cfd7cd8f9384744ec91062de6f5a84daba2ea33d978933f297f44e751edc8c",
-            limit: 10,
-            blockchain: 100
-        });
+        counter += 1;
 
-        req.onData((resp) => {
-            expect(resp.mined).toBeTruthy();
-            expect(resp.block.height).toBe(2500001);
-            expect(resp.block.hash).toBe("5038ffc0d84d496fb6669ab0e60df559fa39dbf181f278d508086a82fc72761f");
-            done()
-        });
-        req.onError((err) => {
-            done.fail(err)
-        })
-    });
-
-    test("subscribe bitcoin tx", (done) => {
-        const client = api.blockchain();
-        const req = client.subscribeTxStatus({
-            txid: "9a7870a8bd7805bdb270db77105eb4a811058cfec602107ba1d027b6bf028928",
-            limit: 3,
-            blockchain: 1
-        });
-
-        req.onData((resp) => {
-            expect(resp.mined).toBeTruthy();
-            expect(resp.block.height).toBe(651732);
-            done();
-        });
-        req.onError((err) => {
-            done.fail(err)
-        })
-    });
-
-    test("get ethereum fees", async () => {
-        const client = api.blockchain();
-        const resp = await client.estimateFees({
-            blockchain: 100,
-            blocks: 10,
-            mode: "avgLast"
-        });
-
-        console.log("Fees", resp);
-
-        expect(isEthereumExtFees(resp)).toBeTruthy();
-        if (isEthereumExtFees(resp)) {
-            expect(resp.expect.length).toBeGreaterThan(5);
-            expect(parseInt(resp.expect.substr(0, 5))).toBeGreaterThan(0);
+        if (counter === 2) {
+          done();
         }
+      })
+      .onError((error) => done(error));
+  });
+
+  test('Get ethereum balance', (done) => {
+    const client = api.blockchain();
+
+    client
+      .getBalance({
+        address: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
+        asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
+      })
+      .then((value) => {
+        expect(value.length).toBe(1);
+        expect(value[0].address).toBe('0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be');
+
+        done();
+      })
+      .catch((error) => done(error));
+  });
+
+  test('Get erc-20 token balance', (done) => {
+    const client = api.blockchain();
+
+    client
+      .getBalance({
+        address: '0xae2d4617c862309a3d75a0ffb358c7a5009c673f',
+        asset: { blockchain: Blockchain.ETHEREUM, code: 'USDC' },
+      })
+      .then((value) => {
+        expect(value.length).toBe(1);
+        expect(value[0].address).toBe('0xae2d4617c862309a3d75a0ffb358c7a5009c673f');
+
+        done();
+      })
+      .catch((error) => done(error));
+  });
+
+  // TODO Fix bitcoin on server
+  xtest('Get bitcoin balance for address', (done) => {
+    const client = api.blockchain();
+
+    client
+      .getBalance({
+        address: 'bc1qmh07ff738tnennr6xz5lkcy3478v2v6k0aacwc',
+        asset: { blockchain: Blockchain.BITCOIN, code: 'BTC' },
+      })
+      .then((value) => {
+        expect(value.length).toBe(1);
+        expect(value[0].address).toBe('bc1qmh07ff738tnennr6xz5lkcy3478v2v6k0aacwc');
+
+        done();
+      })
+      .catch((error) => done(error));
+  });
+
+  // TODO Fix bitcoin on server
+  xtest('Get bitcoin balance for xpub', (done) => {
+    const client = api.blockchain();
+
+    client
+      .getBalance({
+        address:
+          'vpub5ab1RDcpFBvgxMWxKfvVLLHtC6JfF784F6zBdKhoWJhcrS8Mu8Lb' +
+          'hMWRWoXHDAgWtWfAAuF6DWLJqy7kLNn69wvyXQwdYJ4ehsTFhW65Qkp',
+        asset: { blockchain: Blockchain.TESTNET_BITCOIN, code: 'BTC' },
+        includeUtxo: true,
+      })
+      .then((value) => {
+        expect(value.length).toBeGreaterThan(0);
+
+        done();
+      })
+      .catch((error) => done(error));
+  });
+
+  // TODO Fix bitcoin on server
+  xtest('Subscribe bitcoin balance for xpub', (done) => {
+    const client = api.blockchain();
+
+    const call = client.subscribeBalance({
+      address:
+        'vpub5arxPHpfH2FKSNnBqyZJctzBtruGzM4sat7YKcQQNoNGgVZehD1t' +
+        'LiYGvhXBhPzKPcRDRjhGw94Dc9Wwob9BpbAMmkMX7Dzdfd5Ly9LHTGQ',
+      asset: { blockchain: Blockchain.TESTNET_BITCOIN, code: 'BTC' },
+      includeUtxo: true,
     });
 
-    test("get ethereum classic fees", async () => {
-        const client = api.blockchain();
-        const resp = await client.estimateFees({
-            blockchain: 101,
-            blocks: 50,
-            mode: "avgLast"
+    call
+      .onData(() => {
+        call.cancel();
+
+        done();
+      })
+      .onError((error) => {
+        call.cancel();
+
+        done(error);
+      });
+  });
+
+  test('subscribe ethereum tx', (done) => {
+    const client = api.blockchain();
+
+    client
+      .subscribeTxStatus({
+        txid: '0xf3cfd7cd8f9384744ec91062de6f5a84daba2ea33d978933f297f44e751edc8c',
+        limit: 10,
+        blockchain: 100,
+      })
+      .onData((response) => {
+        expect(response.block.hash).toBe('5038ffc0d84d496fb6669ab0e60df559fa39dbf181f278d508086a82fc72761f');
+        expect(response.block.height).toBe(2500001);
+        expect(response.mined).toBeTruthy();
+
+        done();
+      })
+      .onError((error) => done(error));
+  });
+
+  test('subscribe bitcoin tx', (done) => {
+    const client = api.blockchain();
+
+    client
+      .subscribeTxStatus({
+        blockchain: 1,
+        limit: 3,
+        txid: '9a7870a8bd7805bdb270db77105eb4a811058cfec602107ba1d027b6bf028928',
+      })
+      .onData((response) => {
+        expect(response.block.height).toBe(651732);
+        expect(response.mined).toBeTruthy();
+
+        done();
+      })
+      .onError((error) => done(error));
+  });
+
+  test('get ethereum fees', async () => {
+    const client = api.blockchain();
+
+    const response = await client.estimateFees({
+      blockchain: 100,
+      blocks: 10,
+      mode: 'avgLast',
+    });
+
+    expect(isEthereumExtFees(response)).toBeTruthy();
+
+    if (isEthereumExtFees(response)) {
+      expect(response.expect.length).toBeGreaterThan(5);
+      expect(parseInt(response.expect.substring(0, 5))).toBeGreaterThan(0);
+    }
+  });
+
+  test('get ethereum classic fees', async () => {
+    const client = api.blockchain();
+
+    const response = await client.estimateFees({
+      blockchain: 101,
+      blocks: 50,
+      mode: 'avgLast',
+    });
+
+    expect(isEthereumStdFees(response)).toBeTruthy();
+
+    if (isEthereumStdFees(response)) {
+      expect(response.fee.length).toBeGreaterThan(3);
+      expect(parseInt(response.fee.substring(0, 3))).toBeGreaterThan(0);
+    }
+  });
+
+  test('get bitcoin fees', async () => {
+    const client = api.blockchain();
+
+    const response = await client.estimateFees({
+      blockchain: 1,
+      blocks: 6,
+      mode: 'avgLast',
+    });
+
+    expect(isBitcoinStdFees(response)).toBeTruthy();
+
+    if (isBitcoinStdFees(response)) {
+      expect(response.satPerKb).toBeGreaterThan(100);
+    }
+  });
+
+  test('native call with unacceptable raw transaction', (done) => {
+    const client = api.blockchain();
+
+    client
+      .nativeCall(Blockchain.BITCOIN, [
+        {
+          id: 0,
+          method: 'sendrawtransaction',
+          payload: [
+            '02000000017f910020aee597427c89943d20dbb6291f4b0056ffa182e0891bdd0d76e7527700000000' +
+              '00fdffffff01e803000000000000160014f81b17222c8bf510ea8568220d0b21bc548a4ad800000000',
+          ],
+        },
+      ])
+      .onData((value) => {
+        expect(value.success).toBeFalsy();
+
+        done();
+      })
+      .onError((error) => done(error));
+  });
+
+  test('native call terminated after connection failed', (done) => {
+    const server = new grpc.Server();
+
+    server.bindAsync('localhost:0', grpc.ServerCredentials.createInsecure(), (error) => {
+      expect(error).toBeNull();
+
+      let timeout: NodeJS.Timeout | null = null;
+
+      const client = EmeraldApi.fakeApi().blockchain();
+
+      const call = client
+        .nativeCall(Blockchain.BITCOIN, [
+          {
+            id: 0,
+            method: 'sendrawtransaction',
+            payload: [
+              '02000000017f910020aee597427c89943d20dbb6291f4b0056ffa182e0891bdd0d76e7527700000000' +
+                '00fdffffff01e803000000000000160014f81b17222c8bf510ea8568220d0b21bc548a4ad800000000',
+            ],
+          },
+        ])
+        .onError(() => {
+          if (timeout != null) {
+            clearTimeout(timeout);
+          }
+
+          server.tryShutdown(done);
         });
 
-        console.log("Fees on ETC", resp);
+      timeout = setTimeout(() => {
+        call.cancel();
 
-        expect(isEthereumStdFees(resp)).toBeTruthy();
-        if (isEthereumStdFees(resp)) {
-            expect(resp.fee.length).toBeGreaterThan(3);
-            expect(parseInt(resp.fee.substr(0, 3))).toBeGreaterThan(0);
-        }
+        server.tryShutdown(() => done('Connection closed incorrectly'));
+      }, 20 * 1000);
     });
-
-    test("get bitcoin fees", async () => {
-        const client = api.blockchain();
-        const resp = await client.estimateFees({
-            blockchain: 1,
-            blocks: 6,
-            mode: "avgLast"
-        });
-
-        console.log("Fees on BTC", resp);
-
-        expect(isBitcoinStdFees(resp)).toBeTruthy();
-        if (isBitcoinStdFees(resp)) {
-            expect(resp.satPerKb).toBeGreaterThan(100);
-        }
-    });
+  });
 });

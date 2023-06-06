@@ -1,8 +1,7 @@
 {
   "name": "@emeraldpay/api",
-  "version": "0.3.2",
+  "version": "0.4.0-dev",
   "description": "Common code for Emerald gRPC APIs",
-  "private": false,
   "license": "Apache-2.0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -21,30 +20,30 @@
     "emerald-wallet"
   ],
   "scripts": {
-    "clean": "rimraf lib",
+    "prepublishOnly": "npm run clean && npm run build",
     "build": "npm run clean && npm run generate && npm run build:ts",
     "build:ts": "tsc",
-    "prepublishOnly": "npm run clean && npm run build",
+    "clean": "rimraf lib",
     "generate": "npm run generate:clean && npm run generate:js && npm run generate:ts && npm run generate:remove-grpc && npm run generate:copy",
     "generate:clean": "rimraf lib/generated && mkdir lib && mkdir lib/generated",
-    "generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs:./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
-    "generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
-    "generate:remove-grpc": "rimraf lib/generated/*_grpc_pb.d.ts",
     "generate:copy": "rimraf src/generated && cp -r lib/generated src/",
+    "generate:js": "grpc_tools_node_protoc --js_out=import_style=commonjs:./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
+    "generate:remove-grpc": "rimraf lib/generated/*_grpc_pb.d.ts",
+    "generate:ts": "grpc_tools_node_protoc --plugin=protoc-gen-ts=../../node_modules/.bin/protoc-gen-ts --ts_out=./lib/generated -I ../../api-definitions/proto ../../api-definitions/proto/*.proto",
     "test": "jest"
   },
   "dependencies": {
-    "google-protobuf": "^3.10.0",
-    "protobufjs": "^6.8.8"
+    "google-protobuf": "^3.21.2",
+    "protobufjs": "^7.2.3"
   },
   "devDependencies": {
-    "@types/google-protobuf": "^3.7.2",
-    "@types/jest": "^24.0.23",
-    "jest": "24.9.0",
-    "rimraf": "^2.6.3",
-    "ts-jest": "24.1.0",
-    "typescript": "^3.8.3",
-    "grpc-tools": "1.11.2",
-    "grpc_tools_node_protoc_ts": "5.3.2"
+    "@types/google-protobuf": "^3.15.6",
+    "@types/jest": "^29.5.1",
+    "grpc-tools": "^1.12.4",
+    "grpc_tools_node_protoc_ts": "^5.3.3",
+    "jest": "^29.5.0",
+    "rimraf": "^5.0.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.4"
   }
 }
