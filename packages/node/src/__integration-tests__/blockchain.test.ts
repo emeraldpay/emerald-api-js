@@ -5,12 +5,22 @@ import {
   isEthereumExtFees,
   isEthereumStdFees,
 } from '@emeraldpay/api';
-import * as grpc from '@grpc/grpc-js';
+import {
+  GrpcObject,
+  Server as GrpcServer,
+  ServerCredentials,
+  ServiceClientConstructor,
+  credentials as grpcCredentials,
+  loadPackageDefinition,
+} from '@grpc/grpc-js';
+import { loadSync as grpcLoadSync } from '@grpc/proto-loader';
 import { EmeraldApi } from '../EmeraldApi';
 
 jest.setTimeout(30000);
 
 describe('BlockchainClient', () => {
+  const textEncoder = new TextEncoder();
+
   let api: EmeraldApi;
 
   beforeAll(() => {
@@ -301,14 +311,16 @@ describe('BlockchainClient', () => {
   });
 
   test('native call terminated after connection failed', (done) => {
-    const server = new grpc.Server();
+    const server = new GrpcServer();
 
-    server.bindAsync('localhost:0', grpc.ServerCredentials.createInsecure(), (error) => {
+    server.bindAsync('localhost:0', ServerCredentials.createInsecure(), (error, port) => {
       expect(error).toBeNull();
+
+      server.start();
 
       let timeout: NodeJS.Timeout | null = null;
 
-      const client = EmeraldApi.fakeApi().blockchain();
+      const client = EmeraldApi.localApi(port, grpcCredentials.createInsecure()).blockchain();
 
       const call = client
         .nativeCall(Blockchain.BITCOIN, [
@@ -334,6 +346,59 @@ describe('BlockchainClient', () => {
 
         server.tryShutdown(() => done('Connection closed incorrectly'));
       }, 20 * 1000);
+    });
+  });
+
+  test('native call has correct user-agent', (done) => {
+    const server = new GrpcServer();
+
+    const packageDefinition = grpcLoadSync('../../api-definitions/proto/blockchain.proto');
+    const blockchainProto = loadPackageDefinition(packageDefinition);
+
+    const blockchainService = (blockchainProto.emerald as GrpcObject).Blockchain as unknown as ServiceClientConstructor;
+
+    server.addService(blockchainService.service, {
+      nativeCall(call) {
+        const [agent] = call.metadata.get('user-agent');
+
+        expect(agent).toMatch(
+          /^test-client\/\d+\.\d+\.\d+ emerald-client-node\/\d+\.\d+\.\d+(-\w+)? grpc-node-js\/\d+\.\d+\.\d+(-\w+)?$/,
+        );
+
+        call.write({ id: 1, succeed: true, payload: textEncoder.encode('{}') }).end();
+      },
+    });
+
+    server.bindAsync('localhost:0', ServerCredentials.createInsecure(), (error, port) => {
+      expect(error).toBeNull();
+
+      server.start();
+
+      let timeout: NodeJS.Timeout | null = null;
+
+      const emeraldApi = EmeraldApi.localApi(port, grpcCredentials.createInsecure());
+
+      // Initializing second client to check user-agent isn't merged
+      emeraldApi.monitoring();
+
+      emeraldApi
+        .blockchain()
+        .nativeCall(Blockchain.ETHEREUM, [
+          {
+            id: 1,
+            method: 'eth_someMethod',
+            payload: [],
+          },
+        ])
+        .finally(() => {
+          if (timeout != null) {
+            clearTimeout(timeout);
+          }
+
+          server.tryShutdown(done);
+        });
+
+      timeout = setTimeout(() => server.tryShutdown(() => done('Response timeout')), 20 * 1000);
     });
   });
 });

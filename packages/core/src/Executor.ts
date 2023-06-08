@@ -26,7 +26,7 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
   private connections = 0;
 
   private checker: ContinueCheck;
-  private logger: Logger;
+  private logger: Logger | undefined;
   private upstream: Publisher<R> | null;
 
   constructor(call: RemoteCall<T, R>, checker: ContinueCheck, request: T) {
@@ -49,16 +49,14 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
     this.request = request;
   }
 
-  setLogger(logger: Logger): void {
+  setLogger(logger: Logger | undefined): void {
     this.logger = logger;
   }
 
   cancel(): void {
     this.checker.onClose();
 
-    if (this.upstream) {
-      this.upstream.cancel();
-    }
+    this.upstream?.cancel();
   }
 
   execute(reconnect: () => void): void {
