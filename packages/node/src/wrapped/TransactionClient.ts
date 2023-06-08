@@ -16,6 +16,7 @@ const { version: clientVersion } = require('../../package.json');
 export class TransactionClient {
   readonly client: ProtoTransactionClient;
   readonly channel: NativeChannel;
+  readonly credentials: ChannelCredentials;
   readonly retries: number;
 
   private readonly convert: transaction.Convert = new transaction.Convert(classFactory);
@@ -25,6 +26,7 @@ export class TransactionClient {
 
     this.client = new ProtoTransactionClient(address, credentials, { 'grpc.primary_user_agent': agent });
     this.channel = new NativeChannel(this.client);
+    this.credentials = credentials;
     this.retries = retries;
   }
 

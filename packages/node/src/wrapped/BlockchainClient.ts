@@ -34,6 +34,7 @@ const { version: clientVersion } = require('../../package.json');
 export class BlockchainClient {
   readonly client: ProtoBlockchainClient;
   readonly channel: NativeChannel;
+  readonly credentials: ChannelCredentials;
   readonly retries: number;
 
   private readonly convert = new ConvertBlockchain(classFactory);
@@ -43,6 +44,7 @@ export class BlockchainClient {
 
     this.client = new ProtoBlockchainClient(address, credentials, { 'grpc.primary_user_agent': agent });
     this.channel = new NativeChannel(this.client);
+    this.credentials = credentials;
     this.retries = retries;
   }
 
