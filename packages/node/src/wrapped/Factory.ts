@@ -11,6 +11,9 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == "common_pb.Asset") {
         return new common_pb.Asset();
     }
+    if (id == "common_pb.Erc20Asset") {
+        return new common_pb.Erc20Asset();
+    }
     if (id == "common_pb.AnyAddress") {
         return new common_pb.AnyAddress();
     }

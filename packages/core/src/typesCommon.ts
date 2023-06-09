@@ -30,6 +30,11 @@ export type Asset = {
     code: AssetCode
 }
 
+export type Erc20Asset = {
+    blockchain: Blockchain,
+    contractAddress: string
+}
+
 export type SingleAddress = string;
 export type XpubAddress = string | DetailedXpubAddress;
 export type MultiAddress = SingleAddress[];
@@ -134,6 +139,21 @@ export class ConvertCommon {
             // @ts-ignore
             code: asset.getCode()
         };
+    }
+
+    public erc20Asset(asset: common_pb.Erc20Asset): Erc20Asset {
+        return {
+            blockchain: asset.getChain().valueOf(),
+            // @ts-ignore
+            contractAddress: asset.getContractAddress()
+        };
+    }
+
+    public pbErc20Asset(asset: Erc20Asset): common_pb.Erc20Asset {
+        let protoAsset: common_pb.Erc20Asset = this.factory("common_pb.Erc20Asset");
+        protoAsset.setChain(asset.blockchain.valueOf());
+        protoAsset.setContractAddress(asset.contractAddress);
+        return protoAsset;
     }
 
     public blockInfo(blockInfo: common_pb.BlockInfo): BlockInfo {

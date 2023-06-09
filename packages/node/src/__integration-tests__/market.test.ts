@@ -1,5 +1,5 @@
 import {EmeraldApi} from "../EmeraldApi";
-import {GetRatesResponse} from "@emeraldpay/api";
+import {Blockchain} from "@emeraldpay/api";
 
 jest.setTimeout(5000);
 
@@ -44,5 +44,21 @@ describe("MarketClient", () => {
         ]);
         console.log("rates", act);
         expect(act.length).toBe(7);
+    });
+
+    test('Get Erc20 rate', async () => {
+        const client = api.market();
+
+        let act = await client.getRates([
+            { base: { blockchain: Blockchain.ETHEREUM, contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7"}, target: "USD"}
+        ]);
+        // not currently supported by rate service, just check that it doesn't fail
+        // to be replaced with proper checks when rate service will support it
+        expect(act.length).toBe(0);
+        // expect(act.length).toBe(1);
+        // expect(act[0].base).toBe({ blockchain: Blockchain.ETHEREUM, contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7"});
+        // expect(act[0].target).toBe("USD");
+        // expect(parseFloat(act[0].rate)).toBeGreaterThan(0.5);
+        // expect(parseFloat(act[0].rate)).toBeLessThan(1.5);
     });
 });
