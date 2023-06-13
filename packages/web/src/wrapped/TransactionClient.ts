@@ -56,6 +56,14 @@ export class TransactionClient {
         return readOnce(this.channel, call, protoRequest, this.retries);
     }
 
+    public subscribeAddressTokens(request: transaction.AddressTokenRequest): Publisher<transaction.AddressTokenResponse> {
+        const protoRequest = this.convert.addressTokenRequest(request);
+        const mapper = this.convert.addressTokenResponse();
+
+        const call = callStream(this.client.subscribeAddressTokens.bind(this.client), mapper);
+        return alwaysRetry(this.channel, call, protoRequest);
+    }
+
     public getAddressAllowance(request: transaction.AddressAllowanceRequest): Promise<Array<transaction.AddressAllowanceResponse>> {
         const protoRequest = this.convert.addressAllowanceRequest(request);
         const mapper = this.convert.addressAllowanceResponse();

@@ -69,6 +69,7 @@ export interface AddressTxResponse {
 export interface AddressTokenRequest {
     blockchain: Blockchain;
     address: AnyAddress;
+    contractAddresses: string[];
 }
 
 export interface AddressTokenResponse {
@@ -266,6 +267,7 @@ export class Convert {
         let result: transaction_message_pb.AddressTokenRequest = this.factory("transaction_message_pb.AddressTokenRequest");
         return result.setBlockchain(req.blockchain.valueOf())
             .setAddress(this.common.pbAnyAddress(req.address))
+            .setContractAddressesList(req.contractAddresses.map(value => this.common.pbSingleAddress(value)))
     }
 
     public addressTokenResponse(): DataMapper<transaction_message_pb.AddressTokenResponse, AddressTokenResponse> {

@@ -81,6 +81,7 @@ describe("TransactionClient", () => {
             {
                 blockchain: Blockchain.TESTNET_GOERLI,
                 address: "0x7af963cf6d228e564e2a0aa0ddbf06210b38615d",
+                contractAddresses: [],
             }
         );
         call.onData((value) => {
@@ -91,6 +92,30 @@ describe("TransactionClient", () => {
         })
         call.onError((err) => {
             console.warn("err", err);
+            done.fail(err)
+        })
+    });
+
+    test('SubscribeAddressTokens', (done) => {
+        const client = api.transaction();
+        const call = client.subscribeAddressTokens(
+            {
+                blockchain: Blockchain.TESTNET_GOERLI,
+                address: "0x7af963cf6d228e564e2a0aa0ddbf06210b38615d",
+                contractAddresses: ["0x3f152b63ec5ca5831061b2dccfb29a874c317502"],
+            }
+        );
+        call.onData((value) => {
+            expect(value.address).toBe("0x7af963cf6d228e564e2a0aa0ddbf06210b38615d");
+            expect(value.blockchain).toBe(Blockchain.TESTNET_GOERLI);
+            expect(value.contractAddresses[0]).toBe("0x3f152b63ec5ca5831061b2dccfb29a874c317502");
+            console.log('SubscribeAddressTokens', value);
+            call.cancel();
+            done()
+        })
+        call.onError((err) => {
+            console.warn("err", err);
+            call.cancel();
             done.fail(err)
         })
     });
