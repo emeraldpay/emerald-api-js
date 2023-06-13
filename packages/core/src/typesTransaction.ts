@@ -77,6 +77,19 @@ export interface AddressTokenResponse {
     contractAddresses: string[];
 }
 
+export interface AddressAllowanceRequest {
+    blockchain: Blockchain;
+    address: AnyAddress;
+    contractAddresses: string[];
+}
+
+export interface AddressAllowanceResponse {
+    blockchain: Blockchain;
+    address: SingleAddress;
+    approvedByAddress: string[];
+    approvedForAddress: string[];
+}
+
 export interface AddressAmount {
     address?: SingleAddress;
     /** unsigned amount */
@@ -264,6 +277,27 @@ export class Convert {
                 blockchain: resp.getBlockchain().valueOf(),
                 address: resp.getAddress().getAddress(),
                 contractAddresses: contractAddresses,
+            }
+        }
+    }
+
+    public addressAllowanceRequest(req: AddressAllowanceRequest): transaction_message_pb.AddressAllowanceRequest {
+        let result: transaction_message_pb.AddressAllowanceRequest = this.factory("transaction_message_pb.AddressAllowanceRequest");
+        return result.setBlockchain(req.blockchain.valueOf())
+            .setAddress(this.common.pbAnyAddress(req.address))
+            .setContractAddressesList(req.contractAddresses.map(value => this.common.pbSingleAddress(value)))
+    }
+
+    public addressAllowanceResponse(): DataMapper<transaction_message_pb.AddressAllowanceResponse, AddressAllowanceResponse> {
+        return (resp ) => {
+            const approvedByAddress = resp.getApprovedByAddressList().map(value => value.getAddress())
+            const approvedForAddress = resp.getApprovedForAddressList().map(value => value.getAddress())
+
+            return {
+                blockchain: resp.getBlockchain().valueOf(),
+                address: resp.getAddress().getAddress(),
+                approvedByAddress: approvedByAddress,
+                approvedForAddress: approvedForAddress,
             }
         }
     }

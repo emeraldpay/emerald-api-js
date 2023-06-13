@@ -185,6 +185,12 @@ export class ConvertCommon {
         return protoAnyAddress;
     }
 
+    public pbSingleAddress(address: SingleAddress): common_pb.SingleAddress {
+        let protoSingleAddress: common_pb.SingleAddress = this.factory("common_pb.SingleAddress");
+        protoSingleAddress.setAddress(address);
+        return protoSingleAddress;
+    }
+
     public pbXpubAddress(address: XpubAddress) {
         let protoXpubAddress: common_pb.XpubAddress = this.factory("common_pb.XpubAddress");
         let xpub = asDetailedXpub(address);

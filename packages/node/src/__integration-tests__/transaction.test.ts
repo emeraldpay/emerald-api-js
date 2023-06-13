@@ -95,4 +95,26 @@ describe("TransactionClient", () => {
         })
     });
 
+    test('GetAddressAllowance', (done) => {
+        const client = api.transaction();
+        const call = client.getAddressAllowance(
+            {
+                blockchain: Blockchain.TESTNET_GOERLI,
+                address: "0x0000000000000000000000000000000000000000",
+                contractAddresses: ["0x509ee0d083ddf8ac028f2a56731412edd63223b9"],
+            }
+        );
+        call.then((value) => {
+            expect(value[0].blockchain).toBe(Blockchain.TESTNET_GOERLI);
+            expect(value[0].address).toBe("0x0000000000000000000000000000000000000000");
+            expect(value[0].approvedForAddress[0]).toBe("0x509ee0d083ddf8ac028f2a56731412edd63223b9");
+            console.log('GetAddressAllowance', value);
+            done()
+        })
+        call.catch((err) => {
+            console.warn("err", err);
+            done.fail(err)
+        })
+    });
+
 });

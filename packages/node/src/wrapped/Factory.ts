@@ -62,6 +62,9 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == "transaction_message_pb.AddressTokenRequest") {
         return new transaction_message_pb.AddressTokenRequest();
     }
+    if (id == "transaction_message_pb.AddressAllowanceRequest") {
+        return new transaction_message_pb.AddressAllowanceRequest();
+    }
     if (id == "transaction_message_pb.BalanceRequest") {
         return new transaction_message_pb.BalanceRequest();
     }
