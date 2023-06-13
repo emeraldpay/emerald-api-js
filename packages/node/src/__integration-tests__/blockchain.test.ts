@@ -1,6 +1,5 @@
 import {EmeraldApi} from "../EmeraldApi";
-import {Blockchain, isBitcoinStdFees, isEthereumExtFees, isEthereumStdFees} from "@emeraldpay/api";
-import {NativeCallResponse} from "@emeraldpay/api";
+import {Blockchain, isBitcoinStdFees, isEthereumExtFees, isEthereumStdFees, NativeCallResponse} from "@emeraldpay/api";
 
 jest.setTimeout(30000);
 
@@ -118,6 +117,27 @@ describe("BlockchainClient", () => {
             done.fail(err)
         })
     });
+
+    // TODO: contract address are not supported by test server, to be enabled when server is updated
+    test.skip("Get erc-20 token balance by contract address", (done) => {
+        const client = api.blockchain();
+
+        client.getBalance(
+            {
+                asset: {blockchain: Blockchain.ETHEREUM, contractAddress: "0x7EA2be2df7BA6E54B1A9C70676f668455E329d29"},
+                address: "0xae2d4617c862309a3d75a0ffb358c7a5009c673f"
+            }
+        ).then((value) => {
+            console.log("Balance", value);
+            expect(value.length).toBe(1);
+            expect(value[0].address).toBe("0xae2d4617c862309a3d75a0ffb358c7a5009c673f");
+            done()
+        }).catch((err) => {
+            console.warn("balance failed", err);
+            done.fail(err)
+        })
+    });
+
 
     //TODO fix bitcoin on server
     xtest("Get bitcoin balance for address", (done) => {

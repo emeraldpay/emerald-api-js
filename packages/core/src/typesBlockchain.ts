@@ -1,7 +1,7 @@
 import * as blockchain_pb from "./generated/blockchain_pb";
 import * as common_pb from "./generated/common_pb";
 import {DataMapper} from "./Publisher";
-import {AnyAddress, Asset, Blockchain, ConvertCommon, SingleAddress} from "./typesCommon";
+import {AnyAddress, AnyAsset, Blockchain, ConvertCommon, isAsset, isErc20Asset, SingleAddress} from "./typesCommon";
 import {MessageFactory} from "./convert";
 
 const textDecoder = new TextDecoder("utf-8");
@@ -41,13 +41,13 @@ export function isNativeCallError(obj: NativeCallResponse | NativeCallError): ob
 }
 
 export type BalanceRequest = {
-    asset: Asset,
+    asset: AnyAsset;
     address: AnyAddress,
     includeUtxo?: boolean
 }
 
 export interface AddressBalance {
-    asset: Asset;
+    asset: AnyAsset;
     address: SingleAddress;
     balance: string;
     utxo?: Utxo[] | undefined;
@@ -203,7 +203,11 @@ export class ConvertBlockchain {
 
     public balanceRequest(req: BalanceRequest): blockchain_pb.BalanceRequest {
         let result: blockchain_pb.BalanceRequest = this.factory("blockchain_pb.BalanceRequest");
-        result.setAsset(this.common.pbAsset(req.asset));
+        if (isAsset(req.asset)) {
+            result.setAsset(this.common.pbAsset(req.asset));
+        } else if (isErc20Asset(req.asset)) {
+            result.setErc20Asset(this.common.pbErc20Asset(req.asset));
+        }
 
         if (typeof req.includeUtxo == "boolean") {
             result.setIncludeUtxo(req.includeUtxo);
@@ -216,7 +220,14 @@ export class ConvertBlockchain {
 
     public balanceResponse(): DataMapper<blockchain_pb.AddressBalance, AddressBalance> {
         return (resp: blockchain_pb.AddressBalance) => {
-            let asset = this.common.asset(resp.getAsset());
+            let asset
+            if (resp.hasAsset()) {
+                asset = this.common.asset(resp.getAsset());
+            } else if (resp.hasErc20Asset()) {
+                asset = this.common.erc20Asset(resp.getErc20Asset());
+            } else {
+                throw new Error("Invalid response: neither asset nor erc20Asset is set")
+            }
             let utxo: Utxo[] | undefined = undefined;
             if (resp.getUtxoList().length > 0) {
                 utxo = resp.getUtxoList().map((it) => {

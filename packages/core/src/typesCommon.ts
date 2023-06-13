@@ -35,6 +35,8 @@ export type Erc20Asset = {
     contractAddress: string
 }
 
+export type AnyAsset = Asset | Erc20Asset;
+
 export type SingleAddress = string;
 export type XpubAddress = string | DetailedXpubAddress;
 export type MultiAddress = SingleAddress[];
@@ -90,6 +92,14 @@ export function asDetailedXpub(address: XpubAddress): DetailedXpubAddress {
         }
     }
     return address
+}
+
+export function isAsset(asset: AnyAsset): asset is Asset {
+    return typeof asset === "object" && asset.hasOwnProperty("code");
+}
+
+export function isErc20Asset(asset: AnyAsset): asset is Erc20Asset {
+    return typeof asset === "object" && asset.hasOwnProperty("contractAddress");
 }
 
 export function blockchainType(blockchain: Blockchain): BlockchainType {
