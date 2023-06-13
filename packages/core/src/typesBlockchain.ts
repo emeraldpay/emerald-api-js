@@ -266,7 +266,7 @@ export class ConvertBlockchain {
     return (resp) => {
       let block;
       if (resp.hasBlock()) {
-        block = this.common.blockInfo(resp.getBlock()!);
+        block = this.common.blockInfo(resp.getBlock());
       } else {
         block = undefined;
       }

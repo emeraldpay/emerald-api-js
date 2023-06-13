@@ -30,9 +30,9 @@ export type Asset = {
 };
 
 export type Erc20Asset = {
-    blockchain: Blockchain,
-    contractAddress: string
-}
+  blockchain: Blockchain;
+  contractAddress: string;
+};
 
 export type AnyAsset = Asset | Erc20Asset;
 
@@ -90,15 +90,16 @@ export function asDetailedXpub(address: XpubAddress): DetailedXpubAddress {
       xpub: address,
     };
   }
+
   return address;
 }
 
 export function isAsset(asset: AnyAsset): asset is Asset {
-    return typeof asset === "object" && asset.hasOwnProperty("code");
+  return typeof asset === 'object' && 'code' in asset;
 }
 
 export function isErc20Asset(asset: AnyAsset): asset is Erc20Asset {
-    return typeof asset === "object" && asset.hasOwnProperty("contractAddress");
+  return typeof asset === 'object' && 'contractAddress' in asset;
 }
 
 export function blockchainType(blockchain: Blockchain): BlockchainType {
@@ -131,39 +132,43 @@ export class ConvertCommon {
 
   public chain(blockchain: Blockchain): common_pb.Chain {
     const result: common_pb.Chain = this.factory('common_pb.Chain');
+
     result.setType(blockchain.valueOf());
+
     return result;
   }
 
   public pbAsset(asset: Asset): common_pb.Asset {
     const protoAsset: common_pb.Asset = this.factory('common_pb.Asset');
+
     protoAsset.setChain(asset.blockchain.valueOf());
     protoAsset.setCode(asset.code);
+
     return protoAsset;
   }
 
   public asset(asset: common_pb.Asset): Asset {
     return {
-      blockchain: asset.getChain().valueOf(),
-      // @ts-ignore
       code: asset.getCode(),
+      blockchain: asset.getChain().valueOf(),
     };
   }
 
-    public erc20Asset(asset: common_pb.Erc20Asset): Erc20Asset {
-        return {
-            blockchain: asset.getChain().valueOf(),
-            // @ts-ignore
-            contractAddress: asset.getContractAddress()
-        };
-    }
+  public erc20Asset(asset: common_pb.Erc20Asset): Erc20Asset {
+    return {
+      blockchain: asset.getChain().valueOf(),
+      contractAddress: asset.getContractAddress(),
+    };
+  }
 
-    public pbErc20Asset(asset: Erc20Asset): common_pb.Erc20Asset {
-        let protoAsset: common_pb.Erc20Asset = this.factory("common_pb.Erc20Asset");
-        protoAsset.setChain(asset.blockchain.valueOf());
-        protoAsset.setContractAddress(asset.contractAddress);
-        return protoAsset;
-    }
+  public pbErc20Asset(asset: Erc20Asset): common_pb.Erc20Asset {
+    const protoAsset: common_pb.Erc20Asset = this.factory('common_pb.Erc20Asset');
+
+    protoAsset.setChain(asset.blockchain.valueOf());
+    protoAsset.setContractAddress(asset.contractAddress);
+
+    return protoAsset;
+  }
 
   public blockInfo(blockInfo: common_pb.BlockInfo): BlockInfo {
     return {
@@ -175,46 +180,59 @@ export class ConvertCommon {
 
   public pbAnyAddress(address: AnyAddress): common_pb.AnyAddress {
     const protoAnyAddress: common_pb.AnyAddress = this.factory('common_pb.AnyAddress');
+
     if (isSingleAddress(address)) {
       const protoSingleAddress: common_pb.SingleAddress = this.factory('common_pb.SingleAddress');
+
       protoSingleAddress.setAddress(address);
       protoAnyAddress.setAddressSingle(protoSingleAddress);
     } else if (isXpubAddress(address)) {
       const protoXpubAddress = this.pbXpubAddress(address);
+
       protoAnyAddress.setAddressXpub(protoXpubAddress);
     } else if (isMultiAddress(address)) {
       const protoMultiAddress: common_pb.MultiAddress = this.factory('common_pb.MultiAddress');
+
       address.forEach((address) => {
         const protoSingleAddress: common_pb.SingleAddress = this.factory('common_pb.SingleAddress');
+
         protoSingleAddress.setAddress(address);
         protoMultiAddress.addAddresses(protoSingleAddress);
       });
+
       protoAnyAddress.setAddressMulti(protoMultiAddress);
     }
     return protoAnyAddress;
   }
 
-    public pbSingleAddress(address: SingleAddress): common_pb.SingleAddress {
-        let protoSingleAddress: common_pb.SingleAddress = this.factory("common_pb.SingleAddress");
-        protoSingleAddress.setAddress(address);
-        return protoSingleAddress;
-    }
+  public pbSingleAddress(address: SingleAddress): common_pb.SingleAddress {
+    const protoSingleAddress: common_pb.SingleAddress = this.factory('common_pb.SingleAddress');
 
-  public pbXpubAddress(address: XpubAddress) {
+    protoSingleAddress.setAddress(address);
+
+    return protoSingleAddress;
+  }
+
+  public pbXpubAddress(address: XpubAddress): common_pb.XpubAddress {
     const protoXpubAddress: common_pb.XpubAddress = this.factory('common_pb.XpubAddress');
     const xpub = asDetailedXpub(address);
+
     protoXpubAddress.setXpub(xpub.xpub);
+
     if (xpub.start) {
       protoXpubAddress.setStart(xpub.start);
     }
+
     if (typeof xpub.limit === 'number') {
       protoXpubAddress.setLimit(xpub.limit);
     } else {
       protoXpubAddress.setLimit(100);
     }
+
     if (xpub.unused_limit && xpub.unused_limit > 0) {
       protoXpubAddress.setUnusedLimit(xpub.unused_limit);
     }
+
     return protoXpubAddress;
   }
 }

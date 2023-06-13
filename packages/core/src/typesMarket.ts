@@ -1,7 +1,7 @@
 import * as market_pb from './generated/market_pb';
 import { DataMapper } from './Publisher';
-import { MessageFactory } from './typesConvert';
 import { ConvertCommon, Erc20Asset } from './typesCommon';
+import { MessageFactory } from './typesConvert';
 
 export type CryptoCurrency = 'BTC' | 'GRIN' | 'ETC' | 'ETH';
 export type StablecoinCurrency = 'DAI' | 'SAI' | 'USDT';
@@ -22,7 +22,7 @@ export type CountryCurrency =
   | 'INR';
 export type TestCurrency = 'MONOPOLY' | 'KOVAN' | 'TEST_BTC';
 
-export type AnyCurrency = CryptoCurrency | StablecoinCurrency | CountryCurrency | TestCurrency | Erc20Asset
+export type AnyCurrency = CryptoCurrency | StablecoinCurrency | CountryCurrency | TestCurrency | Erc20Asset;
 
 export type GetRatesRequest = Pair[];
 
@@ -59,7 +59,7 @@ export class ConvertMarket {
     const req: market_pb.GetRatesRequest = this.factory('market_pb.GetRatesRequest');
 
     pairs.forEach((pair) => {
-      let pairProto: market_pb.Pair = this.factory('market_pb.Pair');
+      const pairProto: market_pb.Pair = this.factory('market_pb.Pair');
 
       if (isErc20Asset(pair.base)) {
         pairProto.setErc20Base(this.common.pbErc20Asset(pair.base));
@@ -80,7 +80,7 @@ export class ConvertMarket {
 
   public ratesResponse(): DataMapper<market_pb.GetRatesResponse, GetRatesResponse> {
     return (value) => {
-      let rates: Rate[] = value.getRatesList().map((rate) => {
+      const rates: Rate[] = value.getRatesList().map((rate) => {
         let base;
 
         if (rate.hasErc20Base()) {
@@ -109,5 +109,4 @@ export class ConvertMarket {
       return rates;
     };
   }
-}
 }
