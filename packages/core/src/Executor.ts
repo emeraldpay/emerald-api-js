@@ -1,102 +1,124 @@
-import * as grpc from './grpcReimports';
-import {Publisher, ManagedPublisher} from './Publisher';
-import {ContinueCheck} from "./Retry";
+import * as console from 'console';
+import { ManagedPublisher, Publisher } from './Publisher';
+import { ContinueCheck, isContinueCheck } from './Retry';
+import * as grpc from './typesGrpc';
 
-export type RemoteCall<T, R> = (req: T) => Publisher<R>;
+export type RemoteCall<T, R> = (request: T) => Publisher<R>;
 
 export interface MethodExecutor {
-    execute(reconnect: () => void): void;
-    cancel(): void;
-    terminate(): void;
+  cancel(): void;
+  execute(reconnect: () => void): void;
+  terminate(): void;
 }
 
-type Logger = (msg: string) => void;
+export function isMethodExecutor(executor: unknown): executor is MethodExecutor {
+  return (
+    typeof executor === 'object' && executor != null && 'execute' in executor && typeof executor.execute === 'function'
+  );
+}
 
-const NoLogger: Logger = (msg => {});
-const ConsoleLogger: Logger = console.log;
+type Logger = typeof console | undefined;
 
-export class StandardExecutor<T, R> extends ManagedPublisher<R> implements MethodExecutor {
-    private sc: ContinueCheck;
-    private method: RemoteCall<T, R>;
-    private request: T;
-    private log: Logger = NoLogger;
+export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecutor {
+  private readonly call: RemoteCall<T, R>;
+  private readonly request: T;
 
-    private upstream: Publisher<R>;
+  private connections = 0;
 
-    private connections = 0;
+  private checker: ContinueCheck;
+  private logger: Logger | undefined;
+  private upstream: Publisher<R> | null;
 
-    constructor(sc: ContinueCheck, method: RemoteCall<T, R>, request: T) {
-        super();
-        if (typeof sc == 'undefined') {
-            throw new Error('sc is not provided to StandardExecutor');
+  constructor(call: RemoteCall<T, R>, checker: ContinueCheck, request: T) {
+    super();
+
+    if (call == null || typeof call !== 'function') {
+      throw new Error('Call is not provided');
+    }
+
+    if (checker == null || !isContinueCheck(checker)) {
+      throw new Error('Continue checker is not provided');
+    }
+
+    if (request == null) {
+      throw new Error('Request is not provided');
+    }
+
+    this.call = call;
+    this.checker = checker;
+    this.request = request;
+  }
+
+  setLogger(logger: Logger | undefined): void {
+    this.logger = logger;
+  }
+
+  cancel(): void {
+    this.checker.onClose();
+
+    this.upstream?.cancel();
+  }
+
+  execute(reconnect: () => void): void {
+    if (this.upstream != null) {
+      this.upstream.cancel();
+      this.upstream = null;
+    }
+
+    const callId = this.connections++;
+
+    const upstream: Publisher<R> = this.call(this.request);
+
+    upstream
+      .onData((data: R) => {
+        this.logger?.log(`gRPC request ${callId} data`);
+
+        this.checker.onSuccess?.();
+        this.emitData(data);
+      })
+      .onError((error) => {
+        this.checker.onFail?.();
+
+        if (typeof error === 'object' && 'code' in error && typeof error.code === 'number') {
+          const grpcError = error as grpc.Error;
+
+          if (
+            grpcError.code === grpc.GrpcStatus.UNKNOWN ||
+            grpcError.code === grpc.GrpcStatus.UNAVAILABLE ||
+            grpcError.code === grpc.GrpcStatus.INTERNAL
+          ) {
+            this.logger?.warn(
+              `gRPC connection for ${callId} lost with code ${grpcError.code}: ${grpcError.message}. Reconnecting...`,
+            );
+
+            setTimeout(reconnect.bind(this), 100);
+          } else {
+            this.logger?.error(
+              `gRPC connection for ${callId} lost with code ${grpcError.code}: ${grpcError.message}. Closing...`,
+            );
+
+            this.cancel();
+            this.emitError(grpcError);
+          }
+        } else {
+          this.logger?.error(`gRPC client error: ${error.message}. Closing...`);
+
+          this.cancel();
+          this.emitError(error);
         }
-        if (typeof method == 'undefined') {
-            throw new Error("method is not provided to StandardExecutor");
-        }
-        if (typeof request == 'undefined') {
-            throw new Error("request is not provided to StandardExecutor");
-        }
-        this.sc = sc;
-        this.method = method;
-        this.request = request;
-    }
+      })
+      .finally(() => {
+        this.logger?.log(`gRPC request ${callId} closed`);
 
-    setLogger(log: Logger) {
-        this.log = log;
-    }
+        this.checker.onClose();
+        this.emitClosed();
+      });
 
-    _read(size?: number): any {
-    }
+    this.upstream = upstream;
+  }
 
-    execute(reconnect: () => void) {
-        if (this.upstream) {
-            this.upstream.cancel();
-            this.upstream = undefined;
-        }
-        let callId = this.connections++;
-        const upstream: Publisher<R> = this.method(this.request);
-        upstream.onData((data: R) => {
-            this.log(`gRPC request ${callId} data`);
-            this.emitData(data)
-        });
-        upstream.onError((e) => {
-            this.sc.onFail();
-            // @ts-ignore
-            if (e && typeof e.code == "number") {
-                let err = e as grpc.Error;
-                if (err.code === grpc.status.UNKNOWN
-                    || err.code === grpc.status.UNAVAILABLE
-                    || err.code === grpc.status.INTERNAL) {
-                    this.log(`gRPC connection for ${callId} lost with code: ${err.code}. ${err.message}. Reconnecting...`);
-                    setTimeout(reconnect.bind(this), 100);
-                } else {
-                    this.log(`gRPC connection for ${callId} lost with code: ${err ? err.code : ''}. Closing...`);
-                    this.cancel();
-                    this.emitError(err);
-                }
-            } else {
-                this.log(`gRPC client error ${e ? e.message : 'UNKNOWN'}. Closing...`)
-                this.cancel();
-                this.emitError(e);
-            }
-        });
-        upstream.finally(() => {
-            this.log(`gRPC request ${callId} closed`);
-            this.sc.onClose();
-            this.emitClosed()
-        });
-        this.upstream = upstream;
-    }
-
-    cancel(): void {
-        this.sc.onClose();
-        if (this.upstream) {
-            this.upstream.cancel();
-        }
-    }
-
-    terminate(): void {
-        this.cancel();
-        this.emitError(new Error('execution terminated'));
-    }
+  terminate(): void {
+    this.cancel();
+    this.emitError(new Error('Execution terminated'));
+  }
 }

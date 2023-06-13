@@ -1,38 +1,44 @@
 import {
-    ConnectionListener,
-    ConvertMarket,
-    GetRatesRequest,
-    GetRatesResponse,
-    publishToPromise,
-    readOnce,
-} from "@emeraldpay/api";
-import * as grpc from "@grpc/grpc-js";
-import { callSingle, NativeChannel } from "../channel";
-import * as prices_grpc_pb from '../generated/market_grpc_pb';
-import { classFactory } from "./Factory";
+  ConnectionListener,
+  ConvertMarket,
+  GetRatesRequest,
+  GetRatesResponse,
+  publishToPromise,
+  readOnce,
+} from '@emeraldpay/api';
+import { ChannelCredentials } from '@grpc/grpc-js';
+import { NativeChannel, callSingle } from '../channel';
+import { MarketClient as ProtoMarketClient } from '../generated/market_grpc_pb';
+import { classFactory } from './Factory';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { version: clientVersion } = require('../../package.json');
 
 export class MarketClient {
-    readonly client: prices_grpc_pb.MarketClient;
-    readonly channel: NativeChannel;
-    readonly retries: number;
+  readonly client: ProtoMarketClient;
+  readonly channel: NativeChannel;
+  readonly credentials: ChannelCredentials;
+  readonly retries: number;
 
-    private readonly convert = new ConvertMarket(classFactory);
+  private readonly convert = new ConvertMarket(classFactory);
 
-    constructor(address: string, credentials: grpc.ChannelCredentials, retries = 3) {
-        this.client = new prices_grpc_pb.MarketClient(address, credentials);
-        this.channel = new NativeChannel(this.client);
-        this.retries = retries;
-    }
+  constructor(address: string, credentials: ChannelCredentials, agents: string[], retries = 3) {
+    const agent = [...agents, `emerald-client-node/${clientVersion}`].join(' ');
 
-    public setConnectionListener(listener: ConnectionListener) {
-        this.channel.setListener(listener);
-    }
+    this.client = new ProtoMarketClient(address, credentials, { 'grpc.primary_user_agent': agent });
+    this.channel = new NativeChannel(this.client);
+    this.credentials = credentials;
+    this.retries = retries;
+  }
 
-    public getRates(request: GetRatesRequest): Promise<GetRatesResponse> {
-        const req = this.convert.ratesRequest(request);
-        const mapper = this.convert.ratesResponse();
+  public setConnectionListener(listener: ConnectionListener): void {
+    this.channel.setListener(listener);
+  }
 
-        const call = callSingle(this.client.getRates.bind(this.client), mapper);
-        return publishToPromise(readOnce(this.channel, call, req, this.retries));
-    }
+  public getRates(request: GetRatesRequest): Promise<GetRatesResponse> {
+    const ratesRequest = this.convert.ratesRequest(request);
+    const mapper = this.convert.ratesResponse();
+
+    const call = callSingle(this.client.getRates.bind(this.client), mapper);
+    return publishToPromise(readOnce(this.channel, call, ratesRequest, this.retries));
+  }
 }

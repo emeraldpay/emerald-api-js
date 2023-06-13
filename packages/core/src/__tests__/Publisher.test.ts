@@ -1,91 +1,102 @@
-import {BufferedPublisher, ManagedPublisher, publishListToPromise} from "../Publisher";
+import { BufferedPublisher, ManagedPublisher, publishListToPromise } from '../Publisher';
 
-describe("Publisher", () => {
-    describe("BufferedPublisher", () => {
-        it("call finally added late", (done) => {
-            let buffer = new BufferedPublisher<number>();
-            buffer.emitClosed();
-            buffer.finally(() => done());
-        });
+describe('Publisher', () => {
+  describe('BufferedPublisher', () => {
+    it('call finally added late', (done) => {
+      const buffer = new BufferedPublisher<number>();
 
-        it("call finally added first", (done) => {
-            let buffer = new BufferedPublisher<number>();
-            buffer.finally(() => done());
-            buffer.emitClosed();
-        });
+      buffer.emitClosed();
 
-        it("call onData added late", (done) => {
-            let buffer = new BufferedPublisher<number>();
-            buffer.emitData(1);
-            buffer.onData((n) => n == 1 ? done() : done.fail());
-        });
-
-        it("call onData added first", (done) => {
-            let buffer = new BufferedPublisher<number>();
-            buffer.onData((n) => n == 1 ? done() : done.fail());
-            buffer.emitData(1);
-        });
-
-        it("call onError added late", (done) => {
-            let buffer = new BufferedPublisher<number>();
-            buffer.emitError(new Error("test"));
-            buffer.onError((e) => e.message == "test" ? done() : done.fail());
-        });
-
-        it("call onError added first", (done) => {
-            let buffer = new BufferedPublisher<number>();
-            buffer.onError((e) => e.message == "test" ? done() : done.fail());
-            buffer.emitError(new Error("test"));
-        });
+      buffer.finally(() => done());
     });
 
-    describe("publishListToPromise", () => {
-        it("single item", (done) => {
-            let publisher = new ManagedPublisher<number>();
-            let act = publishListToPromise(publisher);
-            act
-                .then((value) => {
-                    if (value.length == 1 && value[0] == 1) done()
-                    else done.fail("invalid data")
-                })
-                .catch((e) => done.fail(e));
-            publisher.emitData(1);
-            publisher.emitClosed()
-        });
+    it('call finally added first', (done) => {
+      const buffer = new BufferedPublisher<number>();
 
-        it("two items", (done) => {
-            let publisher = new ManagedPublisher<number>();
-            let act = publishListToPromise(publisher);
-            act
-                .then((value) => {
-                    if (value.length == 2 && value[0] == 1 && value[1] == 3) done()
-                    else done.fail("invalid data")
-                })
-                .catch((e) => done.fail(e));
-            publisher.emitData(1);
-            publisher.emitData(3);
-            publisher.emitClosed()
-        });
+      buffer.finally(() => done());
 
-        it("no items", (done) => {
-            let publisher = new ManagedPublisher<number>();
-            let act = publishListToPromise(publisher);
-            act
-                .then((value) => {
-                    if (value.length == 0) done()
-                    else done.fail("invalid data")
-                })
-                .catch((e) => done.fail(e));
-            publisher.emitClosed();
-        });
-
-        it("error", (done) => {
-            let publisher = new ManagedPublisher<number>();
-            let act = publishListToPromise(publisher);
-            act
-                .then((value) => done.fail())
-                .catch((e) => e.message == "test" ? done() : done.fail());
-            publisher.emitError(new Error("test"));
-        });
+      buffer.emitClosed();
     });
+
+    it('call onData added late', (done) => {
+      const buffer = new BufferedPublisher<number>();
+
+      buffer.emitData(1);
+
+      buffer.onData((data) => done(data === 1 ? undefined : 'Invalid data'));
+    });
+
+    it('call onData added first', (done) => {
+      const buffer = new BufferedPublisher<number>();
+
+      buffer.onData((data) => done(data === 1 ? undefined : 'Invalid data'));
+
+      buffer.emitData(1);
+    });
+
+    it('call onError added late', (done) => {
+      const buffer = new BufferedPublisher<number>();
+
+      buffer.emitError(new Error('test'));
+
+      buffer.onError((error) => done(error.message === 'test' ? undefined : 'Invalid error'));
+    });
+
+    it('call onError added first', (done) => {
+      const buffer = new BufferedPublisher<number>();
+
+      buffer.onError((error) => done(error.message === 'test' ? undefined : 'Invalid error'));
+
+      buffer.emitError(new Error('test'));
+    });
+  });
+
+  describe('publishListToPromise', () => {
+    it('single item', (done) => {
+      const publisher = new ManagedPublisher<number>();
+
+      const act = publishListToPromise(publisher);
+
+      act
+        .then((value) => done(value.length === 1 && value[0] === 1 ? undefined : 'Invalid data'))
+        .catch((error) => done(error));
+
+      publisher.emitData(1);
+      publisher.emitClosed();
+    });
+
+    it('two items', (done) => {
+      const publisher = new ManagedPublisher<number>();
+
+      const act = publishListToPromise(publisher);
+
+      act
+        .then((value) => done(value.length === 2 && value[0] === 1 && value[1] === 3 ? undefined : 'Invalid data'))
+        .catch((error) => done(error));
+
+      publisher.emitData(1);
+      publisher.emitData(3);
+      publisher.emitClosed();
+    });
+
+    it('no items', (done) => {
+      const publisher = new ManagedPublisher<number>();
+
+      const act = publishListToPromise(publisher);
+
+      act.then((value) => done(value.length == 0 ? undefined : 'Invalid data')).catch((error) => done(error));
+
+      publisher.emitClosed();
+    });
+
+    it('error', (done) => {
+      const publisher = new ManagedPublisher<number>();
+
+      const act = publishListToPromise(publisher);
+
+      act.then(() => done()).catch((error) => done(error.message === 'test' ? undefined : error));
+
+      publisher.emitError(new Error('test'));
+    });
+  });
 });

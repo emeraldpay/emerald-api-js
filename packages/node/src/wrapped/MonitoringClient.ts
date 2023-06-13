@@ -1,28 +1,34 @@
-import { ConnectionListener, publishToPromise, readOnce } from "@emeraldpay/api";
-import * as grpc from "@grpc/grpc-js";
-import { callSingle, NativeChannel } from "../channel";
-import * as monitoring_grpc_pb from '../generated/monitoring_grpc_pb';
-import * as monitoring_pb from '../generated/monitoring_pb';
+import { ConnectionListener, publishToPromise, readOnce } from '@emeraldpay/api';
+import { ChannelCredentials } from '@grpc/grpc-js';
+import { NativeChannel, callSingle } from '../channel';
+import { MonitoringClient as ProtoMonitoringClient } from '../generated/monitoring_grpc_pb';
+import { PingRequest as ProtoPingRequest } from '../generated/monitoring_pb';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { version: clientVersion } = require('../../package.json');
 
 export class MonitoringClient {
-    readonly client: monitoring_grpc_pb.MonitoringClient;
-    readonly channel: NativeChannel;
-    readonly retries: number;
+  readonly client: ProtoMonitoringClient;
+  readonly channel: NativeChannel;
+  readonly credentials: ChannelCredentials;
+  readonly retries: number;
 
-    constructor(address: string, credentials: grpc.ChannelCredentials, retries = 3) {
-        this.client = new monitoring_grpc_pb.MonitoringClient(address, credentials);
-        this.channel = new NativeChannel(this.client);
-        this.retries = retries;
-    }
+  constructor(address: string, credentials: ChannelCredentials, agents: string[], retries = 3) {
+    const agent = [...agents, `emerald-client-node/${clientVersion}`].join(' ');
 
-    public setConnectionListener(listener: ConnectionListener) {
-        this.channel.setListener(listener);
-    }
+    this.client = new ProtoMonitoringClient(address, credentials, { 'grpc.primary_user_agent': agent });
+    this.channel = new NativeChannel(this.client);
+    this.credentials = credentials;
+    this.retries = retries;
+  }
 
-    public ping(): Promise<boolean> {
-        const req = new monitoring_pb.PingRequest();
+  public setConnectionListener(listener: ConnectionListener): void {
+    this.channel.setListener(listener);
+  }
 
-        const call = callSingle(this.client.ping.bind(this.client), () => true);
-        return publishToPromise(readOnce(this.channel, call, req, this.retries));
-    }
+  public ping(): Promise<boolean> {
+    const request = new ProtoPingRequest();
+
+    const call = callSingle(this.client.ping.bind(this.client), () => true);
+    return publishToPromise(readOnce(this.channel, call, request, this.retries));
+  }
 }
