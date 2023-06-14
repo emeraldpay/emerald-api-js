@@ -22,7 +22,8 @@ export type CountryCurrency =
   | 'INR';
 export type TestCurrency = 'MONOPOLY' | 'KOVAN' | 'TEST_BTC';
 
-export type AnyCurrency = CryptoCurrency | StablecoinCurrency | CountryCurrency | TestCurrency | Erc20Asset;
+export type BaseCurrency = CryptoCurrency | StablecoinCurrency | CountryCurrency | TestCurrency;
+export type AnyCurrency = BaseCurrency | Erc20Asset;
 
 export type GetRatesRequest = Pair[];
 
@@ -81,12 +82,12 @@ export class ConvertMarket {
   public ratesResponse(): DataMapper<market_pb.GetRatesResponse, GetRatesResponse> {
     return (value) => {
       const rates: Rate[] = value.getRatesList().map((rate) => {
-        let base;
+        let base: AnyCurrency;
 
         if (rate.hasErc20Base()) {
           base = this.common.erc20Asset(rate.getErc20Base());
         } else if (rate.hasBase()) {
-          base = rate.getBase();
+          base = rate.getBase() as BaseCurrency;
         } else {
           throw new Error('No base currency in rate');
         }
