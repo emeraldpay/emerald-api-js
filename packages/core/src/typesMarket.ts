@@ -1,6 +1,6 @@
 import * as market_pb from './generated/market_pb';
 import { DataMapper } from './Publisher';
-import { ConvertCommon, Erc20Asset } from './typesCommon';
+import { ConvertCommon, Erc20Asset, isErc20Asset } from './typesCommon';
 import { MessageFactory } from './typesConvert';
 
 export type CryptoCurrency = 'BTC' | 'GRIN' | 'ETC' | 'ETH';
@@ -43,12 +43,9 @@ export type Rate = {
   rate: string;
 };
 
-function isErc20Asset(obj: AnyCurrency): obj is Erc20Asset {
-  return typeof obj === 'object' && obj.blockchain !== undefined && obj.contractAddress !== undefined;
-}
-
 export class ConvertMarket {
-  private factory: MessageFactory;
+  private readonly factory: MessageFactory;
+
   private common: ConvertCommon;
 
   constructor(factory: MessageFactory, common: ConvertCommon = new ConvertCommon(factory)) {

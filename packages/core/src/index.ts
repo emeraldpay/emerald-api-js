@@ -41,7 +41,16 @@ export {
   isNativeCallError,
   isNativeCallResponse,
 } from './typesBlockchain';
-export { AnyAddress, AnyAsset, AssetCode, Blockchain, MultiAddress, SingleAddress } from './typesCommon';
+export {
+  AnyAddress,
+  AnyAsset,
+  AssetCode,
+  Blockchain,
+  MultiAddress,
+  SingleAddress,
+  isAsset,
+  isErc20Asset,
+} from './typesCommon';
 export { MessageFactory } from './typesConvert';
 export {
   AnyCurrency,

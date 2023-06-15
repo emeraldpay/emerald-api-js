@@ -94,11 +94,11 @@ export function asDetailedXpub(address: XpubAddress): DetailedXpubAddress {
   return address;
 }
 
-export function isAsset(asset: AnyAsset): asset is Asset {
+export function isAsset(asset: unknown): asset is Asset {
   return typeof asset === 'object' && 'code' in asset;
 }
 
-export function isErc20Asset(asset: AnyAsset): asset is Erc20Asset {
+export function isErc20Asset(asset: unknown): asset is Erc20Asset {
   return typeof asset === 'object' && 'contractAddress' in asset;
 }
 
