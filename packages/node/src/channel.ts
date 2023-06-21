@@ -41,24 +41,22 @@ function toConnectivityState(state: GrpcConnectivityState): ConnectivityState {
 export class NativeChannel implements Channel {
   private readonly client: Client;
 
-  private listener: NodeJS.Timeout;
+  private listener: NodeJS.Timer;
 
   constructor(client: Client) {
     this.client = client;
+  }
+
+  close(): void {
+    clearInterval(this.listener);
+
+    this.client.close();
   }
 
   getState(): ConnectivityState {
     const state = this.client.getChannel().getConnectivityState(true);
 
     return toConnectivityState(state);
-  }
-
-  watch(current: ConnectivityState, deadline: number, handler: StateListener): void {
-    this.client.getChannel().watchConnectivityState(current.valueOf(), Date.now() + deadline, (error) => {
-      const state = this.client.getChannel().getConnectivityState(true);
-
-      handler(error, toConnectivityState(state));
-    });
   }
 
   setListener(listener: ConnectionListener): void {
@@ -69,6 +67,14 @@ export class NativeChannel implements Channel {
 
       listener(asStatus(state));
     }, 1000);
+  }
+
+  watch(current: ConnectivityState, deadline: number, handler: StateListener): void {
+    this.client.getChannel().watchConnectivityState(current.valueOf(), Date.now() + deadline, (error) => {
+      const state = this.client.getChannel().getConnectivityState(true);
+
+      handler(error, toConnectivityState(state));
+    });
   }
 }
 
