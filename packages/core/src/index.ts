@@ -22,6 +22,8 @@ export {
 } from './Publisher';
 export { AlwaysRepeat, ContinueCheck, OnceSuccess, Retry } from './Retry';
 export {
+  AddressAllowanceRequest,
+  AddressAllowanceResponse,
   AddressBalance,
   BalanceRequest,
   ChainHead,
