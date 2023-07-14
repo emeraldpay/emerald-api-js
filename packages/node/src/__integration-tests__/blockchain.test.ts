@@ -8,15 +8,34 @@ import {
 import {
   GrpcObject,
   Server as GrpcServer,
+  status as GrpcStatus,
+  Metadata,
   ServerCredentials,
+  ServerWritableStream,
   ServiceClientConstructor,
+  ServiceError,
   credentials as grpcCredentials,
   loadPackageDefinition,
 } from '@grpc/grpc-js';
 import { loadSync as grpcLoadSync } from '@grpc/proto-loader';
 import { EmeraldApi } from '../EmeraldApi';
+import { AddressBalance, BalanceRequest, NativeCallReplyItem, NativeCallRequest } from '../generated/blockchain_pb';
 
 jest.setTimeout(30000);
+
+class GrpcError extends Error implements ServiceError {
+  code: GrpcStatus;
+  details: string;
+  metadata: Metadata;
+
+  constructor(message: string, code: GrpcStatus) {
+    super(message);
+
+    this.code = code;
+    this.details = '';
+    this.metadata = new Metadata();
+  }
+}
 
 describe('BlockchainClient', () => {
   const textEncoder = new TextEncoder();
@@ -379,14 +398,15 @@ describe('BlockchainClient', () => {
     const blockchainService = (blockchainProto.emerald as GrpcObject).Blockchain as unknown as ServiceClientConstructor;
 
     server.addService(blockchainService.service, {
-      nativeCall(call) {
+      nativeCall(call: ServerWritableStream<NativeCallRequest.AsObject, NativeCallReplyItem.AsObject>) {
         const [agent] = call.metadata.get('user-agent');
 
         expect(agent).toMatch(
           /^test-client\/\d+\.\d+\.\d+ emerald-client-node\/\d+\.\d+\.\d+(-\w+)? grpc-node-js\/\d+\.\d+\.\d+(-\w+)?$/,
         );
 
-        call.write({ id: 1, succeed: true, payload: textEncoder.encode('{}') }).end();
+        call.write({ id: 1, errormessage: '', payload: textEncoder.encode('{}'), succeed: true });
+        call.end();
       },
     });
 
@@ -399,7 +419,7 @@ describe('BlockchainClient', () => {
 
       const emeraldApi = EmeraldApi.localApi(port, grpcCredentials.createInsecure());
 
-      // Initializing second client to check user-agent isn't merged
+      // Initializing a second client to check user-agent isn't merged
       emeraldApi.monitoring();
 
       emeraldApi
@@ -417,6 +437,75 @@ describe('BlockchainClient', () => {
           }
 
           server.tryShutdown(done);
+        });
+
+      timeout = setTimeout(() => server.tryShutdown(() => done('Response timeout')), 20 * 1000);
+    });
+  });
+
+  test('Should close connection with error', (done) => {
+    const client = api.blockchain();
+
+    client
+      .subscribeBalance({
+        address: '0x',
+        asset: { blockchain: Blockchain.TESTNET_GOERLI, code: 'ETHER' },
+      })
+      .onData(() => done('Data received'))
+      .onError(() => done())
+      .finally(() => done('Finally called'));
+  });
+
+  test('Should close connection with error by keepalive timeout', (done) => {
+    const server = new GrpcServer();
+
+    const packageDefinition = grpcLoadSync('../../api-definitions/proto/blockchain.proto');
+    const blockchainProto = loadPackageDefinition(packageDefinition);
+
+    const blockchainService = (blockchainProto.emerald as GrpcObject).Blockchain as unknown as ServiceClientConstructor;
+
+    const thrown = false;
+
+    server.addService(blockchainService.service, {
+      subscribeBalance(call: ServerWritableStream<BalanceRequest.AsObject, AddressBalance.AsObject>) {
+        call.write({
+          address: { address: '0x' },
+          asset: call.request.asset,
+          balance: '0',
+          confirmed: true,
+          utxoList: [],
+        });
+
+        if (!thrown) {
+          throw new GrpcError('Test error', GrpcStatus.UNKNOWN);
+        }
+      },
+    });
+
+    server.bindAsync('localhost:0', ServerCredentials.createInsecure(), (error, port) => {
+      expect(error).toBeNull();
+
+      server.start();
+
+      let received = false;
+      let timeout: NodeJS.Timeout | null = null;
+
+      EmeraldApi.localApi(port, grpcCredentials.createInsecure())
+        .blockchain()
+        .subscribeBalance({
+          address: '0x',
+          asset: { blockchain: Blockchain.TESTNET_GOERLI, code: 'ETHER' },
+        })
+        .onData(() => {
+          if (received) {
+            if (timeout != null) {
+              clearTimeout(timeout);
+            }
+
+            server.tryShutdown(done);
+          }
+
+          received = true;
         });
 
       timeout = setTimeout(() => server.tryShutdown(() => done('Response timeout')), 20 * 1000);

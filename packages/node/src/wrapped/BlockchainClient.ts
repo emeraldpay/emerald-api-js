@@ -60,7 +60,7 @@ export class BlockchainClient {
     const mapper: DataMapper<any, ChainHead> = this.convert.headResponse();
 
     const call = callStream(this.client.subscribeHead.bind(this.client), mapper);
-    return alwaysRetry(this.channel, call, request);
+    return alwaysRetry(this.channel, call, request, this.retries);
   }
 
   public nativeCall(chain: Blockchain, calls: NativeCallItem[]): Publisher<NativeCallResponse | NativeCallError> {
@@ -77,7 +77,7 @@ export class BlockchainClient {
     const mapper: DataMapper<ProtoAddressBalance, AddressBalance> = this.convert.balanceResponse();
 
     const call = callStream(this.client.subscribeBalance.bind(this.client), mapper);
-    return alwaysRetry(this.channel, call, protoRequest);
+    return alwaysRetry(this.channel, call, protoRequest, this.retries);
   }
 
   public getBalance(request: BalanceRequest): Promise<Array<AddressBalance>> {
@@ -117,6 +117,6 @@ export class BlockchainClient {
     const mapper = this.convert.addressAllowanceResponse();
 
     const call = callStream(this.client.subscribeAddressAllowance.bind(this.client), mapper);
-    return alwaysRetry(this.channel, call, protoRequest);
+    return alwaysRetry(this.channel, call, protoRequest, this.retries);
   }
 }

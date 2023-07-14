@@ -64,6 +64,7 @@ export class Retry {
     const isReady = (state: ConnectivityState, retry: boolean): boolean => {
       if (state === ConnectivityState.READY) {
         this.checker.onConnected?.();
+        this.executor.connected();
 
         return true;
       }
@@ -127,23 +128,10 @@ export class Retry {
 }
 
 export class AlwaysRepeat implements ContinueCheck {
-  closed = false;
-
-  shouldContinue(): boolean {
-    return !this.closed;
-  }
-
-  onClose(): void {
-    this.closed = true;
-  }
-}
-
-export class OnceSuccess implements ContinueCheck {
   readonly retries: number;
 
   counter = 0;
 
-  succeed = false;
   closed = false;
 
   constructor(retries: number) {
@@ -155,11 +143,7 @@ export class OnceSuccess implements ContinueCheck {
   }
 
   shouldContinue(): boolean {
-    return !this.failed && !this.succeed && !this.closed;
-  }
-
-  onSuccess(): void {
-    this.succeed = true;
+    return !this.failed && !this.closed;
   }
 
   onFail(): void {
@@ -168,5 +152,17 @@ export class OnceSuccess implements ContinueCheck {
 
   onClose(): void {
     this.closed = true;
+  }
+}
+
+export class OnceSuccess extends AlwaysRepeat {
+  succeed = false;
+
+  shouldContinue(): boolean {
+    return !this.failed && !this.closed && !this.succeed;
+  }
+
+  onSuccess(): void {
+    this.succeed = true;
   }
 }

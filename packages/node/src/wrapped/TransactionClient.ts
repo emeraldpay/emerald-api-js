@@ -80,7 +80,7 @@ export class TransactionClient {
     const mapper = this.convert.addressTokenResponse();
 
     const call = callStream(this.client.subscribeAddressTokens.bind(this.client), mapper);
-    return alwaysRetry(this.channel, call, protoRequest);
+    return alwaysRetry(this.channel, call, protoRequest, this.retries);
   }
 
   public getAddressAllowance(
@@ -100,6 +100,6 @@ export class TransactionClient {
     const mapper = this.convert.addressAllowanceResponse();
 
     const call = callStream(this.client.subscribeAddressAllowance.bind(this.client), mapper);
-    return alwaysRetry(this.channel, call, protoRequest);
+    return alwaysRetry(this.channel, call, protoRequest, this.retries);
   }
 }

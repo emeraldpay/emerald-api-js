@@ -6,6 +6,7 @@ import * as grpc from './typesGrpc';
 export type RemoteCall<T, R> = (request: T) => Publisher<R>;
 
 export interface MethodExecutor {
+  connected(): void;
   cancel(): void;
   execute(reconnect: () => void): void;
   terminate(): void;
@@ -91,6 +92,8 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
               `gRPC connection for ${callId} lost with code ${grpcError.code}: ${grpcError.message}. Reconnecting...`,
             );
 
+            this.reconnect();
+
             setTimeout(reconnect.bind(this), 100);
           } else {
             this.logger?.error(
@@ -108,10 +111,12 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
         }
       })
       .finally(() => {
-        this.logger?.log(`gRPC request ${callId} closed`);
+        if (!this.reconnecting) {
+          this.logger?.log(`gRPC request ${callId} closed`);
 
-        this.checker.onClose();
-        this.emitClosed();
+          this.checker.onClose();
+          this.emitClosed();
+        }
       });
 
     this.upstream = upstream;
