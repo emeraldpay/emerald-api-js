@@ -153,6 +153,10 @@ export class AlwaysRepeat implements ContinueCheck {
   onClose(): void {
     this.closed = true;
   }
+
+  onSuccess(): void {
+    this.counter = 0;
+  }
 }
 
 export class OnceSuccess extends AlwaysRepeat {
