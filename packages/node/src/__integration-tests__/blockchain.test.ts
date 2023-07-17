@@ -328,6 +328,23 @@ describe('BlockchainClient', () => {
     }
   });
 
+  test('get ethereum goerli fees', async () => {
+    const client = api.blockchain();
+
+    const response = await client.estimateFees({
+      blockchain: 10005,
+      blocks: 10,
+      mode: 'avgLast',
+    });
+
+    expect(isEthereumExtFees(response)).toBeTruthy();
+
+    if (isEthereumExtFees(response)) {
+      expect(response.expect.length).toBeGreaterThan(5);
+      expect(parseInt(response.expect.substring(0, 5))).toBeGreaterThan(0);
+    }
+  });
+
   test('native call with unacceptable raw transaction', (done) => {
     const client = api.blockchain();
 

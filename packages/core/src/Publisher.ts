@@ -130,6 +130,7 @@ export class BufferedPublisher<T> implements Publisher<T> {
   }
 
   cancel(): void {
+    this._reconnecting = false;
     this.cancelled = true;
   }
 
@@ -245,7 +246,7 @@ export class ManagedPublisher<T> implements Publisher<T> {
   }
 
   cancel(): void {
-    // Nothing
+    this.buffer.cancel();
   }
 
   emitData(data: T): void {
