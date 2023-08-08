@@ -1,4 +1,5 @@
 import { MessageFactory } from '@emeraldpay/api';
+import * as address_message_pb from '../generated/address.message_pb';
 import * as blockchain_pb from '../generated/blockchain_pb';
 import * as common_pb from '../generated/common_pb';
 import * as market_pb from '../generated/market_pb';
@@ -21,6 +22,9 @@ export const classFactory: MessageFactory = (id: string) => {
       return new common_pb.SingleAddress();
     case 'common_pb.XpubAddress':
       return new common_pb.XpubAddress();
+    // Address
+    case 'address_message_pb.DescribeRequest':
+      return new address_message_pb.DescribeRequest();
     // Blockchain
     case 'blockchain_pb.AddressAllowanceRequest':
       return new blockchain_pb.AddressAllowanceRequest();

@@ -21,6 +21,7 @@ export {
   publishToPromise,
 } from './Publisher';
 export { AlwaysRepeat, ContinueCheck, OnceSuccess, Retry } from './Retry';
+export { ConvertDescribeAddress, DescribeAddressRequest, DescribeAddressResponse } from './typesAddress';
 export {
   AddressAllowanceRequest,
   AddressAllowanceResponse,
