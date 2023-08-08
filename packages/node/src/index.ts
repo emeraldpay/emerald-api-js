@@ -1,34 +1,19 @@
 export {
-    Chain,
-    ChainRef,
-    AnyAddress,
-    MultiAddress,
-    SingleAddress,
-    Asset
-} from './generated/common_pb';
-
-export {GetRatesRequest, GetRatesResponse, Pair, Rate} from './generated/market_pb';
-export {IMarketClient, MarketClient as MarketClientPb} from './generated/market_grpc_pb';
-
-export {
-    NativeCallRequest,
-    NativeCallItem,
-    NativeCallReplyItem,
-    ChainHead,
-    TxStatusRequest,
-    TxStatus,
-    BalanceRequest,
-    AddressBalance
+  AddressBalance,
+  BalanceRequest,
+  ChainHead,
+  NativeCallItem,
+  NativeCallReplyItem,
+  NativeCallRequest,
+  TxStatus,
+  TxStatusRequest,
 } from './generated/blockchain_pb';
-export {IBlockchainClient, BlockchainClient as BlockchainClientPb} from './generated/blockchain_grpc_pb';
-
-export {CHAINS, ChainSpec, chainByCode} from './chain';
-
-export {credentials as credentialsPb} from '@grpc/grpc-js';
-
-export {MarketClient} from './wrapped/MarketClient';
-export {BlockchainClient} from './wrapped/BlockchainClient';
-export {MonitoringClient} from './wrapped/MonitoringClient';
-export {TransactionClient} from './wrapped/TransactionClient';
-
-export {emeraldCredentials, CredentialsContext, AuthenticationStatus, AuthenticationListener} from './credentials';
+export { AnyAddress, Asset, Chain, ChainRef, MultiAddress, SingleAddress } from './generated/common_pb';
+export { GetRatesRequest, GetRatesResponse, Pair, Rate } from './generated/market_pb';
+export { CHAINS, ChainSpec, chainByCode } from './chain';
+export { AuthenticationListener, AuthenticationStatus, CredentialsContext, emeraldCredentials } from './credentials';
+export { AddressClient } from './wrapped/AddressClient';
+export { BlockchainClient } from './wrapped/BlockchainClient';
+export { MarketClient } from './wrapped/MarketClient';
+export { MonitoringClient } from './wrapped/MonitoringClient';
+export { TransactionClient } from './wrapped/TransactionClient';
