@@ -3,6 +3,15 @@ import { DataMapper } from './Publisher';
 import { Blockchain, ConvertCommon, SingleAddress } from './typesCommon';
 import { MessageFactory } from './typesConvert';
 
+export enum DescribeAddressCapability {
+  ERC20 = 'erc20',
+}
+
+export enum DescribeAddressControl {
+  CONTRACT = 'contract',
+  PERSON = 'person',
+}
+
 export interface DescribeAddressRequest {
   address: SingleAddress;
   chain: Blockchain;
@@ -11,8 +20,8 @@ export interface DescribeAddressRequest {
 export interface DescribeAddressResponse {
   active: boolean;
   address: SingleAddress;
-  capabilities: AddressCapability[];
-  control: DescribeResponse.AddrControl;
+  capabilities: DescribeAddressCapability[];
+  control?: DescribeAddressControl;
 }
 
 export class ConvertDescribeAddress {
@@ -34,8 +43,31 @@ export class ConvertDescribeAddress {
     return (response) => ({
       active: response.getActive(),
       address: response.getAddress().getAddress(),
-      capabilities: response.getCapabilitiesList(),
-      control: response.getControl(),
+      capabilities: response
+        .getCapabilitiesList()
+        .map(this.convertAddressCapability)
+        .filter((capability) => capability != null),
+      control: this.convertAddressControl(response.getControl()),
     });
+  }
+
+  private convertAddressCapability(capability: AddressCapability): DescribeAddressCapability | undefined {
+    switch (capability) {
+      case AddressCapability.CAP_ERC20:
+        return DescribeAddressCapability.ERC20;
+      default:
+        return undefined;
+    }
+  }
+
+  private convertAddressControl(control: DescribeResponse.AddrControl): DescribeAddressControl | undefined {
+    switch (control) {
+      case DescribeResponse.AddrControl.CTRL_CONTRACT:
+        return DescribeAddressControl.CONTRACT;
+      case DescribeResponse.AddrControl.CTRL_PERSON:
+        return DescribeAddressControl.PERSON;
+      default:
+        return undefined;
+    }
   }
 }
