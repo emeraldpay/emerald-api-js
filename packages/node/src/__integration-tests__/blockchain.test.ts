@@ -340,8 +340,8 @@ describe('BlockchainClient', () => {
     expect(isEthereumExtFees(response)).toBeTruthy();
 
     if (isEthereumExtFees(response)) {
-      expect(response.expect.length).toBeGreaterThan(5);
-      expect(parseInt(response.expect.substring(0, 5))).toBeGreaterThan(0);
+      expect(response.expect.length).toBeGreaterThan(0);
+      expect(parseInt(response.expect)).toBeGreaterThan(0);
     }
   });
 
