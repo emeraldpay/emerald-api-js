@@ -1,7 +1,7 @@
 import * as blockchain_pb from './generated/blockchain_pb';
 import * as common_pb from './generated/common_pb';
 import { DataMapper } from './Publisher';
-import { AnyAddress, Asset, Blockchain, ConvertCommon, SingleAddress } from './typesCommon';
+import { AnyAddress, AnyAsset, Blockchain, ConvertCommon, SingleAddress, isAsset, isErc20Asset } from './typesCommon';
 import { MessageFactory } from './typesConvert';
 
 const textDecoder = new TextDecoder('utf-8');
@@ -41,13 +41,29 @@ export function isNativeCallError(obj: NativeCallResponse | NativeCallError): ob
 }
 
 export type BalanceRequest = {
-  asset: Asset;
+  asset: AnyAsset;
   address: AnyAddress;
   includeUtxo?: boolean;
 };
 
+export interface AddressAllowanceRequest {
+  address: AnyAddress;
+  chain: Blockchain;
+  contractAddresses: SingleAddress[];
+}
+
+export interface AddressAllowanceResponse {
+  address: SingleAddress;
+  allowance: string;
+  available: string;
+  chain: Blockchain;
+  contractAddress: SingleAddress;
+  ownerAddress: SingleAddress;
+  spenderAddress: SingleAddress;
+}
+
 export interface AddressBalance {
-  asset: Asset;
+  asset: AnyAsset;
   address: SingleAddress;
   balance: string;
   utxo?: Utxo[] | undefined;
@@ -107,6 +123,7 @@ export interface EthereumStdFees {
    */
   fee: string;
 }
+
 export interface EthereumExtFees {
   type: 'ethereumExt';
   /**
@@ -122,6 +139,7 @@ export interface EthereumExtFees {
    */
   max: string;
 }
+
 export interface BitcoinStdFees {
   type: 'bitcoinStd';
   /**
@@ -201,9 +219,35 @@ export class ConvertBlockchain {
     };
   }
 
+  public addressAllowanceRequest(request: AddressAllowanceRequest): blockchain_pb.AddressAllowanceRequest {
+    const result: blockchain_pb.AddressAllowanceRequest = this.factory('blockchain_pb.AddressAllowanceRequest');
+
+    return result
+      .setChain(request.chain.valueOf())
+      .setAddress(this.common.pbAnyAddress(request.address))
+      .setContractAddressesList(request.contractAddresses.map((value) => this.common.pbSingleAddress(value)));
+  }
+
+  public addressAllowanceResponse(): DataMapper<blockchain_pb.AddressAllowance, AddressAllowanceResponse> {
+    return (response) => ({
+      address: response.getAddress().getAddress(),
+      allowance: response.getAllowance(),
+      available: response.getAvailable(),
+      chain: response.getChain().valueOf(),
+      contractAddress: response.getContractAddress().getAddress(),
+      ownerAddress: response.getOwnerAddress().getAddress(),
+      spenderAddress: response.getSpenderAddress().getAddress(),
+    });
+  }
+
   public balanceRequest(req: BalanceRequest): blockchain_pb.BalanceRequest {
     const result: blockchain_pb.BalanceRequest = this.factory('blockchain_pb.BalanceRequest');
-    result.setAsset(this.common.pbAsset(req.asset));
+
+    if (isAsset(req.asset)) {
+      result.setAsset(this.common.pbAsset(req.asset));
+    } else if (isErc20Asset(req.asset)) {
+      result.setErc20Asset(this.common.pbErc20Asset(req.asset));
+    }
 
     if (typeof req.includeUtxo == 'boolean') {
       result.setIncludeUtxo(req.includeUtxo);
@@ -216,8 +260,18 @@ export class ConvertBlockchain {
 
   public balanceResponse(): DataMapper<blockchain_pb.AddressBalance, AddressBalance> {
     return (resp: blockchain_pb.AddressBalance) => {
-      const asset = this.common.asset(resp.getAsset());
+      let asset;
+
+      if (resp.hasAsset()) {
+        asset = this.common.asset(resp.getAsset());
+      } else if (resp.hasErc20Asset()) {
+        asset = this.common.erc20Asset(resp.getErc20Asset());
+      } else {
+        throw new Error('Invalid response: neither asset nor erc20Asset is set');
+      }
+
       let utxo: Utxo[] | undefined = undefined;
+
       if (resp.getUtxoList().length > 0) {
         utxo = resp.getUtxoList().map((it) => {
           return {
@@ -249,7 +303,7 @@ export class ConvertBlockchain {
     return (resp) => {
       let block;
       if (resp.hasBlock()) {
-        block = this.common.blockInfo(resp.getBlock()!);
+        block = this.common.blockInfo(resp.getBlock());
       } else {
         block = undefined;
       }

@@ -1,3 +1,4 @@
+import { Blockchain } from '@emeraldpay/api';
 import { EmeraldApi } from '../EmeraldApi';
 
 jest.setTimeout(5000);
@@ -45,5 +46,28 @@ describe('MarketClient', () => {
     ]);
 
     expect(act.length).toBe(7);
+  });
+
+  test('Get Erc20 rate', async () => {
+    const client = api.market();
+
+    const act = await client.getRates([
+      {
+        base: {
+          blockchain: Blockchain.ETHEREUM,
+          contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+        },
+        target: 'USD',
+      },
+    ]);
+
+    expect(act.length).toBe(1);
+    expect(act[0].base).toMatchObject({
+      blockchain: Blockchain.ETHEREUM,
+      contractAddress: '0xdac17f958d2ee523a2206206994597c13d831ec7',
+    });
+    expect(act[0].target).toBe('USD');
+    expect(parseFloat(act[0].rate)).toBeGreaterThan(0.5);
+    expect(parseFloat(act[0].rate)).toBeLessThan(1.5);
   });
 });

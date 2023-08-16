@@ -1,6 +1,7 @@
 import {
   ConnectionListener,
   Publisher,
+  alwaysRetry,
   publishListToPromise,
   publishToPromise,
   readOnce,
@@ -64,5 +65,41 @@ export class TransactionClient {
 
     const call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
     return readOnce(this.channel, call, protoRequest, this.retries);
+  }
+
+  public getAddressTokens(request: transaction.AddressTokenRequest): Publisher<transaction.AddressTokenResponse> {
+    const protoRequest = this.convert.addressTokenRequest(request);
+    const mapper = this.convert.addressTokenResponse();
+
+    const call = callStream(this.client.getAddressTokens.bind(this.client), mapper);
+    return readOnce(this.channel, call, protoRequest, this.retries);
+  }
+
+  public subscribeAddressTokens(request: transaction.AddressTokenRequest): Publisher<transaction.AddressTokenResponse> {
+    const protoRequest = this.convert.addressTokenRequest(request);
+    const mapper = this.convert.addressTokenResponse();
+
+    const call = callStream(this.client.subscribeAddressTokens.bind(this.client), mapper);
+    return alwaysRetry(this.channel, call, protoRequest, this.retries);
+  }
+
+  public getAddressAllowance(
+    request: transaction.AddressAllowanceRequest,
+  ): Promise<Array<transaction.AddressAllowanceResponse>> {
+    const protoRequest = this.convert.addressAllowanceRequest(request);
+    const mapper = this.convert.addressAllowanceResponse();
+
+    const call = callStream(this.client.getAddressAllowance.bind(this.client), mapper);
+    return publishListToPromise(readOnce(this.channel, call, protoRequest, this.retries));
+  }
+
+  public subscribeAddressAllowance(
+    request: transaction.AddressAllowanceRequest,
+  ): Publisher<transaction.AddressAllowanceResponse> {
+    const protoRequest = this.convert.addressAllowanceRequest(request);
+    const mapper = this.convert.addressAllowanceResponse();
+
+    const call = callStream(this.client.subscribeAddressAllowance.bind(this.client), mapper);
+    return alwaysRetry(this.channel, call, protoRequest, this.retries);
   }
 }

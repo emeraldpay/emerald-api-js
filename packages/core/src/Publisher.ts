@@ -24,9 +24,21 @@ export type AnyError = Error | grpc.Error;
  */
 export interface Publisher<T> {
   /**
+   * Get reconnection status
+   */
+  get reconnecting(): boolean;
+  /**
+   * Connect after error
+   */
+  connected(): void;
+  /**
+   * Reconnect when error
+   */
+  reconnect(): void;
+  /**
    * Cancel call
    */
-  cancel();
+  cancel(): void;
   /**
    * Handler for incoming data
    * @param handler
@@ -38,7 +50,7 @@ export interface Publisher<T> {
    */
   onError(handler: Handler<AnyError>): Publisher<T>;
   /**
-   * Handler for call end
+   * Handler for a call end
    * @param handler
    */
   finally(handler: Handler<void>): Publisher<T>;
@@ -91,16 +103,79 @@ function joinHandlers<T>(current: Handler<T> | undefined, additional: Handler<T>
 }
 
 /**
- * Publisher that may keep actual events in buffer, until a handler added to process. I.e. for case when request received
- * data before onData(..) was called. Otherwise the call may miss data, or errors.
+ * Publisher that may keep actual events in buffer, until a handler added to process.
+ * I.e., for a case when request received data before onData(..) was called.
+ * Otherwise the call may miss data or errors.
  */
 export class BufferedPublisher<T> implements Publisher<T> {
+  private _reconnecting = false;
+
   private buffer: EmitItem[] = [];
   private cancelled = false;
 
   private onDataHandler: Handler<T> | undefined = undefined;
   private onErrorHandler: Handler<AnyError> | undefined = undefined;
-  private onFinally: Handler<void> | undefined = undefined;
+  private onFinallyHandler: Handler<void> | undefined = undefined;
+
+  get reconnecting(): boolean {
+    return this._reconnecting;
+  }
+
+  connected(): void {
+    this._reconnecting = false;
+  }
+
+  reconnect(): void {
+    this._reconnecting = true;
+  }
+
+  cancel(): void {
+    this._reconnecting = false;
+    this.cancelled = true;
+  }
+
+  execute(repeat = false): void {
+    const left: EmitItem[] = [];
+
+    let internalError = false;
+
+    this.buffer.forEach((item) => {
+      if (item.type === 'data' && this.onDataHandler != null) {
+        try {
+          this.onDataHandler(item.value);
+        } catch (exception) {
+          left.push(item);
+
+          internalError = true;
+        }
+      } else if (item.type === 'error' && this.onErrorHandler != null) {
+        try {
+          this.onErrorHandler(item.value);
+        } catch (exception) {
+          left.push(item);
+
+          internalError = true;
+        }
+      } else if (item.type === 'closed' && this.onFinallyHandler != null) {
+        try {
+          this.onFinallyHandler();
+        } catch (exception) {
+          left.push({ type: 'error', value: exception });
+          left.push(item);
+
+          internalError = true;
+        }
+      } else {
+        left.push(item);
+      }
+    });
+
+    this.buffer = left;
+
+    if (internalError && !repeat) {
+      this.execute(true);
+    }
+  }
 
   emitData(data: T): void {
     if (!this.cancelled) {
@@ -126,53 +201,6 @@ export class BufferedPublisher<T> implements Publisher<T> {
     this.execute();
   }
 
-  execute(repeat = false): void {
-    const left: EmitItem[] = [];
-
-    let internalError = false;
-
-    this.buffer.forEach((item) => {
-      if (item.type === 'data' && this.onDataHandler != null) {
-        try {
-          this.onDataHandler(item.value);
-        } catch (exception) {
-          left.push(item);
-
-          internalError = true;
-        }
-      } else if (item.type === 'error' && this.onErrorHandler != null) {
-        try {
-          this.onErrorHandler(item.value);
-        } catch (exception) {
-          left.push(item);
-
-          internalError = true;
-        }
-      } else if (item.type === 'closed' && this.onFinally != null) {
-        try {
-          this.onFinally();
-        } catch (exception) {
-          left.push({ type: 'error', value: exception });
-          left.push(item);
-
-          internalError = true;
-        }
-      } else {
-        left.push(item);
-      }
-    });
-
-    this.buffer = left;
-
-    if (internalError && !repeat) {
-      this.execute(true);
-    }
-  }
-
-  cancel(): void {
-    this.cancelled = true;
-  }
-
   onData(handler: Handler<T>): Publisher<T> {
     this.onDataHandler = joinHandlers(this.onDataHandler, handler);
     this.execute();
@@ -188,7 +216,7 @@ export class BufferedPublisher<T> implements Publisher<T> {
   }
 
   finally(handler: Handler<void>): Publisher<T> {
-    this.onFinally = joinHandlers(this.onFinally, handler);
+    this.onFinallyHandler = joinHandlers(this.onFinallyHandler, handler);
     this.execute();
 
     return this;
@@ -205,6 +233,22 @@ export class ManagedPublisher<T> implements Publisher<T> {
     this.buffer = new BufferedPublisher<T>();
   }
 
+  get reconnecting(): boolean {
+    return this.buffer.reconnecting;
+  }
+
+  connected(): void {
+    this.buffer.connected();
+  }
+
+  reconnect(): void {
+    this.buffer.reconnect();
+  }
+
+  cancel(): void {
+    this.buffer.cancel();
+  }
+
   emitData(data: T): void {
     this.buffer.emitData(data);
   }
@@ -215,10 +259,6 @@ export class ManagedPublisher<T> implements Publisher<T> {
 
   emitClosed(): void {
     this.buffer.emitClosed();
-  }
-
-  cancel(): void {
-    // Nothing
   }
 
   onData(handler: Handler<T>): Publisher<T> {
@@ -266,6 +306,18 @@ export class MappingPublisher<I, O> implements Publisher<O> {
       .finally(() => this.buffer.emitClosed());
   }
 
+  get reconnecting(): boolean {
+    return this.buffer.reconnecting;
+  }
+
+  connected(): void {
+    this.buffer.connected();
+  }
+
+  reconnect(): void {
+    this.buffer.reconnect();
+  }
+
   cancel(): void {
     this.reader?.cancel();
     this.buffer?.cancel();
@@ -295,6 +347,18 @@ export class PromisePublisher<T> implements Publisher<T> {
 
   constructor(value: Promise<T>) {
     this.value = value;
+  }
+
+  get reconnecting(): boolean {
+    return false;
+  }
+
+  connected(): void {
+    // Nothing
+  }
+
+  reconnect(): void {
+    // Nothing
   }
 
   cancel(): void {

@@ -1,4 +1,6 @@
 import {
+  AddressAllowanceRequest,
+  AddressAllowanceResponse,
   AddressBalance,
   BalanceRequest,
   Blockchain,
@@ -58,7 +60,7 @@ export class BlockchainClient {
     const mapper: DataMapper<any, ChainHead> = this.convert.headResponse();
 
     const call = callStream(this.client.subscribeHead.bind(this.client), mapper);
-    return alwaysRetry(this.channel, call, request);
+    return alwaysRetry(this.channel, call, request, this.retries);
   }
 
   public nativeCall(chain: Blockchain, calls: NativeCallItem[]): Publisher<NativeCallResponse | NativeCallError> {
@@ -75,7 +77,7 @@ export class BlockchainClient {
     const mapper: DataMapper<ProtoAddressBalance, AddressBalance> = this.convert.balanceResponse();
 
     const call = callStream(this.client.subscribeBalance.bind(this.client), mapper);
-    return alwaysRetry(this.channel, call, protoRequest);
+    return alwaysRetry(this.channel, call, protoRequest, this.retries);
   }
 
   public getBalance(request: BalanceRequest): Promise<Array<AddressBalance>> {
@@ -100,5 +102,21 @@ export class BlockchainClient {
 
     const call = callSingle(this.client.estimateFee.bind(this.client), mapper);
     return publishToPromise(readOnce(this.channel, call, protoRequest, this.retries));
+  }
+
+  public getAddressAllowance(request: AddressAllowanceRequest): Promise<Array<AddressAllowanceResponse>> {
+    const protoRequest = this.convert.addressAllowanceRequest(request);
+    const mapper = this.convert.addressAllowanceResponse();
+
+    const call = callStream(this.client.getAddressAllowance.bind(this.client), mapper);
+    return publishListToPromise(readOnce(this.channel, call, protoRequest, this.retries));
+  }
+
+  public subscribeAddressAllowance(request: AddressAllowanceRequest): Publisher<AddressAllowanceResponse> {
+    const protoRequest = this.convert.addressAllowanceRequest(request);
+    const mapper = this.convert.addressAllowanceResponse();
+
+    const call = callStream(this.client.subscribeAddressAllowance.bind(this.client), mapper);
+    return alwaysRetry(this.channel, call, protoRequest, this.retries);
   }
 }

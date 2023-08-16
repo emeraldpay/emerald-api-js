@@ -36,8 +36,8 @@ export function isChannel(channel: unknown): channel is Channel {
   return typeof channel === 'object' && channel != null && 'watch' in channel && typeof channel.watch === 'function';
 }
 
-export function alwaysRetry<T, R>(channel: Channel, call: RemoteCall<R, T>, request: R): Publisher<T> {
-  const reconnect = new AlwaysRepeat();
+export function alwaysRetry<T, R>(channel: Channel, call: RemoteCall<R, T>, request: R, retries: number): Publisher<T> {
+  const reconnect = new AlwaysRepeat(retries);
   const executor = new Executor(call, reconnect, request);
   const retry = new Retry(channel, executor, reconnect);
 

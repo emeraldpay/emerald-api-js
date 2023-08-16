@@ -22,6 +22,15 @@ export {
 } from './Publisher';
 export { AlwaysRepeat, ContinueCheck, OnceSuccess, Retry } from './Retry';
 export {
+  ConvertDescribeAddress,
+  DescribeAddressCapability,
+  DescribeAddressControl,
+  DescribeAddressRequest,
+  DescribeAddressResponse,
+} from './typesAddress';
+export {
+  AddressAllowanceRequest,
+  AddressAllowanceResponse,
   AddressBalance,
   BalanceRequest,
   ChainHead,
@@ -41,7 +50,16 @@ export {
   isNativeCallError,
   isNativeCallResponse,
 } from './typesBlockchain';
-export { AnyAddress, Asset, AssetCode, Blockchain, MultiAddress, SingleAddress } from './typesCommon';
+export {
+  AnyAddress,
+  AnyAsset,
+  AssetCode,
+  Blockchain,
+  MultiAddress,
+  SingleAddress,
+  isAsset,
+  isErc20Asset,
+} from './typesCommon';
 export { MessageFactory } from './typesConvert';
 export {
   AnyCurrency,

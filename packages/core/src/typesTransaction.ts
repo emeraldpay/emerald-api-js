@@ -76,6 +76,31 @@ export interface AddressTxResponse {
   transfers: AnyTransfer[];
 }
 
+export interface AddressTokenRequest {
+  blockchain: Blockchain;
+  address: AnyAddress;
+  contractAddresses: string[];
+}
+
+export interface AddressTokenResponse {
+  blockchain: Blockchain;
+  address: AnyAddress;
+  contractAddresses: string[];
+}
+
+export interface AddressAllowanceRequest {
+  blockchain: Blockchain;
+  address: AnyAddress;
+  contractAddresses: string[];
+}
+
+export interface AddressAllowanceResponse {
+  blockchain: Blockchain;
+  address: SingleAddress;
+  approvedByAddress: string[];
+  approvedForAddress: string[];
+}
+
 export interface AddressAmount {
   address?: SingleAddress;
   /** unsigned amount */
@@ -243,6 +268,57 @@ export class Convert {
         failed: resp.getFailed(),
         removed: resp.getRemoved(),
         txId: resp.getTxId(),
+      };
+    };
+  }
+
+  public addressTokenRequest(req: AddressTokenRequest): transaction_message_pb.AddressTokenRequest {
+    const result: transaction_message_pb.AddressTokenRequest = this.factory(
+      'transaction_message_pb.AddressTokenRequest',
+    );
+
+    return result
+      .setBlockchain(req.blockchain.valueOf())
+      .setAddress(this.common.pbAnyAddress(req.address))
+      .setContractAddressesList(req.contractAddresses.map((value) => this.common.pbSingleAddress(value)));
+  }
+
+  public addressTokenResponse(): DataMapper<transaction_message_pb.AddressTokenResponse, AddressTokenResponse> {
+    return (resp) => {
+      const contractAddresses = resp.getContractAddressesList().map((value) => value.getAddress());
+
+      return {
+        blockchain: resp.getBlockchain().valueOf(),
+        address: resp.getAddress().getAddress(),
+        contractAddresses: contractAddresses,
+      };
+    };
+  }
+
+  public addressAllowanceRequest(req: AddressAllowanceRequest): transaction_message_pb.AddressAllowanceRequest {
+    const result: transaction_message_pb.AddressAllowanceRequest = this.factory(
+      'transaction_message_pb.AddressAllowanceRequest',
+    );
+
+    return result
+      .setBlockchain(req.blockchain.valueOf())
+      .setAddress(this.common.pbAnyAddress(req.address))
+      .setContractAddressesList(req.contractAddresses.map((value) => this.common.pbSingleAddress(value)));
+  }
+
+  public addressAllowanceResponse(): DataMapper<
+    transaction_message_pb.AddressAllowanceResponse,
+    AddressAllowanceResponse
+  > {
+    return (resp) => {
+      const approvedByAddress = resp.getApprovedByAddressList().map((value) => value.getAddress());
+      const approvedForAddress = resp.getApprovedForAddressList().map((value) => value.getAddress());
+
+      return {
+        blockchain: resp.getBlockchain().valueOf(),
+        address: resp.getAddress().getAddress(),
+        approvedByAddress: approvedByAddress,
+        approvedForAddress: approvedForAddress,
       };
     };
   }

@@ -1,5 +1,6 @@
 import { ChannelCredentials } from '@grpc/grpc-js';
 import { emeraldCredentials } from './credentials';
+import { AddressClient } from './wrapped/AddressClient';
 import { BlockchainClient } from './wrapped/BlockchainClient';
 import { MarketClient } from './wrapped/MarketClient';
 import { MonitoringClient } from './wrapped/MonitoringClient';
@@ -26,6 +27,10 @@ export class EmeraldApi {
 
   static productionApi(): EmeraldApi {
     return new EmeraldApi('api.emrld.io:443');
+  }
+
+  address(): AddressClient {
+    return new AddressClient(this.hostname, this.credentials, this.agents);
   }
 
   blockchain(): BlockchainClient {
