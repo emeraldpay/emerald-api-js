@@ -480,7 +480,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@emeraldpay/api-node@workspace:packages/node"
   dependencies:
-    "@emeraldpay/api": 0.4.0-dev
+    "@emeraldpay/api": 0.4.0
     "@grpc/grpc-js": ^1.8.18
     "@grpc/proto-loader": ^0.7.8
     "@types/google-protobuf": ^3.15.6
@@ -502,7 +502,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@emeraldpay/api-web@workspace:packages/web"
   dependencies:
-    "@emeraldpay/api": 0.4.0-dev
+    "@emeraldpay/api": 0.4.0
     "@types/google-protobuf": ^3.15.6
     "@types/jest": ^29.5.3
     google-protobuf: ^3.21.2
@@ -520,7 +520,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@emeraldpay/api@0.4.0-dev, @emeraldpay/api@workspace:packages/core":
+"@emeraldpay/api@0.4.0, @emeraldpay/api@workspace:packages/core":
   version: 0.0.0-use.local
   resolution: "@emeraldpay/api@workspace:packages/core"
   dependencies:
