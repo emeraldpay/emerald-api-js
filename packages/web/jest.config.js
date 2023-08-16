@@ -5,7 +5,7 @@ module.exports = {
   setupFiles: ['./jest.setup.js'],
   testEnvironment: 'jsdom',
   testEnvironmentOptions: {
-    url: 'http://insights.emerald.test',
+    url: 'https://api.emeraldpay.dev',
   },
   testPathIgnorePatterns: ['<rootDir>/lib/', '<rootDir>/node_modules/'],
 };
