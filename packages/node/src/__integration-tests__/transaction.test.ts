@@ -65,7 +65,7 @@ describe('TransactionClient', () => {
       .onError((error) => done(error));
   });
 
-  xtest('GetAddressTokens', (done) => {
+  test('GetAddressTokens', (done) => {
     const client = api.transaction();
     const call = client.getAddressTokens({
       blockchain: Blockchain.TESTNET_GOERLI,
@@ -106,7 +106,7 @@ describe('TransactionClient', () => {
     });
   });
 
-  xtest('GetAddressAllowance', (done) => {
+  test('GetAddressAllowance', (done) => {
     const client = api.transaction();
     const call = client.getAddressAllowance({
       blockchain: Blockchain.TESTNET_GOERLI,
