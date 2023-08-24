@@ -1,6 +1,4 @@
 import {
-  AddressAllowanceRequest,
-  AddressAllowanceResponse,
   AddressBalance,
   BalanceRequest,
   Blockchain,
@@ -104,19 +102,4 @@ export class BlockchainClient {
     return publishToPromise(readOnce(this.channel, call, protoRequest, this.retries));
   }
 
-  public getAddressAllowance(request: AddressAllowanceRequest): Promise<Array<AddressAllowanceResponse>> {
-    const protoRequest = this.convert.addressAllowanceRequest(request);
-    const mapper = this.convert.addressAllowanceResponse();
-
-    const call = callStream(this.client.getAddressAllowance.bind(this.client), mapper);
-    return publishListToPromise(readOnce(this.channel, call, protoRequest, this.retries));
-  }
-
-  public subscribeAddressAllowance(request: AddressAllowanceRequest): Publisher<AddressAllowanceResponse> {
-    const protoRequest = this.convert.addressAllowanceRequest(request);
-    const mapper = this.convert.addressAllowanceResponse();
-
-    const call = callStream(this.client.subscribeAddressAllowance.bind(this.client), mapper);
-    return alwaysRetry(this.channel, call, protoRequest, this.retries);
-  }
 }

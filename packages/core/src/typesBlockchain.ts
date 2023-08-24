@@ -46,22 +46,6 @@ export type BalanceRequest = {
   includeUtxo?: boolean;
 };
 
-export interface AddressAllowanceRequest {
-  address: AnyAddress;
-  chain: Blockchain;
-  contractAddresses: SingleAddress[];
-}
-
-export interface AddressAllowanceResponse {
-  address: SingleAddress;
-  allowance: string;
-  available: string;
-  chain: Blockchain;
-  contractAddress: SingleAddress;
-  ownerAddress: SingleAddress;
-  spenderAddress: SingleAddress;
-}
-
 export interface AddressBalance {
   asset: AnyAsset;
   address: SingleAddress;
@@ -217,27 +201,6 @@ export class ConvertBlockchain {
         } as NativeCallError;
       }
     };
-  }
-
-  public addressAllowanceRequest(request: AddressAllowanceRequest): blockchain_pb.AddressAllowanceRequest {
-    const result: blockchain_pb.AddressAllowanceRequest = this.factory('blockchain_pb.AddressAllowanceRequest');
-
-    return result
-      .setChain(request.chain.valueOf())
-      .setAddress(this.common.pbAnyAddress(request.address))
-      .setContractAddressesList(request.contractAddresses.map((value) => this.common.pbSingleAddress(value)));
-  }
-
-  public addressAllowanceResponse(): DataMapper<blockchain_pb.AddressAllowance, AddressAllowanceResponse> {
-    return (response) => ({
-      address: response.getAddress().getAddress(),
-      allowance: response.getAllowance(),
-      available: response.getAvailable(),
-      chain: response.getChain().valueOf(),
-      contractAddress: response.getContractAddress().getAddress(),
-      ownerAddress: response.getOwnerAddress().getAddress(),
-      spenderAddress: response.getSpenderAddress().getAddress(),
-    });
   }
 
   public balanceRequest(req: BalanceRequest): blockchain_pb.BalanceRequest {
