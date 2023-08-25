@@ -29,8 +29,6 @@ export {
   DescribeAddressResponse,
 } from './typesAddress';
 export {
-  AddressAllowanceRequest,
-  AddressAllowanceResponse,
   AddressBalance,
   BalanceRequest,
   ChainHead,
@@ -74,3 +72,4 @@ export {
   TestCurrency,
 } from './typesMarket';
 export * as transaction from './typesTransaction';
+export * as token from './typesToken';

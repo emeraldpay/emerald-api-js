@@ -4,6 +4,7 @@ import { AddressClient } from './wrapped/AddressClient';
 import { BlockchainClient } from './wrapped/BlockchainClient';
 import { MarketClient } from './wrapped/MarketClient';
 import { MonitoringClient } from './wrapped/MonitoringClient';
+import { TokenClient } from './wrapped/TokenClient';
 import { TransactionClient } from './wrapped/TransactionClient';
 
 export class EmeraldApi {
@@ -43,6 +44,10 @@ export class EmeraldApi {
 
   monitoring(): MonitoringClient {
     return new MonitoringClient(this.hostname, this.credentials, this.agents);
+  }
+
+  token(): TokenClient {
+    return new TokenClient(this.hostname, this.credentials, this.agents);
   }
 
   transaction(): TransactionClient {

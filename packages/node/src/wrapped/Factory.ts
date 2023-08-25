@@ -3,6 +3,7 @@ import * as address_message_pb from '../generated/address.message_pb';
 import * as blockchain_pb from '../generated/blockchain_pb';
 import * as common_pb from '../generated/common_pb';
 import * as market_pb from '../generated/market_pb';
+import * as token_message_pb from '../generated/token.message_pb';
 import * as transaction_message_pb from '../generated/transaction.message_pb';
 
 export const classFactory: MessageFactory = (id: string) => {
@@ -26,8 +27,6 @@ export const classFactory: MessageFactory = (id: string) => {
     case 'address_message_pb.DescribeRequest':
       return new address_message_pb.DescribeRequest();
     // Blockchain
-    case 'blockchain_pb.AddressAllowanceRequest':
-      return new blockchain_pb.AddressAllowanceRequest();
     case 'blockchain_pb.AddressBalance':
       return new blockchain_pb.AddressBalance();
     case 'blockchain_pb.BalanceRequest':
@@ -47,11 +46,12 @@ export const classFactory: MessageFactory = (id: string) => {
       return new market_pb.GetRatesRequest();
     case 'market_pb.Pair':
       return new market_pb.Pair();
+    // Token
+    case 'token_message_pb.AddressAllowanceRequest':
+      return new token_message_pb.AddressAllowanceRequest();
+    case 'token_message_pb.AddressTokenRequest':
+      return new token_message_pb.AddressTokenRequest();
     // Transaction
-    case 'transaction_message_pb.AddressAllowanceRequest':
-      return new transaction_message_pb.AddressAllowanceRequest();
-    case 'transaction_message_pb.AddressTokenRequest':
-      return new transaction_message_pb.AddressTokenRequest();
     case 'transaction_message_pb.AddressTxRequest':
       return new transaction_message_pb.AddressTxRequest();
     case 'transaction_message_pb.BalanceRequest':

@@ -72,33 +72,6 @@ export interface AddressTxResponse {
   /** True if transaction is failed */
   failed: boolean;
   changes: Change[];
-  /** TODO: deprecated */
-  transfers: AnyTransfer[];
-}
-
-export interface AddressTokenRequest {
-  blockchain: Blockchain;
-  address: AnyAddress;
-  contractAddresses: string[];
-}
-
-export interface AddressTokenResponse {
-  blockchain: Blockchain;
-  address: AnyAddress;
-  contractAddresses: string[];
-}
-
-export interface AddressAllowanceRequest {
-  blockchain: Blockchain;
-  address: AnyAddress;
-  contractAddresses: string[];
-}
-
-export interface AddressAllowanceResponse {
-  blockchain: Blockchain;
-  address: SingleAddress;
-  approvedByAddress: string[];
-  approvedForAddress: string[];
 }
 
 export interface AddressAmount {
@@ -206,41 +179,6 @@ export class Convert {
     };
   }
 
-  private static transfer(blockchain: Blockchain, transfer: transaction_message_pb.Transfer): AnyTransfer {
-    if (blockchainType(blockchain) == BlockchainType.BITCOIN) {
-      return {
-        direction: transfer.getDirection(),
-        amount: transfer.getAmount(),
-        addressAmounts: transfer.getAddressAmountsList().map((value) => {
-          return {
-            address: value.getAddress()?.getAddress(),
-            amount: value.getAmount(),
-          };
-        }),
-        xpubIndexes: transfer.getXpubIndexesList(),
-      };
-    }
-    if (blockchainType(blockchain) == BlockchainType.ETHEREUM) {
-      const [firstAddressAmount] = transfer.getAddressAmountsList();
-      if (firstAddressAmount == null) {
-        throw new Error('Address of ETHEREUM transfer is empty');
-      }
-      return {
-        direction: transfer.getDirection(),
-        amount: transfer.getAmount(),
-        fee: transfer.getFee(),
-        address: firstAddressAmount.getAddress().getAddress(),
-        xpubIndexes: transfer.getXpubIndexesList(),
-        contractAddress: transfer.getContractaddress() != '' ? transfer.getContractaddress() : undefined,
-      };
-    }
-    return {
-      direction: transfer.getDirection(),
-      amount: transfer.getAmount(),
-      xpubIndexes: transfer.getXpubIndexesList(),
-    };
-  }
-
   public addressTxResponse(): DataMapper<transaction_message_pb.AddressTxResponse, AddressTxResponse> {
     return (resp) => {
       let block: BlockInfo | undefined;
@@ -253,7 +191,6 @@ export class Convert {
       const changes = resp.getChangesList().map((value) => Convert.change(value));
       const cursor = resp.getCursor();
       const mempool = resp.getMempool();
-      const transfers = resp.getTransfersList().map((value) => Convert.transfer(blockchain, value));
       const xpubIndex = resp.hasXpubIndex() ? resp.getXpubIndex().getValue() : undefined;
 
       return {
@@ -261,7 +198,6 @@ export class Convert {
         blockchain,
         changes,
         mempool,
-        transfers,
         xpubIndex,
         address: resp.getAddress().getAddress(),
         cursor: cursor.length > 0 ? cursor : undefined,
@@ -272,54 +208,4 @@ export class Convert {
     };
   }
 
-  public addressTokenRequest(req: AddressTokenRequest): transaction_message_pb.AddressTokenRequest {
-    const result: transaction_message_pb.AddressTokenRequest = this.factory(
-      'transaction_message_pb.AddressTokenRequest',
-    );
-
-    return result
-      .setBlockchain(req.blockchain.valueOf())
-      .setAddress(this.common.pbAnyAddress(req.address))
-      .setContractAddressesList(req.contractAddresses.map((value) => this.common.pbSingleAddress(value)));
-  }
-
-  public addressTokenResponse(): DataMapper<transaction_message_pb.AddressTokenResponse, AddressTokenResponse> {
-    return (resp) => {
-      const contractAddresses = resp.getContractAddressesList().map((value) => value.getAddress());
-
-      return {
-        blockchain: resp.getBlockchain().valueOf(),
-        address: resp.getAddress().getAddress(),
-        contractAddresses: contractAddresses,
-      };
-    };
-  }
-
-  public addressAllowanceRequest(req: AddressAllowanceRequest): transaction_message_pb.AddressAllowanceRequest {
-    const result: transaction_message_pb.AddressAllowanceRequest = this.factory(
-      'transaction_message_pb.AddressAllowanceRequest',
-    );
-
-    return result
-      .setBlockchain(req.blockchain.valueOf())
-      .setAddress(this.common.pbAnyAddress(req.address))
-      .setContractAddressesList(req.contractAddresses.map((value) => this.common.pbSingleAddress(value)));
-  }
-
-  public addressAllowanceResponse(): DataMapper<
-    transaction_message_pb.AddressAllowanceResponse,
-    AddressAllowanceResponse
-  > {
-    return (resp) => {
-      const approvedByAddress = resp.getApprovedByAddressList().map((value) => value.getAddress());
-      const approvedForAddress = resp.getApprovedForAddressList().map((value) => value.getAddress());
-
-      return {
-        blockchain: resp.getBlockchain().valueOf(),
-        address: resp.getAddress().getAddress(),
-        approvedByAddress: approvedByAddress,
-        approvedForAddress: approvedForAddress,
-      };
-    };
-  }
 }

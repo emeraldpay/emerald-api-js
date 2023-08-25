@@ -1,6 +1,6 @@
 import { EmeraldApi } from '../EmeraldApi';
 
-jest.setTimeout(5000);
+jest.setTimeout(15000);
 
 describe('MonitoringClient', () => {
   let api: EmeraldApi;
