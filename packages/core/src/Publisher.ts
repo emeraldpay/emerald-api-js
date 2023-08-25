@@ -144,8 +144,9 @@ export class BufferedPublisher<T> implements Publisher<T> {
         try {
           this.onDataHandler(item.value);
         } catch (exception) {
-          left.push(item);
-
+          left.push({ type: 'error', value: exception });
+          // the item would never be processed
+          // left.push(item);
           internalError = true;
         }
       } else if (item.type === 'error' && this.onErrorHandler != null) {
