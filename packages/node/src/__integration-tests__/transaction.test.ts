@@ -1,7 +1,7 @@
 import { Blockchain } from '@emeraldpay/api';
 import { EmeraldApi } from '../EmeraldApi';
 
-jest.setTimeout(10000);
+jest.setTimeout(15000);
 
 describe('TransactionClient', () => {
   let api: EmeraldApi;

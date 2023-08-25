@@ -174,7 +174,7 @@ describe('BlockchainClient', () => {
       })
       .catch((err) => {
         console.warn('balance failed', err);
-        done.fail(err);
+        done(err);
       });
   });
 
@@ -263,19 +263,21 @@ describe('BlockchainClient', () => {
   test('subscribe bitcoin tx', (done) => {
     const client = api.blockchain();
 
-    client
-      .subscribeTxStatus({
-        blockchain: 1,
-        limit: 3,
-        txid: '9a7870a8bd7805bdb270db77105eb4a811058cfec602107ba1d027b6bf028928',
-      })
-      .onData((response) => {
-        expect(response.block.height).toBe(651732);
-        expect(response.mined).toBeTruthy();
-
-        done();
-      })
-      .onError((error) => done(error));
+    const call = client.subscribeTxStatus({
+      blockchain: 1,
+      limit: 3,
+      txid: '9a7870a8bd7805bdb270db77105eb4a811058cfec602107ba1d027b6bf028928',
+    })
+    call.onData((response) => {
+      expect(response.block.height).toBe(651732);
+      expect(response.mined).toBeTruthy();
+      call.cancel();
+      done();
+    })
+    call.onError((error) => {
+      call.cancel();
+      done(error);
+    });
   });
 
   test('get ethereum fees', async () => {

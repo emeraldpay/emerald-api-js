@@ -40,7 +40,7 @@ describe('TokenClient', () => {
     call.onError((err) => {
       console.warn('err', err);
       call.cancel();
-      done.fail(err);
+      done(err);
     });
   });
 
@@ -73,13 +73,13 @@ describe('TokenClient', () => {
       // spender address is not checked, as it could be changed in the future
       // expect(value.ownerAddress).toBe('0x23160eb5db66cf0f876df64751e02dbee16fb340');
       expect(value.spenderAddress).toBe('0x0000000000000000000000000000000000000000');
-      done();
       call.cancel();
+      done();
     });
     call.onError((err) => {
       console.warn('err', err);
-      done.fail(err);
       call.cancel();
+      done(err);
     });
   });
 });
