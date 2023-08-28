@@ -52,8 +52,10 @@ export const classFactory: MessageFactory = (id: string) => {
     case 'token_message_pb.AddressTokenRequest':
       return new token_message_pb.AddressTokenRequest();
     // Transaction
-    case 'transaction_message_pb.AddressTxRequest':
-      return new transaction_message_pb.AddressTxRequest();
+    case 'transaction_message_pb.GetTransactionsRequest':
+      return new transaction_message_pb.GetTransactionsRequest();
+    case 'transaction_message_pb.SubscribeTransactionsRequest':
+      return new transaction_message_pb.SubscribeTransactionsRequest();
     case 'transaction_message_pb.BalanceRequest':
       return new transaction_message_pb.BalanceRequest();
     case 'transaction_message_pb.XpubStateRequest':
