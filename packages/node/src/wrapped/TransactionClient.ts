@@ -50,19 +50,19 @@ export class TransactionClient {
     return publishToPromise(readOnce(this.channel, call, protoRequest, this.retries));
   }
 
-  public getAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
-    const protoRequest = this.convert.addressTxRequest(request);
-    const mapper = this.convert.addressTxResponse();
+  public getTransactions(request: transaction.GetTransactionsRequest): Publisher<transaction.AddressTransaction> {
+    const protoRequest = this.convert.getTransactionsRequest(request);
+    const mapper = this.convert.addressTransaction();
 
-    const call = callStream(this.client.getAddressTx.bind(this.client), mapper);
+    const call = callStream(this.client.getTransactions.bind(this.client), mapper);
     return readOnce(this.channel, call, protoRequest, this.retries);
   }
 
-  public subscribeAddressTx(request: transaction.AddressTxRequest): Publisher<transaction.AddressTxResponse> {
-    const protoRequest = this.convert.addressTxRequest(request);
-    const mapper = this.convert.addressTxResponse();
+  public subscribeTransactions(request: transaction.SubscribeTransactionsRequest): Publisher<transaction.AddressTransaction> {
+    const protoRequest = this.convert.subscribeTransactionsRequest(request);
+    const mapper = this.convert.addressTransaction();
 
-    const call = callStream(this.client.subscribeAddressTx.bind(this.client), mapper);
+    const call = callStream(this.client.subscribeTransactions.bind(this.client), mapper);
     return readOnce(this.channel, call, protoRequest, this.retries);
   }
 

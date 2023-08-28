@@ -5,11 +5,9 @@ import {
   Asset,
   BlockInfo,
   Blockchain,
-  BlockchainType,
   ConvertCommon,
   SingleAddress,
   XpubAddress,
-  blockchainType,
 } from './typesCommon';
 import { MessageFactory } from './typesConvert';
 
@@ -46,7 +44,7 @@ export interface XpubState {
   lastIndex?: number;
 }
 
-export interface AddressTxRequest {
+export interface GetTransactionsRequest {
   blockchain: Blockchain;
   address: AnyAddress;
   cursor?: string;
@@ -55,7 +53,12 @@ export interface AddressTxRequest {
   onlyUnspent?: boolean;
 }
 
-export interface AddressTxResponse {
+export interface SubscribeTransactionsRequest {
+  blockchain: Blockchain;
+  address: AnyAddress;
+}
+
+export interface AddressTransaction {
   blockchain: Blockchain;
   /** self address */
   address: SingleAddress;
@@ -158,14 +161,21 @@ export class Convert {
     };
   }
 
-  public addressTxRequest(req: AddressTxRequest): transaction_message_pb.AddressTxRequest {
-    const result: transaction_message_pb.AddressTxRequest = this.factory('transaction_message_pb.AddressTxRequest');
+  public getTransactionsRequest(req: GetTransactionsRequest): transaction_message_pb.GetTransactionsRequest {
+    const result: transaction_message_pb.GetTransactionsRequest = this.factory('transaction_message_pb.GetTransactionsRequest');
     return result
-      .setBlockchain(req.blockchain.valueOf())
+      .setChain(req.blockchain.valueOf())
       .setAddress(this.common.pbAnyAddress(req.address))
       .setCursor(req.cursor)
       .setLimit(req.limit)
-      .setOnlyUnspent(req.onlyUnspent);
+      .setUnspentOnly(req.onlyUnspent);
+  }
+
+  public subscribeTransactionsRequest(req: SubscribeTransactionsRequest): transaction_message_pb.SubscribeTransactionsRequest {
+    const result: transaction_message_pb.SubscribeTransactionsRequest = this.factory('transaction_message_pb.SubscribeTransactionsRequest');
+    return result
+        .setChain(req.blockchain.valueOf())
+        .setAddress(this.common.pbAnyAddress(req.address))
   }
 
   private static change(change: transaction_message_pb.Change): Change {
@@ -179,7 +189,7 @@ export class Convert {
     };
   }
 
-  public addressTxResponse(): DataMapper<transaction_message_pb.AddressTxResponse, AddressTxResponse> {
+  public addressTransaction(): DataMapper<transaction_message_pb.AddressTransaction, AddressTransaction> {
     return (resp) => {
       let block: BlockInfo | undefined;
 
@@ -187,7 +197,7 @@ export class Convert {
         block = this.common.blockInfo(resp.getBlock());
       }
 
-      const blockchain = resp.getBlockchain().valueOf();
+      const blockchain = resp.getChain().valueOf();
       const changes = resp.getChangesList().map((value) => Convert.change(value));
       const cursor = resp.getCursor();
       const mempool = resp.getMempool();

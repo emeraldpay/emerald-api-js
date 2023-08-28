@@ -17,9 +17,10 @@ describe('TokenClient', () => {
       address: '0x7af963cf6d228e564e2a0aa0ddbf06210b38615d',
       contractAddresses: [],
     });
+    console.log('GetTokens', value);
+
     expect(value.address).toBe('0x7af963cf6d228e564e2a0aa0ddbf06210b38615d');
     expect(value.blockchain).toBe(Blockchain.TESTNET_GOERLI);
-    console.log('GetAddressTokens', value);
   });
 
   test('SubscribeTokens', (done) => {
@@ -33,7 +34,7 @@ describe('TokenClient', () => {
       expect(value.address).toBe('0x7af963cf6d228e564e2a0aa0ddbf06210b38615d');
       expect(value.blockchain).toBe(Blockchain.TESTNET_GOERLI);
       expect(value.contractAddresses[0]).toBe('0x3f152b63ec5ca5831061b2dccfb29a874c317502');
-      console.log('SubscribeAddressTokens', value);
+      console.log('SubscribeTokens', value);
       call.cancel();
       done();
     });
@@ -51,10 +52,10 @@ describe('TokenClient', () => {
       address: '0x0000000000000000000000000000000000000000',
       contractAddresses: ['0x509ee0d083ddf8ac028f2a56731412edd63223b9'],
     });
+    console.log('GetAllowanceTokens', value);
     expect(value.blockchain).toBe(Blockchain.TESTNET_GOERLI);
     expect(value.address).toBe('0x0000000000000000000000000000000000000000');
     expect(value.approvedForAddress[0]).toBe('0x509ee0d083ddf8ac028f2a56731412edd63223b9');
-    console.log('GetAddressAllowance', value);
   });
 
   test('GetAllowanceAmounts', (done) => {
@@ -65,7 +66,7 @@ describe('TokenClient', () => {
       contractAddresses: ['0x509ee0d083ddf8ac028f2a56731412edd63223b9'],
     });
     call.onData((value) => {
-      console.log('GetAddressAllowance', value);
+      console.log('GetAllowanceAmounts', value);
 
       expect(value.blockchain).toBe(Blockchain.TESTNET_GOERLI);
       expect(value.address).toBe('0x0000000000000000000000000000000000000000');
