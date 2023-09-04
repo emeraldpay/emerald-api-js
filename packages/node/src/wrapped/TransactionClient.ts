@@ -1,13 +1,11 @@
 import {
   ConnectionListener,
   Publisher,
-  publishListToPromise,
-  publishToPromise,
   readOnce,
   transaction,
 } from '@emeraldpay/api';
 import { ChannelCredentials } from '@grpc/grpc-js';
-import { NativeChannel, callSingle, callStream } from '../channel';
+import { NativeChannel, callStream } from '../channel';
 import { TransactionClient as ProtoTransactionClient } from '../generated/transaction_grpc_pb';
 import { classFactory } from './Factory';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -19,7 +17,7 @@ export class TransactionClient {
   readonly credentials: ChannelCredentials;
   readonly retries: number;
 
-  private readonly convert: transaction.Convert = new transaction.Convert(classFactory);
+  private readonly convert: transaction.ConvertTransaction = new transaction.ConvertTransaction(classFactory);
 
   constructor(address: string, credentials: ChannelCredentials, agents: string[], retries = 3) {
     const agent = [...agents, `emerald-client-node/${clientVersion}`].join(' ');
@@ -32,22 +30,6 @@ export class TransactionClient {
 
   public setConnectionListener(listener: ConnectionListener): void {
     this.channel.setListener(listener);
-  }
-
-  public getBalance(request: transaction.BalanceRequest): Promise<Array<transaction.BalanceResponse>> {
-    const protoRequest = this.convert.balanceRequest(request);
-    const mapper = this.convert.balanceResponse();
-
-    const call = callStream(this.client.getBalance.bind(this.client), mapper);
-    return publishListToPromise(readOnce(this.channel, call, protoRequest, this.retries));
-  }
-
-  public getXpubState(request: transaction.XpubStateRequest): Promise<transaction.XpubState> {
-    const protoRequest = this.convert.xpubStateRequest(request);
-    const mapper = this.convert.xpubState();
-
-    const call = callSingle(this.client.getXpubState.bind(this.client), mapper);
-    return publishToPromise(readOnce(this.channel, call, protoRequest, this.retries));
   }
 
   public getTransactions(request: transaction.GetTransactionsRequest): Publisher<transaction.AddressTransaction> {

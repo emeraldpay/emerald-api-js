@@ -21,13 +21,7 @@ export {
   publishToPromise,
 } from './Publisher';
 export { AlwaysRepeat, ContinueCheck, OnceSuccess, Retry } from './Retry';
-export {
-  ConvertDescribeAddress,
-  DescribeAddressCapability,
-  DescribeAddressControl,
-  DescribeAddressRequest,
-  DescribeAddressResponse,
-} from './typesAddress';
+export * as address from './typesAddress';
 export {
   AddressBalance,
   BalanceRequest,
@@ -71,5 +65,5 @@ export {
   StablecoinCurrency,
   TestCurrency,
 } from './typesMarket';
-export * as transaction from './typesTransaction';
 export * as token from './typesToken';
+export * as transaction from './typesTransaction';

@@ -26,6 +26,8 @@ export const classFactory: MessageFactory = (id: string) => {
     // Address
     case 'address_message_pb.DescribeRequest':
       return new address_message_pb.DescribeRequest();
+    case 'address_message_pb.DescribeXpubRequest':
+      return new address_message_pb.DescribeXpubRequest();
     // Blockchain
     case 'blockchain_pb.AddressBalance':
       return new blockchain_pb.AddressBalance();
@@ -56,10 +58,6 @@ export const classFactory: MessageFactory = (id: string) => {
       return new transaction_message_pb.GetTransactionsRequest();
     case 'transaction_message_pb.SubscribeTransactionsRequest':
       return new transaction_message_pb.SubscribeTransactionsRequest();
-    case 'transaction_message_pb.BalanceRequest':
-      return new transaction_message_pb.BalanceRequest();
-    case 'transaction_message_pb.XpubStateRequest':
-      return new transaction_message_pb.XpubStateRequest();
     default:
       throw Error(`Unsupported type: ${id}`);
   }
