@@ -1,6 +1,6 @@
 {
   "name": "@emeraldpay/api",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Common code for Emerald gRPC APIs",
   "license": "Apache-2.0",
   "main": "lib/index.js",
