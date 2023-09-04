@@ -2,12 +2,10 @@ import * as transaction_message_pb from './generated/transaction.message_pb';
 import { DataMapper } from './Publisher';
 import {
   AnyAddress,
-  Asset,
   BlockInfo,
   Blockchain,
   ConvertCommon,
   SingleAddress,
-  XpubAddress,
 } from './typesCommon';
 import { MessageFactory } from './typesConvert';
 
@@ -19,29 +17,6 @@ export enum Direction {
 export enum ChangeType {
   CHANGE = 0,
   FEE = 1,
-}
-
-export type BalanceRequest = {
-  asset: Asset;
-  address: AnyAddress;
-};
-
-export interface BalanceResponse {
-  asset: Asset;
-  address: SingleAddress[];
-  balance: string;
-}
-
-export type XpubStateRequest = {
-  blockchain: Blockchain;
-  address: XpubAddress;
-};
-
-export interface XpubState {
-  blockchain: Blockchain;
-  address: XpubAddress;
-  lastAddress?: SingleAddress;
-  lastIndex?: number;
 }
 
 export interface GetTransactionsRequest {
@@ -97,68 +72,13 @@ export interface Change {
   xpubIndex?: number;
 }
 
-export interface GenericTransfer {
-  direction: Direction;
-  /** unsigned amount */
-  amount: string;
-  /** indexes of counterparty addresses in xpub if xpub has been requested if detected */
-  xpubIndexes: number[];
-}
-
-export interface EthereumTransfer extends GenericTransfer {
-  /** unsigned fee amount */
-  fee: string;
-  /** counterparty address */
-  address: SingleAddress;
-  /** e.g. ERC-20 token address, optional, undefined for blockchain native token */
-  contractAddress?: string;
-}
-
-export interface BitcoinTransfer extends GenericTransfer {
-  /** counterparty address or self address for change */
-  addressAmounts: AddressAmount[];
-}
-
-export type AnyTransfer = GenericTransfer | EthereumTransfer | BitcoinTransfer;
-
-export class Convert {
+export class ConvertTransaction {
   private readonly factory: MessageFactory;
   private readonly common: ConvertCommon;
 
   constructor(factory: MessageFactory, common: ConvertCommon = new ConvertCommon(factory)) {
     this.factory = factory;
     this.common = common;
-  }
-
-  public balanceRequest(req: BalanceRequest): transaction_message_pb.BalanceRequest {
-    const result: transaction_message_pb.BalanceRequest = this.factory('transaction_message_pb.BalanceRequest');
-    return result.setAsset(this.common.pbAsset(req.asset)).setAddress(this.common.pbAnyAddress(req.address));
-  }
-
-  public balanceResponse(): DataMapper<transaction_message_pb.BalanceResponse, BalanceResponse> {
-    return (resp) => {
-      return {
-        asset: this.common.asset(resp.getAsset()),
-        address: resp.getAddressList()?.map((value) => value.getAddress()),
-        balance: resp.getBalance(),
-      };
-    };
-  }
-
-  public xpubStateRequest(req: XpubStateRequest): transaction_message_pb.XpubStateRequest {
-    const result: transaction_message_pb.XpubStateRequest = this.factory('transaction_message_pb.XpubStateRequest');
-    return result.setBlockchain(req.blockchain.valueOf()).setAddress(this.common.pbXpubAddress(req.address));
-  }
-
-  public xpubState(): DataMapper<transaction_message_pb.XpubState, XpubState> {
-    return (resp) => {
-      return {
-        blockchain: resp.getBlockchain().valueOf(),
-        address: resp.getAddress().getXpub(),
-        lastAddress: resp.hasLastAddress() ? resp.getLastAddress().getAddress() : undefined,
-        lastIndex: resp.hasLastIndex() ? resp.getLastIndex().getValue() : undefined,
-      };
-    };
   }
 
   public getTransactionsRequest(req: GetTransactionsRequest): transaction_message_pb.GetTransactionsRequest {
@@ -198,7 +118,7 @@ export class Convert {
       }
 
       const blockchain = resp.getChain().valueOf();
-      const changes = resp.getChangesList().map((value) => Convert.change(value));
+      const changes = resp.getChangesList().map((value) => ConvertTransaction.change(value));
       const cursor = resp.getCursor();
       const mempool = resp.getMempool();
       const xpubIndex = resp.hasXpubIndex() ? resp.getXpubIndex().getValue() : undefined;

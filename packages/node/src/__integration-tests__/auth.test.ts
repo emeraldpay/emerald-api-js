@@ -38,7 +38,7 @@ describe('Auth', () => {
     const blockchainClient = api.blockchain();
     const marketClient = api.market();
     const monitoringClient = api.monitoring();
-    const transactionClient = api.transaction();
+    const addressClient = api.address();
 
     const results = await Promise.all([
       blockchainClient.estimateFees({
@@ -48,7 +48,7 @@ describe('Auth', () => {
       }),
       marketClient.getRates([{ base: 'ETH', target: 'USD' }]),
       monitoringClient.ping(),
-      transactionClient.getXpubState({
+      addressClient.describeXpub({
         address:
           'vpub5bGr72An7v5pmqBZecLVnd74Kpip5t9GSPX7ULe9LazdvWq1ECkJ' +
           'Tpsf6YGFcD4T1McCvcaVdmuHZoo1qaNsddqREiheeFfzUuJ1vMjLFWE',
@@ -63,16 +63,16 @@ describe('Auth', () => {
     const blockchainMetadata = await blockchainClient.credentials._getCallCredentials().generateMetadata(options);
     const marketMetadata = await marketClient.credentials._getCallCredentials().generateMetadata(options);
     const monitoringMetadata = await monitoringClient.credentials._getCallCredentials().generateMetadata(options);
-    const transactionMetadata = await transactionClient.credentials._getCallCredentials().generateMetadata(options);
+    const addressMetadata = await addressClient.credentials._getCallCredentials().generateMetadata(options);
 
     const [blockchainAuthorization] = blockchainMetadata.get('authorization');
     const [marketAuthorization] = marketMetadata.get('authorization');
     const [monitoringAuthorization] = monitoringMetadata.get('authorization');
-    const [transactionAuthorization] = transactionMetadata.get('authorization');
+    const [addressAuthorization] = addressMetadata.get('authorization');
 
     expect(blockchainAuthorization).toEqual(marketAuthorization);
     expect(marketAuthorization).toEqual(monitoringAuthorization);
-    expect(monitoringAuthorization).toEqual(transactionAuthorization);
+    expect(monitoringAuthorization).toEqual(addressAuthorization);
   });
 
   test('token awaiting stopped in other clients when first request failed', async () => {
@@ -94,7 +94,7 @@ describe('Auth', () => {
     const blockchainClient = api.blockchain();
     const marketClient = api.market();
     const monitoringClient = api.monitoring();
-    const transactionClient = api.transaction();
+    const addressClient = api.address();
 
     try {
       const results = await Promise.all([
@@ -105,7 +105,7 @@ describe('Auth', () => {
         }),
         marketClient.getRates([{ base: 'ETH', target: 'USD' }]),
         monitoringClient.ping(),
-        transactionClient.getXpubState({
+        addressClient.describeXpub({
           address:
             'vpub5bGr72An7v5pmqBZecLVnd74Kpip5t9GSPX7ULe9LazdvWq1ECkJ' +
             'Tpsf6YGFcD4T1McCvcaVdmuHZoo1qaNsddqREiheeFfzUuJ1vMjLFWE',

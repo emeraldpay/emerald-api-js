@@ -10,42 +10,6 @@ describe('TransactionClient', () => {
     api = EmeraldApi.devApi();
   });
 
-  test.skip('GetBalance', (done) => {
-    const client = api.transaction();
-
-    client
-      .getBalance({
-        address: '0x7af963cf6d228e564e2a0aa0ddbf06210b38615d',
-        asset: {
-          blockchain: Blockchain.TESTNET_GOERLI,
-          code: 'ETH',
-        },
-      })
-      .then(() => done())
-      .catch((error) => done(error));
-  });
-
-  test('GetXpubState', (done) => {
-    const client = api.transaction();
-
-    client
-      .getXpubState({
-        address:
-          'vpub5bGr72An7v5pmqBZecLVnd74Kpip5t9GSPX7ULe9LazdvWq1ECkJ' +
-          'Tpsf6YGFcD4T1McCvcaVdmuHZoo1qaNsddqREiheeFfzUuJ1vMjLFWE',
-        blockchain: Blockchain.TESTNET_BITCOIN,
-      })
-      .then(({ address }) => {
-        expect(address).toEqual(
-          'vpub5bGr72An7v5pmqBZecLVnd74Kpip5t9GSPX7ULe9LazdvWq1ECkJ' +
-            'Tpsf6YGFcD4T1McCvcaVdmuHZoo1qaNsddqREiheeFfzUuJ1vMjLFWE',
-        );
-
-        done();
-      })
-      .catch((error) => done(error));
-  });
-
   test('GetTransactions', (done) => {
     const client = api.transaction();
 
