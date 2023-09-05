@@ -16,4 +16,5 @@ export { AddressClient } from './wrapped/AddressClient';
 export { BlockchainClient } from './wrapped/BlockchainClient';
 export { MarketClient } from './wrapped/MarketClient';
 export { MonitoringClient } from './wrapped/MonitoringClient';
+export { TokenClient } from './wrapped/TokenClient';
 export { TransactionClient } from './wrapped/TransactionClient';
