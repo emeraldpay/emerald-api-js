@@ -1,12 +1,6 @@
 import * as transaction_message_pb from './generated/transaction.message_pb';
 import { DataMapper } from './Publisher';
-import {
-  AnyAddress,
-  BlockInfo,
-  Blockchain,
-  ConvertCommon,
-  SingleAddress,
-} from './typesCommon';
+import { AnyAddress, BlockInfo, Blockchain, ConvertCommon, SingleAddress } from './typesCommon';
 import { MessageFactory } from './typesConvert';
 
 export enum Direction {
@@ -47,9 +41,10 @@ export interface AddressTransaction {
   cursor?: string;
   /** True if transaction is removed from blockchain */
   removed: boolean;
-  /** True if transaction is failed */
+  /** True if the transaction is failed */
   failed: boolean;
   changes: Change[];
+  txIndexInBlock: number;
 }
 
 export interface AddressAmount {
@@ -82,20 +77,31 @@ export class ConvertTransaction {
   }
 
   public getTransactionsRequest(req: GetTransactionsRequest): transaction_message_pb.GetTransactionsRequest {
-    const result: transaction_message_pb.GetTransactionsRequest = this.factory('transaction_message_pb.GetTransactionsRequest');
-    return result
-      .setChain(req.blockchain.valueOf())
+    const result: transaction_message_pb.GetTransactionsRequest = this.factory(
+      'transaction_message_pb.GetTransactionsRequest',
+    );
+
+    result
       .setAddress(this.common.pbAnyAddress(req.address))
-      .setCursor(req.cursor)
+      .setChain(req.blockchain.valueOf())
       .setLimit(req.limit)
       .setUnspentOnly(req.onlyUnspent);
+
+    if (req.cursor != null) {
+      result.setCursor(req.cursor);
+    }
+
+    return result;
   }
 
-  public subscribeTransactionsRequest(req: SubscribeTransactionsRequest): transaction_message_pb.SubscribeTransactionsRequest {
-    const result: transaction_message_pb.SubscribeTransactionsRequest = this.factory('transaction_message_pb.SubscribeTransactionsRequest');
-    return result
-        .setChain(req.blockchain.valueOf())
-        .setAddress(this.common.pbAnyAddress(req.address))
+  public subscribeTransactionsRequest(
+    req: SubscribeTransactionsRequest,
+  ): transaction_message_pb.SubscribeTransactionsRequest {
+    const result: transaction_message_pb.SubscribeTransactionsRequest = this.factory(
+      'transaction_message_pb.SubscribeTransactionsRequest',
+    );
+
+    return result.setChain(req.blockchain.valueOf()).setAddress(this.common.pbAnyAddress(req.address));
   }
 
   private static change(change: transaction_message_pb.Change): Change {
@@ -117,25 +123,21 @@ export class ConvertTransaction {
         block = this.common.blockInfo(resp.getBlock());
       }
 
-      const blockchain = resp.getChain().valueOf();
-      const changes = resp.getChangesList().map((value) => ConvertTransaction.change(value));
       const cursor = resp.getCursor();
-      const mempool = resp.getMempool();
-      const xpubIndex = resp.hasXpubIndex() ? resp.getXpubIndex().getValue() : undefined;
 
       return {
         block,
-        blockchain,
-        changes,
-        mempool,
-        xpubIndex,
         address: resp.getAddress().getAddress(),
+        blockchain: resp.getChain().valueOf(),
+        changes: resp.getChangesList().map((value) => ConvertTransaction.change(value)),
         cursor: cursor.length > 0 ? cursor : undefined,
         failed: resp.getFailed(),
+        mempool: resp.getMempool(),
         removed: resp.getRemoved(),
         txId: resp.getTxId(),
+        txIndexInBlock: resp.getTxIndexInBlock(),
+        xpubIndex: resp.hasXpubIndex() ? resp.getXpubIndex().getValue() : undefined,
       };
     };
   }
-
 }
