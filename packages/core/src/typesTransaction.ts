@@ -44,7 +44,7 @@ export interface AddressTransaction {
   /** True if the transaction is failed */
   failed: boolean;
   changes: Change[];
-  txIndexInBlock: number;
+  txIndexInBlock?: number;
 }
 
 export interface AddressAmount {
@@ -135,7 +135,7 @@ export class ConvertTransaction {
         mempool: resp.getMempool(),
         removed: resp.getRemoved(),
         txId: resp.getTxId(),
-        txIndexInBlock: resp.getTxIndexInBlock(),
+        txIndexInBlock: block == null ? undefined : resp.getTxIndexInBlock(),
         xpubIndex: resp.hasXpubIndex() ? resp.getXpubIndex().getValue() : undefined,
       };
     };
