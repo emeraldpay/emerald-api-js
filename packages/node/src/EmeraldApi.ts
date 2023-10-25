@@ -19,7 +19,7 @@ export class EmeraldApi {
   }
 
   static devApi(credentials?: ChannelCredentials): EmeraldApi {
-    return new EmeraldApi('api.emeraldpay.dev:443', credentials);
+    return new EmeraldApi('api4.emeraldpay.dev:443', credentials);
   }
 
   static localApi(port = 50051, credentials?: ChannelCredentials): EmeraldApi {
