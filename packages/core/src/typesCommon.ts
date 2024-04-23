@@ -20,6 +20,8 @@ export enum Blockchain {
   TESTNET_GOERLI = 10005,
   TESTNET_ROPSTEN = 10006,
   TESTNET_RINKEBY = 10007,
+  TESTNET_HOLESKY = 10008,
+  TESTNET_SEPOLIA = 10009,
 }
 
 export type AssetCode = string;
@@ -116,6 +118,8 @@ export function blockchainType(blockchain: Blockchain): BlockchainType {
     case Blockchain.TESTNET_GOERLI:
     case Blockchain.TESTNET_ROPSTEN:
     case Blockchain.TESTNET_RINKEBY:
+    case Blockchain.TESTNET_HOLESKY:
+    case Blockchain.TESTNET_SEPOLIA:
       return BlockchainType.ETHEREUM;
     case Blockchain.UNSPECIFIED:
     default:
