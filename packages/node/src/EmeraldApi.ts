@@ -6,6 +6,7 @@ import { MarketClient } from './wrapped/MarketClient';
 import { MonitoringClient } from './wrapped/MonitoringClient';
 import { TokenClient } from './wrapped/TokenClient';
 import { TransactionClient } from './wrapped/TransactionClient';
+import {SecretToken} from "@emeraldpay/api/lib/typesAuth";
 
 export class EmeraldApi {
   private readonly agents: string[] = ['test-client/0.0.0'];
@@ -13,21 +14,25 @@ export class EmeraldApi {
   private readonly hostname: string;
   private readonly credentials: ChannelCredentials;
 
-  constructor(hostname: string, credentials?: ChannelCredentials) {
-    this.credentials = credentials ?? emeraldCredentials(hostname, this.agents, 'test-client').getChannelCredentials();
+  constructor(hostname: string, token: SecretToken, credentials?: ChannelCredentials) {
+    this.credentials = credentials ?? emeraldCredentials(hostname, this.agents, token).getChannelCredentials();
     this.hostname = hostname;
   }
 
   static devApi(credentials?: ChannelCredentials): EmeraldApi {
-    return new EmeraldApi('api.emeraldpay.dev:443', credentials);
+    // a dev token with access only from the internal network
+    let devToken = 'emrld_8ntrHbZN67DF8TWKgCMO1I9nSaMG0cpoMhj3GP';
+    return new EmeraldApi('api.emeraldpay.dev:443', devToken, credentials);
   }
 
   static localApi(port = 50051, credentials?: ChannelCredentials): EmeraldApi {
-    return new EmeraldApi(`localhost:${port}`, credentials);
+    // just a random token, doesn't exist
+    let noToken = 'emrld_yKb3jXMKRJLUWFzL7wPrktkherocZCBy7W6qZH';
+    return new EmeraldApi(`localhost:${port}`, noToken, credentials);
   }
 
-  static productionApi(): EmeraldApi {
-    return new EmeraldApi('api.emrld.io:443');
+  static productionApi(token: SecretToken): EmeraldApi {
+    return new EmeraldApi('api.emrld.io:443', token);
   }
 
   address(): AddressClient {

@@ -23,6 +23,12 @@ export {
 export { AlwaysRepeat, ContinueCheck, OnceSuccess, Retry } from './Retry';
 export * as address from './typesAddress';
 export {
+  isSecretToken,
+  isRefreshToken,
+  SecretToken,
+  RefreshToken
+} from './typesAuth';
+export {
   AddressBalance,
   BalanceRequest,
   ChainHead,

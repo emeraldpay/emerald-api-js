@@ -1,16 +1,16 @@
 import { Blockchain } from '@emeraldpay/api';
 import { EmeraldAuthentication, TokenStatus, emeraldCredentials } from '../credentials';
 import { EmeraldApi } from '../EmeraldApi';
-import { AuthMetadata } from '../signature';
+import {AuthMetadata, JwtSignature} from '../signature';
 
 jest.setTimeout(30000);
 
 describe('Auth', () => {
   test('auth and get balance', async () => {
-    const client = EmeraldApi.productionApi().blockchain();
+    const client = EmeraldApi.devApi().blockchain();
 
     const balance = await client.getBalance({
-      asset: { blockchain: Blockchain.ETHEREUM, code: 'ETHER' },
+      asset: { blockchain: Blockchain.TESTNET_SEPOLIA, code: 'ETHER' },
       address: '0x3f5CE5FBFe3E9af3971dD833D26bA9b5C936f0bE',
     });
 
@@ -42,7 +42,7 @@ describe('Auth', () => {
 
     const results = await Promise.all([
       blockchainClient.estimateFees({
-        blockchain: Blockchain.TESTNET_GOERLI,
+        blockchain: Blockchain.TESTNET_SEPOLIA,
         blocks: 1,
         mode: 'avgLast',
       }),
@@ -76,10 +76,13 @@ describe('Auth', () => {
   });
 
   test('token awaiting stopped in other clients when first request failed', async () => {
-    const credentials = emeraldCredentials('localhost:50051', ['fake-client/0.0.0'], 'fake-client');
+    const credentials = emeraldCredentials('localhost:50051', ['fake-client/0.0.0'], 'emrld_yKb3jXMKRJLUWFzL7wPrktkherocZCBy7W6qZH');
 
     class FakeAuthentication implements EmeraldAuthentication {
       authenticate(): Promise<AuthMetadata> {
+        return new Promise((resolve, reject) => setTimeout(reject, 250));
+      }
+      refresh(): Promise<AuthMetadata> {
         return new Promise((resolve, reject) => setTimeout(reject, 250));
       }
     }
@@ -120,4 +123,35 @@ describe('Auth', () => {
       expect(tokenStatus).toEqual(TokenStatus.ERROR);
     }
   });
+
+  test('cals a refresh', async () => {
+    let calls = ["start"];
+
+    const credentials = emeraldCredentials('localhost:50051', ['fake-client/0.0.0'], 'emrld_yKb3jXMKRJLUWFzL7wPrktkherocZCBy7W6qZH');
+    class FakeAuthentication implements EmeraldAuthentication {
+      authenticate(): Promise<AuthMetadata> {
+        calls.push("auth");
+        return Promise.resolve(new JwtSignature("test-initial-jwt", new Date()));
+      }
+      refresh(): Promise<AuthMetadata> {
+        calls.push("refresh");
+        return Promise.resolve(new JwtSignature("test-refreshed-jwt", new Date()));
+      }
+    }
+    credentials.setAuthentication(new FakeAuthentication());
+
+    const meta1 = await credentials.getChannelCredentials()._getCallCredentials()
+        .generateMetadata({service_url: "test"})
+    const meta2 = await credentials.getChannelCredentials()._getCallCredentials()
+        .generateMetadata({service_url: "test"})
+
+    // make sure it doesn't make initial request twice
+    expect(calls).toEqual(["start", "auth", "refresh"]);
+
+    // make sure it uses received jwts
+    expect(meta1.get("authorization")).toEqual(["Bearer test-initial-jwt"]);
+    expect(meta2.get("authorization")).toEqual(["Bearer test-refreshed-jwt"]);
+  })
+
+
 });

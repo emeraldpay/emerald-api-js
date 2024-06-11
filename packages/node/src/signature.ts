@@ -1,12 +1,13 @@
 import { Metadata } from '@grpc/grpc-js';
 
 export interface AuthMetadata {
-  add(meta: Metadata);
+  add(meta: Metadata): void;
+  isExpired(): boolean;
 }
 
 export class JwtSignature implements AuthMetadata {
-  readonly token: string;
-  readonly expire: Date;
+  token: string;
+  expire: Date;
 
   constructor(token: string, expire: Date) {
     this.token = token;
@@ -16,4 +17,14 @@ export class JwtSignature implements AuthMetadata {
   add(meta: Metadata): void {
     meta.add('Authorization', `Bearer ${this.token}`);
   }
+
+  public update(token: string, expire: Date): void {
+    this.token = token;
+    this.expire = expire;
+  }
+
+  isExpired(): boolean {
+    return new Date() >= this.expire;
+  }
+
 }
