@@ -13,6 +13,7 @@ import {
 import { WebChannel, callStream } from '../channel';
 import * as blockchain_rpc from '../generated/BlockchainServiceClientPb';
 import { classFactory } from './Factory';
+import {CredentialsContext} from "../credentials";
 
 export class BlockchainClient {
   readonly client: blockchain_rpc.BlockchainClient;
@@ -21,8 +22,8 @@ export class BlockchainClient {
 
   private readonly convert = new ConvertBlockchain(classFactory);
 
-  constructor(hostname: string, channel: WebChannel, retries = 3) {
-    this.client = new blockchain_rpc.BlockchainClient(hostname);
+  constructor(hostname: string, channel: WebChannel, credentials: CredentialsContext, retries = 3) {
+    this.client = new blockchain_rpc.BlockchainClient(hostname, null, credentials.options);
     this.channel = channel;
     this.retries = retries;
   }

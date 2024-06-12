@@ -1,72 +1,95 @@
 import { ChannelCredentials, Metadata, credentials } from '@grpc/grpc-js';
-import { AuthRequest, AuthResponse, TempAuth } from './generated/auth_pb';
-import { AuthMetadata, JwtSignature } from './signature';
 import { AuthClient } from './wrapped/Auth';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+import {
+  isSecretToken,
+  SecretToken,
+  Signer,
+  StandardSigner,
+  AuthenticationListener,
+  EmeraldAuthenticator
+} from "@emeraldpay/api";
+import {
+  AuthRequest as BaseAuthRequest,
+  AuthResponse as BaseAuthResponse,
+  BaseAuthClient,
+  ConvertAuth,
+  RefreshRequest as BaseRefreshRequest
+} from "@emeraldpay/api";
+import { classFactory } from './wrapped/Factory';
 const { version: clientVersion } = require('../package.json');
 
-export enum AuthenticationStatus {
-  AUTHENTICATING,
-  AUTHENTICATED,
-  ERROR,
+/**
+ * Use this function to create a new CredentialsContext for the Emerald API
+ *
+ * @param url
+ * @param agents
+ * @param secretToken
+ */
+export function emeraldCredentials(url: string, agents: string[], secretToken: SecretToken): CredentialsContext {
+  return new CredentialsContext(url, agents, secretToken);
 }
 
-export enum TokenStatus {
-  REQUIRED,
-  REQUESTED,
-  SUCCESS,
-  ERROR,
-}
+///
+/// ------------- Internal implementation details -------------
+///
 
-export type AuthenticationListener = (status: AuthenticationStatus, tokenStatus: TokenStatus) => void;
+class NodeAuthClient implements BaseAuthClient {
+  private readonly client: AuthClient;
+  private readonly convert = new ConvertAuth(classFactory);
+
+  constructor(client: AuthClient) {
+      this.client = client;
+  }
+
+  authenticate(req: BaseAuthRequest): Promise<BaseAuthResponse> {
+    return this.client.authenticate(this.convert.authRequest(req))
+        .then(this.convert.authResponse)
+  }
+  refresh(req: BaseRefreshRequest): Promise<BaseAuthResponse> {
+    return this.client.refresh(this.convert.refreshRequest(req))
+        .then(this.convert.authResponse)
+  }
+}
 
 export class CredentialsContext {
   private readonly agents: string[];
   private readonly channelCredentials: ChannelCredentials;
   private readonly ssl: ChannelCredentials;
-  private readonly userId: string;
+  private readonly secretToken: SecretToken;
 
-  private authenticationStatus = AuthenticationStatus.AUTHENTICATING;
-  private tokenStatus = TokenStatus.REQUIRED;
-
-  private authentication: EmeraldAuthentication | undefined;
-  private listener: AuthenticationListener | undefined;
-  private token: AuthMetadata | undefined;
-
+  private signer: Signer;
   readonly address: string;
 
-  constructor(address: string, agents: string[], userId: string) {
+  constructor(address: string, agents: string[], secretToken: string | SecretToken) {
     this.address = address;
-    this.agents = agents;
-    this.userId = userId;
+    this.agents = [...agents, `emerald-client-node/${clientVersion}`];
+
+    if (!isSecretToken(secretToken)) {
+        throw new Error('Invalid secret token');
+    }
+    this.secretToken = secretToken;
 
     this.ssl = credentials.createSsl();
+
+    let authClient = new AuthClient(this.address, this.ssl, this.agents)
+    this.signer = new StandardSigner(new NodeAuthClient(authClient), this.secretToken, this.agents)
 
     const ssl = this.getSsl();
 
     const callCredentials = credentials.createFromMetadataGenerator(
       (params: { service_url: string }, callback: (error: Error | null, metadata?: Metadata) => void) =>
-        this.getSigner()
+        this.signer.getAuth()
           .then((auth) => {
             const meta = new Metadata();
-
             try {
-              auth.add(meta);
+              auth.applyAuth(meta);
             } catch (exception) {
-              this.notify(AuthenticationStatus.ERROR);
-
               callback(exception);
-
               return;
             }
-
-            this.notify(AuthenticationStatus.AUTHENTICATED);
-
             callback(null, meta);
           })
           .catch(() => {
-            this.notify(AuthenticationStatus.ERROR);
-
             callback(new Error('Unable to get token'));
           }),
     );
@@ -78,108 +101,16 @@ export class CredentialsContext {
     return this.channelCredentials;
   }
 
-  setAuthentication(authentication: EmeraldAuthentication): void {
-    this.authentication = authentication;
+  setAuthentication(authentication: EmeraldAuthenticator): void {
+    this.signer.setAuthentication(authentication);
   }
 
   setListener(listener: AuthenticationListener): void {
-    this.listener = listener;
-
-    listener(this.authenticationStatus, this.tokenStatus);
-  }
-
-  protected getSigner(): Promise<AuthMetadata> {
-    if (this.tokenStatus === TokenStatus.REQUESTED) {
-      return new Promise((resolve, reject) => {
-        const awaitToken = (): void => {
-          switch (this.tokenStatus) {
-            case TokenStatus.ERROR:
-              return reject();
-            case TokenStatus.SUCCESS:
-              return resolve(this.token);
-            default:
-              setTimeout(awaitToken, 50);
-          }
-        };
-
-        awaitToken();
-      });
-    }
-
-    if (this.authentication == null) {
-      this.authentication = new JwtUserAuth(this.address, this.getSsl(), this.agents);
-    }
-
-    if (this.token == null) {
-      this.tokenStatus = TokenStatus.REQUESTED;
-
-      return this.authentication
-        .authenticate(this.agents, this.userId)
-        .then((token) => {
-          this.token = token;
-          this.tokenStatus = TokenStatus.SUCCESS;
-
-          return token;
-        })
-        .catch((error) => {
-          this.tokenStatus = TokenStatus.ERROR;
-
-          throw error;
-        });
-    }
-
-    return Promise.resolve(this.token);
+    this.signer.setListener(listener);
   }
 
   protected getSsl(): ChannelCredentials {
     return this.ssl;
   }
-
-  protected notify(status: AuthenticationStatus): void {
-    if (status != this.authenticationStatus) {
-      this.authenticationStatus = status;
-
-      this.listener?.(status, this.tokenStatus);
-    }
-  }
 }
 
-export function emeraldCredentials(url: string, agents: string[], userId: string): CredentialsContext {
-  return new CredentialsContext(url, agents, userId);
-}
-
-export interface EmeraldAuthentication {
-  authenticate(agents: string[], userId: string): Promise<AuthMetadata>;
-}
-
-class JwtUserAuth implements EmeraldAuthentication {
-  client: AuthClient;
-
-  constructor(url: string, credentials: ChannelCredentials, agents: string[]) {
-    this.client = new AuthClient(url, credentials, agents);
-  }
-
-  authenticate(agents: string[], userId: string): Promise<AuthMetadata> {
-    const authRequest = new AuthRequest();
-    const tempAuth = new TempAuth();
-
-    tempAuth.setId(userId);
-
-    authRequest.setAgentDetailsList([...agents, `emerald-client-node/${clientVersion}`]);
-    authRequest.setCapabilitiesList(['JWT_RS256']);
-    authRequest.setScopesList(['BASIC_USER']);
-    authRequest.setTempAuth(tempAuth);
-
-    return this.client.authenticate(authRequest).then((result: AuthResponse) => {
-      if (!result.getSucceed()) {
-        throw new Error(`Failed to auth ${result.getDenyCode()}: ${result.getDenyMessage()}`);
-      }
-
-      if (result.getType() === 'JWT_RS256') {
-        return new JwtSignature(result.getToken(), new Date(result.getExpire()));
-      }
-
-      throw new Error(`Unsupported auth: ${result.getType()}`);
-    });
-  }
-}

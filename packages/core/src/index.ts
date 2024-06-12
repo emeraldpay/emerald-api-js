@@ -23,6 +23,17 @@ export {
 export { AlwaysRepeat, ContinueCheck, OnceSuccess, Retry } from './Retry';
 export * as address from './typesAddress';
 export {
+  isSecretToken,
+  isRefreshToken,
+  SecretToken,
+  RefreshToken,
+  AuthRequest,
+  AuthResponse, AuthResponseOk, AuthResponseFail, isAuthResponseFail, isAuthResponseOk,
+  BaseAuthClient,
+  RefreshRequest,
+  ConvertAuth
+} from './typesAuth';
+export {
   AddressBalance,
   BalanceRequest,
   ChainHead,
@@ -67,3 +78,9 @@ export {
 } from './typesMarket';
 export * as token from './typesToken';
 export * as transaction from './typesTransaction';
+export {
+  Headers, AuthDetails, JwtSignature,
+  AuthenticationListener, AuthenticationStatus,
+  Signer, StandardSigner, NoSigner, NoAuth,
+  TokenStatus, EmeraldAuthenticator
+} from './signature';
