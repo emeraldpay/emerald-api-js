@@ -26,7 +26,12 @@ export {
   isSecretToken,
   isRefreshToken,
   SecretToken,
-  RefreshToken
+  RefreshToken,
+  AuthRequest,
+  AuthResponse, AuthResponseOk, AuthResponseFail, isAuthResponseFail, isAuthResponseOk,
+  BaseAuthClient,
+  RefreshRequest,
+  ConvertAuth
 } from './typesAuth';
 export {
   AddressBalance,
@@ -73,3 +78,9 @@ export {
 } from './typesMarket';
 export * as token from './typesToken';
 export * as transaction from './typesTransaction';
+export {
+  Headers, AuthDetails, JwtSignature,
+  AuthenticationListener, AuthenticationStatus,
+  Signer, StandardSigner, NoSigner, NoAuth,
+  TokenStatus, EmeraldAuthenticator
+} from './signature';

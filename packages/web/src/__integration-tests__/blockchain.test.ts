@@ -8,11 +8,11 @@ describe('BlockchainClient', () => {
 
   beforeAll(() => {
     // Origin is set in jest.config.js
-    api = new EmeraldApi('https://api.emeraldpay.dev');
+    api = EmeraldApi.devApi()
   });
 
   test('Get head', (done) => {
-    const client = api.blockchain();
+    const client = api.blockchain;
 
     const call = client.subscribeHead(Blockchain.ETHEREUM);
 
@@ -30,7 +30,7 @@ describe('BlockchainClient', () => {
   });
 
   test('Get block', (done) => {
-    const client = api.blockchain();
+    const client = api.blockchain;
 
     client
       .nativeCall(Blockchain.ETHEREUM, [
@@ -46,6 +46,7 @@ describe('BlockchainClient', () => {
         const act = value as NativeCallResponse;
 
         expect(act.payload).toBeDefined();
+        expect(act.payload.hash).toBe('0x88e96d4537bea4d9c05d12549907b32561d3bf31f45aae734cdc119f13406cb6');
 
         done();
       })

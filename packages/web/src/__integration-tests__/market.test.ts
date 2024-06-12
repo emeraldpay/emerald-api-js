@@ -7,13 +7,14 @@ describe("MarketClient", () => {
 
     beforeAll(() => {
         // ORIGIN is set in jest.config.js
-        api = new EmeraldApi("https://api.emeraldpay.dev");
+        api = EmeraldApi.devApi();
     });
 
     test('Get ETH rate', async () => {
-        const client = api.market();
+        const client = api.market;
 
         let act = await client.getRates([{base: "ETH", target: "USD"}]);
+        console.log("rates", act);
         expect(act.length).toBe(1);
         expect(act[0].base).toBe("ETH");
         expect(act[0].target).toBe("USD");
@@ -21,7 +22,7 @@ describe("MarketClient", () => {
     });
 
     test('Get BTC rate', async () => {
-        const client = api.market();
+        const client = api.market;
 
         let act = await client.getRates([{base: "BTC", target: "USD"}]);
         expect(act.length).toBe(1);
@@ -31,7 +32,7 @@ describe("MarketClient", () => {
     });
 
     test('Get multiple rates', async () => {
-        const client = api.market();
+        const client = api.market;
 
         let act = await client.getRates([
             {base: "BTC", target: "USD"},

@@ -1,7 +1,6 @@
-import { Blockchain } from '@emeraldpay/api';
-import { EmeraldAuthentication, TokenStatus, emeraldCredentials } from '../credentials';
+import {Blockchain, AuthDetails, JwtSignature, EmeraldAuthenticator, TokenStatus} from '@emeraldpay/api';
+import { emeraldCredentials } from '../credentials';
 import { EmeraldApi } from '../EmeraldApi';
-import {AuthMetadata, JwtSignature} from '../signature';
 
 jest.setTimeout(30000);
 
@@ -78,11 +77,11 @@ describe('Auth', () => {
   test('token awaiting stopped in other clients when first request failed', async () => {
     const credentials = emeraldCredentials('localhost:50051', ['fake-client/0.0.0'], 'emrld_yKb3jXMKRJLUWFzL7wPrktkherocZCBy7W6qZH');
 
-    class FakeAuthentication implements EmeraldAuthentication {
-      authenticate(): Promise<AuthMetadata> {
+    class FakeAuthentication implements EmeraldAuthenticator {
+      authenticate(): Promise<AuthDetails> {
         return new Promise((resolve, reject) => setTimeout(reject, 250));
       }
-      refresh(): Promise<AuthMetadata> {
+      refresh(): Promise<AuthDetails> {
         return new Promise((resolve, reject) => setTimeout(reject, 250));
       }
     }
@@ -128,12 +127,12 @@ describe('Auth', () => {
     let calls = ["start"];
 
     const credentials = emeraldCredentials('localhost:50051', ['fake-client/0.0.0'], 'emrld_yKb3jXMKRJLUWFzL7wPrktkherocZCBy7W6qZH');
-    class FakeAuthentication implements EmeraldAuthentication {
-      authenticate(): Promise<AuthMetadata> {
+    class FakeAuthentication implements EmeraldAuthenticator {
+      authenticate(): Promise<AuthDetails> {
         calls.push("auth");
         return Promise.resolve(new JwtSignature("test-initial-jwt", new Date()));
       }
-      refresh(): Promise<AuthMetadata> {
+      refresh(): Promise<AuthDetails> {
         calls.push("refresh");
         return Promise.resolve(new JwtSignature("test-refreshed-jwt", new Date()));
       }

@@ -1,30 +1,14 @@
 import { Metadata } from '@grpc/grpc-js';
+import {Headers} from '@emeraldpay/api';
 
-export interface AuthMetadata {
-  add(meta: Metadata): void;
-  isExpired(): boolean;
-}
-
-export class JwtSignature implements AuthMetadata {
-  token: string;
-  expire: Date;
-
-  constructor(token: string, expire: Date) {
-    this.token = token;
-    this.expire = expire;
-  }
-
-  add(meta: Metadata): void {
-    meta.add('Authorization', `Bearer ${this.token}`);
-  }
-
-  public update(token: string, expire: Date): void {
-    this.token = token;
-    this.expire = expire;
-  }
-
-  isExpired(): boolean {
-    return new Date() >= this.expire;
-  }
-
-}
+// export class NodeHeaders implements Headers {
+//     private readonly meta: Metadata;
+//
+//     constructor(meta: Metadata) {
+//         this.meta = meta;
+//     }
+//
+//     add(key: string, value: string): void {
+//         this.meta.add(key, value);
+//     }
+// }

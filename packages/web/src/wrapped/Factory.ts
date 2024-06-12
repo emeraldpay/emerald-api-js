@@ -2,6 +2,7 @@ import { MessageFactory } from "@emeraldpay/api";
 import * as blockchain_pb from "../generated/blockchain_pb";
 import * as common_pb from "../generated/common_pb";
 import * as market_pb from "../generated/market_pb";
+import * as auth_pb from "../generated/auth_pb";
 
 export const classFactory: MessageFactory = (id: string) => {
     if (id == "common_pb.Chain") {
@@ -25,7 +26,17 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == "common_pb.XpubAddress") {
         return new common_pb.XpubAddress();
     }
-
+    // Auth
+    if (id == 'auth_pb.RefreshRequest') {
+        return new auth_pb.RefreshRequest();
+    }
+    if (id == 'auth_pb.AuthRequest') {
+        return new auth_pb.AuthRequest();
+    }
+    if (id == 'auth_pb.AuthResponse') {
+        return new auth_pb.AuthResponse();
+    }
+    // Blockchain
     if (id == "blockchain_pb.NativeCallRequest") {
         return new blockchain_pb.NativeCallRequest();
     }
@@ -47,7 +58,7 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == "blockchain_pb.EstimateFeeRequest") {
         return new blockchain_pb.EstimateFeeRequest();
     }
-
+    // Market
     if (id == "market_pb.GetRatesRequest") {
         return new market_pb.GetRatesRequest();
     }

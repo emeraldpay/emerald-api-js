@@ -10,6 +10,9 @@ export type InsightsData = {
 
 const textDecoder = new TextDecoder("utf-8");
 
+/**
+ * @deprecated
+ */
 export class InsightsClient {
     readonly client: insight_pb.InsightsClient;
     readonly channel: WebChannel;
