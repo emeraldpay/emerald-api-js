@@ -1,9 +1,10 @@
+import {SecretToken} from "@emeraldpay/api";
 import {WebChannel} from "./channel";
+import {CredentialsContext, emeraldCredentials} from "./credentials";
 import {BlockchainClient} from "./wrapped/BlockchainClient";
 import {InsightsClient} from "./wrapped/InsightsClient";
 import {MarketClient} from "./wrapped/MarketClient";
-import {CredentialsContext, emeraldCredentials} from "./credentials";
-import {SecretToken} from "@emeraldpay/api";
+import {SierraStatClient} from "./wrapped/SierraStatClient";
 
 export class EmeraldApi {
     private readonly hostname: string;
@@ -18,7 +19,7 @@ export class EmeraldApi {
 
     static devApi(token?: SecretToken | undefined, credentials?: CredentialsContext): EmeraldApi {
         // a dev token with access only from the internal network
-        let devToken = token ?? 'emrld_8ntrHbZN67DF8TWKgCMO1I9nSaMG0cpoMhj3GP';
+        const devToken = token ?? 'emrld_8ntrHbZN67DF8TWKgCMO1I9nSaMG0cpoMhj3GP';
         return new EmeraldApi('https://api.emeraldpay.dev', devToken, credentials);
     }
 
@@ -39,6 +40,10 @@ export class EmeraldApi {
 
     get market(): MarketClient {
         return new MarketClient(this.hostname, this.channel, this.credentials);
+    }
+
+    get sierraStat(): SierraStatClient {
+        return new SierraStatClient(this.hostname, this.channel, this.credentials);
     }
 
 }

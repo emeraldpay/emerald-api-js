@@ -1,8 +1,9 @@
 import { MessageFactory } from "@emeraldpay/api";
+import * as auth_pb from "../generated/auth_pb";
 import * as blockchain_pb from "../generated/blockchain_pb";
 import * as common_pb from "../generated/common_pb";
 import * as market_pb from "../generated/market_pb";
-import * as auth_pb from "../generated/auth_pb";
+import * as sierra_stat_message_pb from "../generated/sierra.stat.message_pb";
 
 export const classFactory: MessageFactory = (id: string) => {
     if (id == "common_pb.Chain") {
@@ -64,6 +65,13 @@ export const classFactory: MessageFactory = (id: string) => {
     }
     if (id == "market_pb.Pair") {
         return new market_pb.Pair();
+    }
+    // Sierra
+    if (id == "sierra_stat_message_pb.GetRequestCountRequest") {
+        return new sierra_stat_message_pb.GetRequestCountRequest();
+    }
+    if (id == "sierra_stat_message_pb.GetTokenStatRequest") {
+        return new sierra_stat_message_pb.GetTokenStatRequest();
     }
 
     throw Error("Unsupported type: " + id)
