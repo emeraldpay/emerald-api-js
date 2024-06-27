@@ -15,13 +15,13 @@ describe('TransactionClient', () => {
 
     client
       .getTransactions({
-        address: '0x7af963cf6d228e564e2a0aa0ddbf06210b38615d',
-        blockchain: Blockchain.TESTNET_GOERLI,
+        address: '0x01066F7d28a2e86cAcd9f9579657077Efe8E371b',
+        blockchain: Blockchain.TESTNET_SEPOLIA,
         limit: 1,
       })
       .onData(({ address, blockchain, failed }) => {
-        expect(address).toEqual('0x7af963cf6d228e564e2a0aa0ddbf06210b38615d');
-        expect(blockchain).toEqual(Blockchain.TESTNET_GOERLI);
+        expect(address).toEqual('0x01066f7d28a2e86cacd9f9579657077efe8e371b');
+        expect(blockchain).toEqual(Blockchain.TESTNET_SEPOLIA);
         expect(failed).toEqual(false);
 
         done();
@@ -34,8 +34,8 @@ describe('TransactionClient', () => {
 
     const call = client
       .subscribeTransactions({
-        address: '0x7af963cf6d228e564e2a0aa0ddbf06210b38615d',
-        blockchain: Blockchain.TESTNET_GOERLI,
+        address: '0x01066F7d28a2e86cAcd9f9579657077Efe8E371b',
+        blockchain: Blockchain.TESTNET_SEPOLIA,
       })
       .onError((error) => done(error));
 

@@ -330,11 +330,11 @@ describe('BlockchainClient', () => {
     }
   });
 
-  test('get ethereum goerli fees', async () => {
+  test('get ethereum sepolia fees', async () => {
     const client = api.blockchain();
 
     const response = await client.estimateFees({
-      blockchain: 10005,
+      blockchain: 10009,
       blocks: 10,
       mode: 'avgLast',
     });
