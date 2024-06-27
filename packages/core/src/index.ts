@@ -78,6 +78,7 @@ export {
 } from './typesMarket';
 export * as token from './typesToken';
 export * as transaction from './typesTransaction';
+export * as sierra from './typesSierra';
 export {
   Headers, AuthDetails, JwtSignature,
   AuthenticationListener, AuthenticationStatus,
