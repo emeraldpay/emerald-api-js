@@ -116,7 +116,7 @@ export class ConvertSierra {
     const result: sierra_stat_message_pb.GetTokenStatRequest = this.factory('sierra_stat_message_pb.GetTokenStatRequest');
     result.setOrgId(request.orgId);
     if (request.tokenIds) {
-      result.setTokenIdList(request.tokenIds);
+      result.setTokenIdsList(request.tokenIds);
     }
     return result;
   }
