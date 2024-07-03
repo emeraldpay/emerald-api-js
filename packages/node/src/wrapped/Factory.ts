@@ -6,6 +6,7 @@ import * as market_pb from '../generated/market_pb';
 import * as token_message_pb from '../generated/token.message_pb';
 import * as transaction_message_pb from '../generated/transaction.message_pb';
 import * as auth_message_pb from '../generated/auth_pb';
+import * as auth_pb from "@emeraldpay/api-web/src/generated/auth_pb";
 
 export const classFactory: MessageFactory = (id: string) => {
   switch (id) {
@@ -31,6 +32,8 @@ export const classFactory: MessageFactory = (id: string) => {
       return new auth_message_pb.AuthRequest();
     case 'auth_pb.AuthResponse':
       return new auth_message_pb.AuthResponse();
+    case 'auth_pb.ListTokensRequest':
+      return new auth_pb.ListTokensRequest();
     // Address
     case 'address_message_pb.DescribeRequest':
       return new address_message_pb.DescribeRequest();

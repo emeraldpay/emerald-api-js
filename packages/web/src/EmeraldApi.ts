@@ -5,6 +5,7 @@ import {BlockchainClient} from "./wrapped/BlockchainClient";
 import {InsightsClient} from "./wrapped/InsightsClient";
 import {MarketClient} from "./wrapped/MarketClient";
 import {SierraStatClient} from "./wrapped/SierraStatClient";
+import {AuthClient} from "./wrapped/AuthClient";
 
 export class EmeraldApi {
     private readonly hostname: string;
@@ -44,6 +45,10 @@ export class EmeraldApi {
 
     get sierraStat(): SierraStatClient {
         return new SierraStatClient(this.hostname, this.channel, this.credentials);
+    }
+
+    get auth(): AuthClient {
+        return new AuthClient(this.hostname, this.channel, this.credentials);
     }
 
 }

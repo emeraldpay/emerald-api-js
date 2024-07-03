@@ -29,9 +29,12 @@ export {
   RefreshToken,
   AuthRequest,
   AuthResponse, AuthResponseOk, AuthResponseFail, isAuthResponseFail, isAuthResponseOk,
-  BaseAuthClient,
+  OrganizationId, ProjectId, TokenId,
+  CredentialsClient,
   RefreshRequest,
-  ConvertAuth
+  ConvertAuth,
+  ListTokensRequest, ListTokensResponse, TokenDetails,
+  WhoIAmResponse, IAmAuthenticated, IAMUnauthenticated,
 } from './typesAuth';
 export {
   AddressBalance,
@@ -62,6 +65,7 @@ export {
   SingleAddress,
   isAsset,
   isErc20Asset,
+  UUID,
 } from './typesCommon';
 export { MessageFactory } from './typesConvert';
 export {

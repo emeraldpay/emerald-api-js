@@ -4,7 +4,7 @@ import {AuthClient} from "./generated/AuthServiceClientPb";
 import {
     AuthRequest as BaseAuthRequest,
     AuthResponse as BaseAuthResponse,
-    BaseAuthClient,
+    CredentialsClient,
     ConvertAuth, RefreshRequest as BaseRefreshRequest
 } from "@emeraldpay/api";
 import {classFactory} from "./wrapped/Factory";
@@ -35,7 +35,7 @@ class WebHeaders implements Headers {
     }
 }
 
-class WebAuthClient implements BaseAuthClient {
+class WebAuthClient implements CredentialsClient {
     private readonly client: AuthClient;
     private readonly convert = new ConvertAuth(classFactory);
 

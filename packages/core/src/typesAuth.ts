@@ -1,7 +1,12 @@
 import {MessageFactory} from "./typesConvert";
 import * as auth_pb from "./generated/auth_pb";
+import {UUID} from "./typesCommon";
 
 export type AuthCapability = 'JWT_RS256';
+
+export type TokenId = UUID;
+export type OrganizationId = UUID;
+export type ProjectId = UUID;
 
 export type SecretToken = string;
 const SecretTokenRegex = new RegExp('^emrld_[0-9a-zA-Z]{38}$');
@@ -46,6 +51,33 @@ export function isAuthResponseFail(res: AuthResponse): res is AuthResponseFail {
   return res.status != 0;
 }
 
+export type IAmAuthenticated = {
+  authenticated: true,
+  tokenId: TokenId,
+}
+
+export type IAMUnauthenticated = {
+  authenticated: false,
+}
+
+export type WhoIAmResponse = IAmAuthenticated | IAMUnauthenticated;
+
+export type ListTokensRequest = {
+  organizationId: OrganizationId,
+  projectId?: ProjectId,
+}
+
+export type ListTokensResponse = {
+  tokens: TokenDetails[],
+}
+
+export type TokenDetails = {
+  organizationId: OrganizationId,
+  projectId: ProjectId,
+  tokenId: TokenId,
+  createdAt: Date,
+}
+
 export class ConvertAuth {
   private readonly factory: MessageFactory;
 
@@ -87,9 +119,50 @@ export class ConvertAuth {
       }
     }
   }
+
+  public whoIAmResponse(res: auth_pb.WhoAmIResponse): WhoIAmResponse {
+    if (res.getIsAuthenticated()) {
+      return {
+        authenticated: true,
+        tokenId: res.getTokenId(),
+      }
+    } else {
+      return {
+        authenticated: false,
+      }
+    }
+  }
+
+  public listTokensRequest(req: ListTokensRequest): auth_pb.ListTokensRequest {
+    const result: auth_pb.ListTokensRequest = this.factory('auth_pb.ListTokensRequest');
+
+    result.setOrganizationId(req.organizationId);
+    if (req.projectId) {
+      result.setProjectId(req.projectId);
+    }
+
+    return result;
+  }
+
+  public listTokensResponse(res: auth_pb.ListTokensResponse): ListTokensResponse {
+    return {
+      tokens: res.getTokensList().map((token) => {
+        return {
+          organizationId: token.getOrganizationId(),
+          projectId: token.getProjectId(),
+          tokenId: token.getTokenId(),
+          createdAt: new Date(token.getCreationDate()),
+        }
+      }),
+    }
+  }
+
 }
 
-export interface BaseAuthClient {
+/**
+ * A subset of the Auth API used to get credentials
+ */
+export interface CredentialsClient {
   authenticate(req: AuthRequest): Promise<AuthResponse>;
   refresh(req: RefreshRequest): Promise<AuthResponse>;
 }
