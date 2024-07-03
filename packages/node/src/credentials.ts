@@ -11,7 +11,7 @@ import {
 import {
   AuthRequest as BaseAuthRequest,
   AuthResponse as BaseAuthResponse,
-  BaseAuthClient,
+  CredentialsClient,
   ConvertAuth,
   RefreshRequest as BaseRefreshRequest
 } from "@emeraldpay/api";
@@ -33,7 +33,7 @@ export function emeraldCredentials(url: string, agents: string[], secretToken: S
 /// ------------- Internal implementation details -------------
 ///
 
-class NodeAuthClient implements BaseAuthClient {
+class NodeAuthClient implements CredentialsClient {
   private readonly client: AuthClient;
   private readonly convert = new ConvertAuth(classFactory);
 

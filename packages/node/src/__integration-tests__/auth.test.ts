@@ -16,6 +16,14 @@ describe('Auth', () => {
     expect(balance).toBeDefined();
   });
 
+  test('is authenticated', async () => {
+    const client = EmeraldApi.devApi().auth();
+
+    const resp = await client.whoIAm()
+
+    expect(resp.authenticated).toBeTruthy();
+  });
+
   test('terminate connection after timeout', async () => {
     const client = EmeraldApi.localApi().blockchain();
 

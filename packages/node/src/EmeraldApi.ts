@@ -7,6 +7,7 @@ import { MonitoringClient } from './wrapped/MonitoringClient';
 import { TokenClient } from './wrapped/TokenClient';
 import { TransactionClient } from './wrapped/TransactionClient';
 import {SecretToken} from "@emeraldpay/api/lib/typesAuth";
+import {AuthClient} from "./wrapped/Auth";
 
 export class EmeraldApi {
   private readonly agents: string[] = ['test-client/0.0.0'];
@@ -57,5 +58,9 @@ export class EmeraldApi {
 
   transaction(): TransactionClient {
     return new TransactionClient(this.hostname, this.credentials, this.agents);
+  }
+
+  auth(): AuthClient {
+    return new AuthClient(this.hostname, this.credentials, this.agents);
   }
 }

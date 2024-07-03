@@ -43,6 +43,8 @@ export type XpubAddress = string | DetailedXpubAddress;
 export type MultiAddress = SingleAddress[];
 export type AnyAddress = SingleAddress | MultiAddress | XpubAddress;
 
+export type UUID = string;
+
 export interface DetailedXpubAddress {
   xpub: string;
   start?: number;

@@ -1,5 +1,5 @@
 import {
-  BaseAuthClient,
+  CredentialsClient,
   RefreshToken,
   SecretToken,
   AuthRequest,
@@ -143,7 +143,7 @@ export class NoSigner implements Signer {
  * @see JwtAuthProvider
  */
 export class StandardSigner implements Signer {
-  private readonly client: BaseAuthClient;
+  private readonly client: CredentialsClient;
   private readonly secretToken: SecretToken;
   private readonly agents: string[];
 
@@ -153,7 +153,7 @@ export class StandardSigner implements Signer {
   private listener: AuthenticationListener | undefined;
   private authenticationStatus = AuthenticationStatus.AUTHENTICATING;
 
-  constructor(client: BaseAuthClient, secretToken: SecretToken, agents: string[]) {
+  constructor(client: CredentialsClient, secretToken: SecretToken, agents: string[]) {
     this.client = client;
     this.secretToken = secretToken;
     this.agents = agents;
@@ -251,12 +251,12 @@ export class StandardSigner implements Signer {
 }
 
 class JwtAuthProvider implements EmeraldAuthenticator {
-  private readonly client: BaseAuthClient;
+  private readonly client: CredentialsClient;
   private readonly agents: string[];
   private readonly secretToken: SecretToken;
   private refreshToken: RefreshToken | undefined;
 
-  constructor(client: BaseAuthClient, secretToken: SecretToken, agents: string[]) {
+  constructor(client: CredentialsClient, secretToken: SecretToken, agents: string[]) {
     this.client = client;
     this.secretToken = secretToken;
     if (this.agents == null || this.agents.length == 0) {
