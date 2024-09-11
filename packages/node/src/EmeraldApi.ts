@@ -20,9 +20,9 @@ export class EmeraldApi {
     this.hostname = hostname;
   }
 
-  static devApi(credentials?: ChannelCredentials): EmeraldApi {
+  static devApi(token?: SecretToken | undefined, credentials?: ChannelCredentials): EmeraldApi {
     // a dev token with access only from the internal network
-    let devToken = 'emrld_8ntrHbZN67DF8TWKgCMO1I9nSaMG0cpoMhj3GP';
+    let devToken = token ?? 'emrld_8ntrHbZN67DF8TWKgCMO1I9nSaMG0cpoMhj3GP';
     return new EmeraldApi('api.emeraldpay.dev:443', devToken, credentials);
   }
 

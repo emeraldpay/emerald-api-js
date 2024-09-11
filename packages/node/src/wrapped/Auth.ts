@@ -1,5 +1,5 @@
 import {
-  ConnectionListener, ConvertAuth,
+  ConnectionListener, ConvertAuth, IssuedTokenResponse, IssueTokenRequest,
   ListTokensRequest,
   ListTokensResponse,
   publishToPromise,
@@ -60,4 +60,11 @@ export class AuthClient {
     const call = callSingle(this.client.listTokens.bind(this.client), this.convert.listTokensResponse);
     return publishToPromise(readOnce(this.channel, call, request, this.retries));
   }
+
+  issueToken(req: IssueTokenRequest): Promise<IssuedTokenResponse> {
+    const request = this.convert.issueTokenRequest(req);
+    const call = callSingle(this.client.issueToken.bind(this.client), this.convert.issuedTokenResponse);
+    return publishToPromise(readOnce(this.channel, call, request, this.retries));
+  }
+
 }

@@ -1,4 +1,4 @@
-import {Blockchain, AuthDetails, JwtSignature, EmeraldAuthenticator, TokenStatus} from '@emeraldpay/api';
+import {Blockchain, AuthDetails, JwtSignature, EmeraldAuthenticator, TokenStatus, isSecretToken} from '@emeraldpay/api';
 import { emeraldCredentials } from '../credentials';
 import { EmeraldApi } from '../EmeraldApi';
 
@@ -14,6 +14,24 @@ describe('Auth', () => {
     });
 
     expect(balance).toBeDefined();
+  });
+
+  test('auth with temp token', async () => {
+    const client = EmeraldApi.devApi().auth();
+
+    const token = await client.issueToken({
+        type: 'temp',
+    });
+
+    expect(token).toBeDefined();
+    expect(token.secret).toBeDefined();
+    expect(token.expiresAt).toBeDefined();
+    expect(isSecretToken(token.secret)).toBeTruthy();
+
+    const client2 = EmeraldApi.devApi(token.secret).auth();
+
+    const me = await client2.whoIAm();
+    expect(me.authenticated).toBeTruthy();
   });
 
   test('is authenticated', async () => {
@@ -99,7 +117,7 @@ describe('Auth', () => {
     credentials.setAuthentication(new FakeAuthentication());
     credentials.setListener((...statuses) => ([, tokenStatus] = statuses));
 
-    const api = EmeraldApi.devApi(credentials.getChannelCredentials());
+    const api = EmeraldApi.devApi(null, credentials.getChannelCredentials());
 
     const blockchainClient = api.blockchain();
     const marketClient = api.market();
