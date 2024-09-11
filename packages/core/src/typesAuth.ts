@@ -8,8 +8,13 @@ export type TokenId = UUID;
 export type OrganizationId = UUID;
 export type ProjectId = UUID;
 
+/**
+ * A token to authenticate with API. Format: emrld_ + 38 random alphanumeric characters.
+ * When it's a one-time auth token, it starts with "emrld_temp_"
+ */
 export type SecretToken = string;
-const SecretTokenRegex = new RegExp('^emrld_[0-9a-zA-Z]{38}$');
+
+const SecretTokenRegex = new RegExp('^emrld_(temp_)?[0-9a-zA-Z]{38}$');
 
 export function isSecretToken(token: string): token is SecretToken {
   return SecretTokenRegex.test(token);
