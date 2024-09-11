@@ -290,7 +290,6 @@ class JwtAuthProvider implements EmeraldAuthenticator {
     }
 
     const refreshRequest: RefreshRequest = {
-        secret: this.secretToken,
         refreshToken: this.refreshToken,
     }
 
