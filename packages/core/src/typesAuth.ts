@@ -33,7 +33,6 @@ export type AuthRequest = {
 }
 
 export type RefreshRequest = {
-  secret: SecretToken,
   refreshToken: RefreshToken,
 }
 
@@ -139,10 +138,7 @@ export class ConvertAuth {
 
   public refreshRequest(req: RefreshRequest): auth_pb.RefreshRequest {
     const result: auth_pb.RefreshRequest = this.factory('auth_pb.RefreshRequest');
-
-    result.setAuthSecret(req.secret);
     result.setRefreshToken(req.refreshToken);
-
     return result;
   }
 
