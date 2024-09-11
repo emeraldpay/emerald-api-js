@@ -83,6 +83,43 @@ export type TokenDetails = {
   createdAt: Date,
 }
 
+export type IssueTokenRequest = {
+  /**
+   * Type of the token to issue
+   * - "temp" - one-time token
+   */
+  type: "temp",
+
+  /**
+   * The scopes to be used for the token. Cannot be larger that the current authenticated scopes.
+   */
+  scopes?: string[],
+
+  /**
+   * The user id associated with the token, i.e. who will use the token.
+   * There are restrictions who can set this. In short the token issuer must be in control of the user / impersonate the user.
+   */
+  userId?: string,
+
+  /**
+   * A timestamp when it expires.
+   * For a temp one-time token, by default, it's 1 Day and cannot be more than 30 days.
+   */
+  expireAt?: Date,
+}
+
+export type IssuedTokenResponse = {
+  /**
+   * The issued token
+   */
+  secret: SecretToken,
+
+  /**
+   * When the token expires
+   */
+  expiresAt: Date,
+}
+
 export class ConvertAuth {
   private readonly factory: MessageFactory;
 
@@ -162,6 +199,32 @@ export class ConvertAuth {
     }
   }
 
+  public issueTokenRequest(req: IssueTokenRequest): auth_pb.IssueTokenRequest {
+    const result: auth_pb.IssueTokenRequest = this.factory('auth_pb.IssueTokenRequest');
+    if (req.type == "temp") {
+        result.setType(auth_pb.IssueTokenRequest.TokenType.TEMP);
+    }
+    if (req.scopes) {
+        result.setScopesList(req.scopes);
+    }
+    if (req.userId) {
+        result.setUserId(req.userId);
+    }
+    if (req.expireAt) {
+        result.setExpireAt(req.expireAt.getTime());
+    }
+    return result;
+  }
+
+  public issuedTokenResponse(res: auth_pb.IssuedTokenResponse): IssuedTokenResponse {
+    return {
+      secret: res.getAuthSecret(),
+
+      // when backed returns 0, it means "never expires" (though it almost always has some actual date).
+      // Let's set 10 years from now here, to avoid unnecessary null checks
+      expiresAt: res.getExpiresAt() > 0 ? new Date(res.getExpiresAt()) : new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
+    }
+  }
 }
 
 /**

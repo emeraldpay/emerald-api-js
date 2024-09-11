@@ -35,6 +35,7 @@ export {
   ConvertAuth,
   ListTokensRequest, ListTokensResponse, TokenDetails,
   WhoIAmResponse, IAmAuthenticated, IAMUnauthenticated,
+  IssueTokenRequest, IssuedTokenResponse,
 } from './typesAuth';
 export {
   AddressBalance,

@@ -33,6 +33,8 @@ export const classFactory: MessageFactory = (id: string) => {
       return new auth_message_pb.AuthResponse();
     case 'auth_pb.ListTokensRequest':
       return new auth_message_pb.ListTokensRequest();
+    case 'auth_pb.IssueTokenRequest':
+      return new auth_message_pb.IssueTokenRequest();
     // Address
     case 'address_message_pb.DescribeRequest':
       return new address_message_pb.DescribeRequest();
