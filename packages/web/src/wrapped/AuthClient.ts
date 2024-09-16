@@ -14,7 +14,6 @@ import * as auth_rpc from '../generated/AuthServiceClientPb';
 import * as auth_pb from "../generated/auth_pb";
 import {classFactory} from "./Factory";
 import {CredentialsContext} from "../credentials";
-import {callSingle} from "@emeraldpay/api-node/lib/channel";
 
 export class AuthClient {
     readonly client: auth_rpc.AuthClient;
@@ -46,7 +45,7 @@ export class AuthClient {
 
     issueToken(req: IssueTokenRequest): Promise<IssuedTokenResponse> {
         const request = this.convert.issueTokenRequest(req);
-        const call = callSingle(this.client.issueToken.bind(this.client), this.convert.issuedTokenResponse);
+        const call = callPromise(this.client.issueToken.bind(this.client), this.convert.issuedTokenResponse);
         return publishToPromise(readOnce(this.channel, call, request, this.retries));
     }
 
