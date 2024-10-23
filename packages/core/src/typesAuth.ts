@@ -80,6 +80,7 @@ export type TokenDetails = {
   projectId: ProjectId,
   tokenId: TokenId,
   createdAt: Date,
+  description?: string,
 }
 
 export type IssueTokenRequest = {
@@ -190,6 +191,7 @@ export class ConvertAuth {
           projectId: token.getProjectId(),
           tokenId: token.getTokenId(),
           createdAt: new Date(token.getCreationDate()),
+          description: (typeof token.getDescription() == "string" && token.getDescription().length > 0) ? token.getDescription() : null,
         }
       }),
     }
