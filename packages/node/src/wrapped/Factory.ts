@@ -1,11 +1,12 @@
-import { MessageFactory } from '@emeraldpay/api';
+import {MessageFactory} from '@emeraldpay/api';
 import * as address_message_pb from '../generated/address.message_pb';
+import * as auth_message_pb from '../generated/auth_pb';
 import * as blockchain_pb from '../generated/blockchain_pb';
 import * as common_pb from '../generated/common_pb';
 import * as market_pb from '../generated/market_pb';
+import * as sierra_message_pb from "../generated/sierra.message_pb";
 import * as token_message_pb from '../generated/token.message_pb';
 import * as transaction_message_pb from '../generated/transaction.message_pb';
-import * as auth_message_pb from '../generated/auth_pb';
 
 export const classFactory: MessageFactory = (id: string) => {
   switch (id) {
@@ -70,6 +71,12 @@ export const classFactory: MessageFactory = (id: string) => {
       return new transaction_message_pb.GetTransactionsRequest();
     case 'transaction_message_pb.SubscribeTransactionsRequest':
       return new transaction_message_pb.SubscribeTransactionsRequest();
+    // Sierra
+    case 'sierra_message_pb.CreateProjectRequest':
+        return new sierra_message_pb.CreateProjectRequest();
+    case 'sierra_message_pb.ListProjectsRequest':
+        return new sierra_message_pb.ListProjectsRequest();
+
     default:
       throw Error(`Unsupported type: ${id}`);
   }
