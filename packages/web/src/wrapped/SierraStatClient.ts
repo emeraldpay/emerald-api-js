@@ -1,7 +1,7 @@
 import {Publisher, readOnce, sierra} from "@emeraldpay/api";
 import {WebChannel, callStream} from "../channel";
 import {CredentialsContext} from "../credentials";
-import * as sierra_rpc from '../generated/Sierra.statServiceClientPb';
+import * as sierra_rpc from '../generated/SierraServiceClientPb';
 import {classFactory} from "./Factory";
 
 export class SierraStatClient {
@@ -32,7 +32,5 @@ export class SierraStatClient {
         const call = callStream(this.client.getTokenStat.bind(this.client), mapper);
         return readOnce(this.channel, call, req, this.retries);
     }
-
-
 
 }
