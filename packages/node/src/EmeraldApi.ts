@@ -23,7 +23,9 @@ export class EmeraldApi {
 
   static devApi(token?: SecretToken | undefined, credentials?: ChannelCredentials): EmeraldApi {
     // a dev token with access only from the internal network
-    const devToken = token ?? 'emrld_8ntrHbZN67DF8TWKgCMO1I9nSaMG0cpoMhj3GP';
+    // Token ID: 893b95a0-d28c-49b9-b1b1-6c63e2081d7e
+    // User ID: bada55a1-0000-4000-a000-000000000000
+    const devToken = token ?? 'emrld_pbhT80xj0hsnFf73uOVJ6LEmenaVcbsXO7pGwH';
     return new EmeraldApi('api.emeraldpay.dev:443', devToken, credentials);
   }
 

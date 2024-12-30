@@ -6,8 +6,7 @@ describe("SierraOrgClient", () => {
   let api: EmeraldApi;
 
   beforeAll(() => {
-    // a dev token with user id: bada55a1-0000-4000-a000-000000000000
-    api = EmeraldApi.devApi("emrld_fU88aIafXsCClerhyWtflBp1hH6h112ckzpSfP");
+    api = EmeraldApi.devApi();
   });
 
   test('getOrg',  async () => {

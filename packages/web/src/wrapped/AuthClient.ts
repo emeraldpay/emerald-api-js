@@ -1,19 +1,18 @@
 import {
-    AuthRequest, AuthResponse,
-    CredentialsClient,
     ConvertAuth,
+    DeleteTokenRequest,
+    DeleteTokenResponse,
+    IssueTokenRequest,
+    IssuedTokenResponse,
     ListTokensRequest,
     ListTokensResponse,
-    RefreshRequest,
-    WhoIAmResponse,
-    publishToPromise,
-    readOnce, IssueTokenRequest, IssuedTokenResponse
+    WhoIAmResponse, publishToPromise, readOnce
 } from "@emeraldpay/api";
-import {callPromise, WebChannel} from "../channel";
-import * as auth_rpc from '../generated/AuthServiceClientPb';
-import * as auth_pb from "../generated/auth_pb";
-import {classFactory} from "./Factory";
+import {WebChannel, callPromise} from "../channel";
 import {CredentialsContext} from "../credentials";
+import * as auth_pb from "../generated/auth_pb";
+import * as auth_rpc from '../generated/AuthServiceClientPb';
+import {classFactory} from "./Factory";
 
 export class AuthClient {
     readonly client: auth_rpc.AuthClient;
@@ -46,6 +45,12 @@ export class AuthClient {
     issueToken(req: IssueTokenRequest): Promise<IssuedTokenResponse> {
         const request = this.convert.issueTokenRequest(req);
         const call = callPromise(this.client.issueToken.bind(this.client), this.convert.issuedTokenResponse);
+        return publishToPromise(readOnce(this.channel, call, request, 1));
+    }
+
+    deleteToken(req: DeleteTokenRequest): Promise<DeleteTokenResponse> {
+        const request = this.convert.deleteTokenRequest(req)
+        const call = callPromise(this.client.deleteToken.bind(this.client), this.convert.deleteTokenResponse);
         return publishToPromise(readOnce(this.channel, call, request, this.retries));
     }
 

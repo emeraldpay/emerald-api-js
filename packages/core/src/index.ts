@@ -33,6 +33,7 @@ export {
   CredentialsClient,
   RefreshRequest,
   ConvertAuth,
+  DeleteTokenRequest, DeleteTokenResponse,
   ListTokensRequest, ListTokensResponse, TokenDetails,
   WhoIAmResponse, IAmAuthenticated, IAMUnauthenticated,
   IssueTokenRequest, IssuedTokenResponse,
