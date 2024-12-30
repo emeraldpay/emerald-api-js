@@ -1,6 +1,6 @@
-import {MessageFactory} from "./typesConvert";
 import * as auth_pb from "./generated/auth_pb";
 import {UUID} from "./typesCommon";
+import {MessageFactory} from "./typesConvert";
 
 export type AuthCapability = 'JWT_RS256';
 
@@ -87,8 +87,9 @@ export type IssueTokenRequest = {
   /**
    * Type of the token to issue
    * - "temp" - one-time token
+   * - "permanent" - long-live token that can be used multiple times
    */
-  type: "temp",
+  type: "temp" | "permanent",
 
   /**
    * The scopes to be used for the token. Cannot be larger that the current authenticated scopes.
@@ -106,6 +107,22 @@ export type IssueTokenRequest = {
    * For a temp one-time token, by default, it's 1 Day and cannot be more than 30 days.
    */
   expireAt?: Date,
+
+  /**
+   * (for a permanent token) organization id for the token
+   */
+  organizationId?: OrganizationId,
+
+  /**
+   * (for a permanent token) project id for the token
+   */
+  projectId?: ProjectId,
+
+  /**
+   * (for a permanent token) description of the token
+   */
+  description?: string,
+
 }
 
 export type IssuedTokenResponse = {
@@ -119,6 +136,14 @@ export type IssuedTokenResponse = {
    */
   expiresAt: Date,
 }
+
+export type DeleteTokenRequest = {
+  organizationId: OrganizationId,
+  projectId: ProjectId,
+  tokenId: TokenId,
+}
+
+export type DeleteTokenResponse = Record<string, never>;
 
 export class ConvertAuth {
   private readonly factory: MessageFactory;
@@ -201,12 +226,23 @@ export class ConvertAuth {
     const result: auth_pb.IssueTokenRequest = this.factory('auth_pb.IssueTokenRequest');
     if (req.type == "temp") {
         result.setType(auth_pb.IssueTokenRequest.TokenType.TEMP);
+    } else if (req.type == "permanent") {
+        result.setType(auth_pb.IssueTokenRequest.TokenType.PERMANENT);
     }
     if (req.scopes) {
         result.setScopesList(req.scopes);
     }
     if (req.userId) {
         result.setUserId(req.userId);
+    }
+    if (req.organizationId) {
+        result.setOrganizationId(req.organizationId);
+    }
+    if (req.projectId) {
+        result.setProjectId(req.projectId);
+    }
+    if (req.description) {
+        result.setDescription(req.description);
     }
     if (req.expireAt) {
         result.setExpireAt(req.expireAt.getTime());
@@ -222,6 +258,19 @@ export class ConvertAuth {
       // Let's set 10 years from now here, to avoid unnecessary null checks
       expiresAt: res.getExpiresAt() > 0 ? new Date(res.getExpiresAt()) : new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
     }
+  }
+
+  public deleteTokenRequest(req: DeleteTokenRequest): auth_pb.DeleteTokenRequest {
+    const result: auth_pb.DeleteTokenRequest = this.factory('auth_pb.DeleteTokenRequest');
+    result.setOrganizationId(req.organizationId);
+    result.setProjectId(req.projectId);
+    result.setTokenId(req.tokenId);
+    return result;
+  }
+
+  // eslint-disable-next-line unused-imports/no-unused-vars
+  public deleteTokenResponse(res: auth_pb.DeleteTokenResponse): DeleteTokenResponse {
+    return {};
   }
 }
 

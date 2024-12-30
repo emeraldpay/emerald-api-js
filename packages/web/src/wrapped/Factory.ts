@@ -43,6 +43,9 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == 'auth_pb.IssueTokenRequest') {
         return new auth_pb.IssueTokenRequest();
     }
+    if (id == 'auth_pb.DeleteTokenRequest') {
+        return new auth_pb.DeleteTokenRequest();
+    }
     // Blockchain
     if (id == "blockchain_pb.NativeCallRequest") {
         return new blockchain_pb.NativeCallRequest();

@@ -22,7 +22,7 @@ export class EmeraldApi {
 
     static devApi(token?: SecretToken | undefined, credentials?: CredentialsContext): EmeraldApi {
         // a dev token with access only from the internal network
-        const devToken = token ?? 'emrld_8ntrHbZN67DF8TWKgCMO1I9nSaMG0cpoMhj3GP';
+        const devToken = token ?? 'emrld_pbhT80xj0hsnFf73uOVJ6LEmenaVcbsXO7pGwH';
         return new EmeraldApi('https://api.emeraldpay.dev', devToken, credentials);
     }
 
