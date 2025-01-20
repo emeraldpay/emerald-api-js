@@ -49,31 +49,31 @@ describe('TokenClient', () => {
     const client = api.token();
     const value = await client.getAllowanceTokens({
       blockchain: Blockchain.TESTNET_SEPOLIA,
-      address: '0x0000000000000000000000000000000000000000',
-      contractAddresses: ['0x2863192e43fd72f0405719041504e19fd6e70d24'],
+      address: '0xcdfdc3752caaa826fe62531e0000c40546ec56a6',
+      contractAddresses: ['0x543ddb01ba47acb11de34891cd86b675f04840db'],
     });
     console.log('GetAllowanceTokens', value);
     expect(value.blockchain).toBe(Blockchain.TESTNET_SEPOLIA);
-    expect(value.address).toBe('0x0000000000000000000000000000000000000000');
-    expect(value.approvedForAddress[0]).toBe('0x2863192e43fd72f0405719041504e19fd6e70d24');
+    expect(value.address).toBe('0xcdfdc3752caaa826fe62531e0000c40546ec56a6');
+    expect(value.approvedForAddress[0]).toBe('0x543ddb01ba47acb11de34891cd86b675f04840db');
   });
 
   test('GetAllowanceAmounts', (done) => {
     const client = api.token();
     const call = client.getAllowanceAmounts({
       blockchain: Blockchain.TESTNET_SEPOLIA,
-      address: '0x0000000000000000000000000000000000000000',
-      contractAddresses: ['0x2863192e43fd72f0405719041504e19fd6e70d24'],
+      address: '0xcdfdc3752caaa826fe62531e0000c40546ec56a6',
+      contractAddresses: ['0x543ddb01ba47acb11de34891cd86b675f04840db'],
     });
     call.onData((value) => {
       console.log('GetAllowanceAmounts', value);
 
       expect(value.blockchain).toBe(Blockchain.TESTNET_SEPOLIA);
-      expect(value.address).toBe('0x0000000000000000000000000000000000000000');
-      expect(value.contractAddress).toBe('0x2863192e43fd72f0405719041504e19fd6e70d24');
-      // spender address is not checked, as it could be changed in the future
-      // expect(value.ownerAddress).toBe('0x23160eb5db66cf0f876df64751e02dbee16fb340');
-      expect(value.spenderAddress).toBe('0x0000000000000000000000000000000000000000');
+      expect(value.address).toBe('0xcdfdc3752caaa826fe62531e0000c40546ec56a6');
+      expect(value.contractAddress).toBe('0x543ddb01ba47acb11de34891cd86b675f04840db');
+      expect(value.spenderAddress).toBe('0xcdfdc3752caaa826fe62531e0000c40546ec56a6');
+      // owner address is not checked, as it could be changed in the future
+      // expect(value.ownerAddress).toBe('0x0fc05e8ea021b56cdd9111a0c35b31598c1a0dfd');
       call.cancel();
       done();
     });
