@@ -61,6 +61,7 @@ export {
 export {
   AnyAddress,
   AnyAsset,
+  Erc20Asset,
   AssetCode,
   Blockchain,
   MultiAddress,
@@ -68,6 +69,14 @@ export {
   isAsset,
   isErc20Asset,
   UUID,
+  Asset,
+  BlockchainType,
+  XpubAddress,
+  DetailedXpubAddress,
+  isXpubAddress,
+  isSingleAddress,
+  isMultiAddress,
+  isDetailedXpubAddress,
 } from './typesCommon';
 export { MessageFactory } from './typesConvert';
 export {
