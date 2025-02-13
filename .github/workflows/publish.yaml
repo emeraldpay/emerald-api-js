@@ -34,6 +34,13 @@ jobs:
       - name: Install JS dependencies
         run: yarn install
 
+      - name: Connect Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
       - name: Build
         run: yarn workspaces foreach run build
 
