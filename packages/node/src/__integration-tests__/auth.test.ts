@@ -1,4 +1,7 @@
-import {Blockchain, AuthDetails, JwtSignature, EmeraldAuthenticator, TokenStatus, isSecretToken} from '@emeraldpay/api';
+import {
+  Blockchain, AuthDetails, JwtSignature, EmeraldAuthenticator, TokenStatus, isSecretToken,
+  StandardSigner, CredentialsClient, AuthRequest, AuthResponse, RefreshRequest, Headers,
+} from '@emeraldpay/api';
 import { emeraldCredentials } from '../credentials';
 import { EmeraldApi } from '../EmeraldApi';
 
@@ -65,6 +68,13 @@ describe('Auth', () => {
     const monitoringClient = api.monitoring();
     const addressClient = api.address();
 
+    // All clients must share the exact same ChannelCredentials instance,
+    // which ensures they share the same JWT and auth state
+    expect(blockchainClient.credentials).toBe(marketClient.credentials);
+    expect(marketClient.credentials).toBe(monitoringClient.credentials);
+    expect(monitoringClient.credentials).toBe(addressClient.credentials);
+
+    // Verify the shared credentials actually work by making API calls through different clients
     const results = await Promise.all([
       blockchainClient.estimateFees({
         blockchain: Blockchain.TESTNET_SEPOLIA,
@@ -82,22 +92,6 @@ describe('Auth', () => {
     ]);
 
     expect(results.length).toEqual(4);
-
-    const options = { service_url: '' };
-
-    const blockchainMetadata = await blockchainClient.credentials._getCallCredentials().generateMetadata(options);
-    const marketMetadata = await marketClient.credentials._getCallCredentials().generateMetadata(options);
-    const monitoringMetadata = await monitoringClient.credentials._getCallCredentials().generateMetadata(options);
-    const addressMetadata = await addressClient.credentials._getCallCredentials().generateMetadata(options);
-
-    const [blockchainAuthorization] = blockchainMetadata.get('authorization');
-    const [marketAuthorization] = marketMetadata.get('authorization');
-    const [monitoringAuthorization] = monitoringMetadata.get('authorization');
-    const [addressAuthorization] = addressMetadata.get('authorization');
-
-    expect(blockchainAuthorization).toEqual(marketAuthorization);
-    expect(marketAuthorization).toEqual(monitoringAuthorization);
-    expect(monitoringAuthorization).toEqual(addressAuthorization);
   });
 
   test('token awaiting stopped in other clients when first request failed', async () => {
@@ -149,13 +143,19 @@ describe('Auth', () => {
     }
   });
 
-  test('cals a refresh', async () => {
-    let calls = ["start"];
+  test('calls a refresh', async () => {
+    const calls = ["start"];
 
-    const credentials = emeraldCredentials('localhost:50051', ['fake-client/0.0.0'], 'emrld_yKb3jXMKRJLUWFzL7wPrktkherocZCBy7W6qZH');
+    // A no-op credentials client; we override the authentication provider below so this is never called
+    const noopClient: CredentialsClient = {
+      authenticate(_req: AuthRequest): Promise<AuthResponse> { return Promise.reject(new Error('should not be called')); },
+      refresh(_req: RefreshRequest): Promise<AuthResponse> { return Promise.reject(new Error('should not be called')); },
+    };
+
     class FakeAuthentication implements EmeraldAuthenticator {
       authenticate(): Promise<AuthDetails> {
         calls.push("auth");
+        // Return an already-expired JWT so the next getAuth() triggers a refresh
         return Promise.resolve(new JwtSignature("test-initial-jwt", new Date()));
       }
       refresh(): Promise<AuthDetails> {
@@ -163,19 +163,25 @@ describe('Auth', () => {
         return Promise.resolve(new JwtSignature("test-refreshed-jwt", new Date()));
       }
     }
-    credentials.setAuthentication(new FakeAuthentication());
 
-    const meta1 = await credentials.getChannelCredentials()._getCallCredentials()
-        .generateMetadata({service_url: "test"})
-    const meta2 = await credentials.getChannelCredentials()._getCallCredentials()
-        .generateMetadata({service_url: "test"})
+    const signer = new StandardSigner(noopClient, 'emrld_yKb3jXMKRJLUWFzL7wPrktkherocZCBy7W6qZH', ['fake-client/0.0.0']);
+    signer.setAuthentication(new FakeAuthentication());
 
-    // make sure it doesn't make initial request twice
+    const auth1 = await signer.getAuth();
+    const auth2 = await signer.getAuth();
+
+    // Make sure it authenticates first and then refreshes (not authenticates twice)
     expect(calls).toEqual(["start", "auth", "refresh"]);
 
-    // make sure it uses received jwts
-    expect(meta1.get("authorization")).toEqual(["Bearer test-initial-jwt"]);
-    expect(meta2.get("authorization")).toEqual(["Bearer test-refreshed-jwt"]);
+    // Verify the JWTs returned by each call
+    const headers1: Record<string, string> = {};
+    auth1.applyAuth({ add: (key: string, value: string) => { headers1[key] = value; } });
+
+    const headers2: Record<string, string> = {};
+    auth2.applyAuth({ add: (key: string, value: string) => { headers2[key] = value; } });
+
+    expect(headers1['Authorization']).toEqual("Bearer test-initial-jwt");
+    expect(headers2['Authorization']).toEqual("Bearer test-refreshed-jwt");
   })
 
 

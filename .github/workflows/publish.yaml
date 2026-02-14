@@ -28,11 +28,14 @@ jobs:
           node-version: "18.x"
           always-auth: true
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Configure NPM
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Install JS dependencies
-        run: yarn install
+        run: pnpm install
 
       - name: Connect Tailscale
         uses: tailscale/github-action@v2
@@ -42,7 +45,7 @@ jobs:
           tags: tag:ci
 
       - name: Build
-        run: yarn workspaces foreach run build
+        run: pnpm -r run build
 
       - name: Publish to NPM
         run: npm publish --access=public

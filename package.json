@@ -1,11 +1,19 @@
 {
   "private": true,
-  "packageManager": "yarn@3.5.1",
+  "packageManager": "pnpm@10.13.1",
   "scripts": {
-    "build": "yarn workspaces foreach run build",
-    "clean": "yarn workspaces foreach run clean",
+    "build": "pnpm -r run build",
+    "clean": "pnpm -r run clean",
     "clean:modules": "rimraf -g node_modules 'packages/*/node_modules'",
-    "test": "yarn workspaces foreach run test"
+    "test": "pnpm -r run test"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "grpc-tools",
+      "protobufjs",
+      "protoc-gen-grpc-web",
+      "unrs-resolver"
+    ]
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -15,10 +23,5 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-unused-imports": "^3.0.0",
     "prettier": "^3.0.0"
-  },
-  "workspaces": [
-    "packages/core",
-    "packages/node",
-    "packages/web"
-  ]
+  }
 }

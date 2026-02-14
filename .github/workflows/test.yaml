@@ -29,11 +29,14 @@ jobs:
         with:
           node-version: "18.x"
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Install JS dependencies
-        run: yarn install
+        run: pnpm install
 
       - name: Build
-        run: yarn workspaces foreach run build
+        run: pnpm -r run build
   tests:
     name: Test ${{ matrix.workspace }}
     continue-on-error: ${{ matrix.workspace == 'api-web' }}
@@ -52,8 +55,11 @@ jobs:
         with:
           node-version: "18.x"
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Install JS dependencies
-        run: yarn install
+        run: pnpm install
 
       - name: Connect Tailscale
         uses: tailscale/github-action@v2
@@ -63,7 +69,7 @@ jobs:
           tags: tag:ci
 
       - name: Build
-        run: yarn workspaces foreach run build
+        run: pnpm -r run build
 
       - name: Test
-        run: yarn workspace @emeraldpay/${{ matrix.workspace }} run test
+        run: pnpm --filter @emeraldpay/${{ matrix.workspace }} run test
