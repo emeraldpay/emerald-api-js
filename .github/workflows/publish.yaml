@@ -4,6 +4,10 @@ on:
   release:
     types: [ created ]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   npm:
     name: Publish to NPM ${{ matrix.package }}
@@ -25,14 +29,11 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "24.x"
           always-auth: true
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-
-      - name: Configure NPM
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
       - name: Install JS dependencies
         run: pnpm install
@@ -48,5 +49,5 @@ jobs:
         run: pnpm -r run build
 
       - name: Publish to NPM
-        run: npm publish --access=public
+        run: pnpm publish --access=public
         working-directory: packages/${{ matrix.package }}
