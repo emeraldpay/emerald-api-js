@@ -1,4 +1,5 @@
-import {EmeraldApi} from "../EmeraldApi";
+import { EmeraldApi } from "../EmeraldApi";
+import { Blockchain } from "@emeraldpay/api";
 
 jest.setTimeout(5000);
 
@@ -19,6 +20,41 @@ describe("MarketClient", () => {
         expect(act[0].base).toBe("ETH");
         expect(act[0].target).toBe("USD");
         expect(parseFloat(act[0].rate)).toBeGreaterThan(50);
+    });
+
+    test('Get ETH rate at block 24319623', async () => {
+        const client = api.market;
+
+        let act = await client.getRates({
+            block: {
+                blockchain: Blockchain.ETHEREUM,
+                height: 24319623,
+            },
+            pairs: [{base: "ETH", target: "USD"}],
+        });
+        console.log("rates", act);
+
+        expect(act.length).toBe(1);
+        expect(act[0].base).toBe("ETH");
+        expect(act[0].target).toBe("USD");
+        expect(parseFloat(act[0].rate)).toBeGreaterThan(2850.0);
+        expect(parseFloat(act[0].rate)).toBeLessThan(2950.0);
+    });
+
+    test('Get ETH rate at 6 Feb 2026', async () => {
+        const client = api.market;
+
+        let act = await client.getRates({
+            timestamp: new Date('2026-02-06T12:00:00Z'),
+            pairs: [{base: "ETH", target: "USD"}],
+        });
+        console.log("rates", act);
+
+        expect(act.length).toBe(1);
+        expect(act[0].base).toBe("ETH");
+        expect(act[0].target).toBe("USD");
+        expect(parseFloat(act[0].rate)).toBeGreaterThan(1900.0);
+        expect(parseFloat(act[0].rate)).toBeLessThan(2000.0);
     });
 
     test('Get BTC rate', async () => {

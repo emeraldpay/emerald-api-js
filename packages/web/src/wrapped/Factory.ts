@@ -75,6 +75,10 @@ export const classFactory: MessageFactory = (id: string) => {
     if (id == "market_pb.Pair") {
         return new market_pb.Pair();
     }
+    if (id == "common_pb.BlockRef") {
+        return new common_pb.BlockRef();
+    }
+
     // Sierra
     if (id == "sierra_message_pb.CreateProjectRequest") {
         return new sierra_message_pb.CreateProjectRequest();

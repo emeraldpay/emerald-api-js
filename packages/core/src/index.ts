@@ -80,15 +80,16 @@ export {
 } from './typesCommon';
 export { MessageFactory } from './typesConvert';
 export {
+  CryptoCurrency,
+  StablecoinCurrency,
+  CountryCurrency,
+  BaseCurrency,
   AnyCurrency,
   ConvertMarket,
-  CountryCurrency,
-  CryptoCurrency,
   GetRatesRequest,
   GetRatesResponse,
   Pair,
   Rate,
-  StablecoinCurrency,
   TestCurrency,
 } from './typesMarket';
 export * as token from './typesToken';

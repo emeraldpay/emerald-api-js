@@ -61,6 +61,8 @@ export const classFactory: MessageFactory = (id: string) => {
       return new market_pb.GetRatesRequest();
     case 'market_pb.Pair':
       return new market_pb.Pair();
+    case 'common_pb.BlockRef':
+      return new common_pb.BlockRef();
     // Token
     case 'token_message_pb.AddressAllowanceRequest':
       return new token_message_pb.AddressAllowanceRequest();
