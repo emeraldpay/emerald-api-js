@@ -26,6 +26,11 @@ export interface GetTransactionsRequest {
   limit?: number;
   /** For Bitcoin, allows to query all unspent transactions to that address */
   onlyUnspent?: boolean;
+  /**
+   *  Get transactions is Descending order, i.e., start from the newest and go backwards.
+   *  Default: false (i.e., Ascending, from oldest to newest)
+   */
+  descending?: boolean;
 }
 
 export interface SubscribeTransactionsRequest {
@@ -82,13 +87,19 @@ export class ConvertTransaction {
   }
 
   public getTransactionsRequest(req: GetTransactionsRequest): transaction_message_pb.GetTransactionsRequest {
-    const result: transaction_message_pb.GetTransactionsRequest = this.factory('transaction_message_pb.GetTransactionsRequest');
-    return result
+    let result: transaction_message_pb.GetTransactionsRequest = this.factory('transaction_message_pb.GetTransactionsRequest');
+    result = result
       .setChain(req.blockchain.valueOf())
       .setAddress(this.common.pbAnyAddress(req.address))
       .setCursor(req.cursor)
-      .setLimit(req.limit)
-      .setUnspentOnly(req.onlyUnspent);
+      .setLimit(req.limit);
+    if (typeof req.onlyUnspent === 'boolean') {
+        result = result.setUnspentOnly(req.onlyUnspent);
+    }
+    if (typeof req.descending === 'boolean') {
+        result = result.setDescending(req.descending);
+    }
+    return result;
   }
 
   public subscribeTransactionsRequest(req: SubscribeTransactionsRequest): transaction_message_pb.SubscribeTransactionsRequest {
