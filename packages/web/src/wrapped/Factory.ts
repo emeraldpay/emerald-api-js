@@ -3,6 +3,7 @@ import * as auth_pb from "../generated/auth_pb";
 import * as blockchain_pb from "../generated/blockchain_pb";
 import * as common_pb from "../generated/common_pb";
 import * as market_pb from "../generated/market_pb";
+import * as transaction_message_pb from "../generated/transaction.message_pb";
 import * as sierra_message_pb from "../generated/sierra.message_pb";
 
 export const classFactory: MessageFactory = (id: string) => {
@@ -77,6 +78,14 @@ export const classFactory: MessageFactory = (id: string) => {
     }
     if (id == "common_pb.BlockRef") {
         return new common_pb.BlockRef();
+    }
+
+    // Transaction
+    if (id == 'transaction_message_pb.GetTransactionsRequest') {
+        return new transaction_message_pb.GetTransactionsRequest();
+    }
+    if (id == 'transaction_message_pb.SubscribeTransactionsRequest') {
+        return new transaction_message_pb.SubscribeTransactionsRequest();
     }
 
     // Sierra

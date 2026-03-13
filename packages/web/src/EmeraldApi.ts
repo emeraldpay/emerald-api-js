@@ -2,12 +2,13 @@ import {SecretToken} from "@emeraldpay/api";
 import {WebChannel} from "./channel";
 import {CredentialsContext, emeraldCredentials} from "./credentials";
 import {AuthClient} from "./wrapped/AuthClient";
-import {BlockchainClient} from "./wrapped/BlockchainClient";
+import {BlockchainClient} from "./wrapped";
 import {InsightsClient} from "./wrapped/InsightsClient";
-import {MarketClient} from "./wrapped/MarketClient";
-import {SierraOrgClient} from "./wrapped/SierraOrgClient";
-import {SierraProjectClient} from "./wrapped/SierraProjectClient";
-import {SierraStatClient} from "./wrapped/SierraStatClient";
+import {MarketClient} from "./wrapped";
+import {SierraOrgClient} from "./wrapped";
+import {SierraProjectClient} from "./wrapped";
+import {SierraStatClient} from "./wrapped";
+import { TransactionClient } from "./wrapped";
 
 export class EmeraldApi {
     private readonly hostname: string;
@@ -59,6 +60,10 @@ export class EmeraldApi {
 
     get auth(): AuthClient {
         return new AuthClient(this.hostname, this.channel, this.credentials);
+    }
+
+    get transactions(): TransactionClient {
+        return new TransactionClient(this.hostname, this.channel, this.credentials);
     }
 
 }
