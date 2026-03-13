@@ -1,109 +1,93 @@
 import { MessageFactory } from "@emeraldpay/api";
-import * as auth_pb from "../generated/auth_pb";
+import * as auth_message_pb from '../generated/auth_pb';
+import * as address_message_pb from '../generated/address.message_pb';
 import * as blockchain_pb from "../generated/blockchain_pb";
 import * as common_pb from "../generated/common_pb";
 import * as market_pb from "../generated/market_pb";
 import * as transaction_message_pb from "../generated/transaction.message_pb";
 import * as sierra_message_pb from "../generated/sierra.message_pb";
+import * as token_message_pb from '../generated/token.message_pb';
 
 export const classFactory: MessageFactory = (id: string) => {
-    if (id == "common_pb.Chain") {
-        return new common_pb.Chain();
-    }
-    if (id == "common_pb.Asset") {
-        return new common_pb.Asset();
-    }
-    if (id == "common_pb.Erc20Asset") {
-        return new common_pb.Erc20Asset();
-    }
-    if (id == "common_pb.AnyAddress") {
-        return new common_pb.AnyAddress();
-    }
-    if (id == "common_pb.SingleAddress") {
-        return new common_pb.SingleAddress();
-    }
-    if (id == "common_pb.MultiAddress") {
-        return new common_pb.MultiAddress();
-    }
-    if (id == "common_pb.XpubAddress") {
-        return new common_pb.XpubAddress();
-    }
-    // Auth
-    if (id == 'auth_pb.RefreshRequest') {
-        return new auth_pb.RefreshRequest();
-    }
-    if (id == 'auth_pb.AuthRequest') {
-        return new auth_pb.AuthRequest();
-    }
-    if (id == 'auth_pb.AuthResponse') {
-        return new auth_pb.AuthResponse();
-    }
-    if (id == 'auth_pb.ListTokensRequest') {
-        return new auth_pb.ListTokensRequest();
-    }
-    if (id == 'auth_pb.IssueTokenRequest') {
-        return new auth_pb.IssueTokenRequest();
-    }
-    if (id == 'auth_pb.DeleteTokenRequest') {
-        return new auth_pb.DeleteTokenRequest();
-    }
-    // Blockchain
-    if (id == "blockchain_pb.NativeCallRequest") {
-        return new blockchain_pb.NativeCallRequest();
-    }
-    if (id == "blockchain_pb.NativeCallItem") {
-        return new blockchain_pb.NativeCallItem();
-    }
-    if (id == "blockchain_pb.AddressBalance") {
-        return new blockchain_pb.AddressBalance();
-    }
-    if (id == "blockchain_pb.BalanceRequest") {
-        return new blockchain_pb.BalanceRequest();
-    }
-    if (id == "blockchain_pb.TxStatusRequest") {
-        return new blockchain_pb.TxStatusRequest();
-    }
-    if (id == "blockchain_pb.TxStatus") {
-        return new blockchain_pb.TxStatus();
-    }
-    if (id == "blockchain_pb.EstimateFeeRequest") {
-        return new blockchain_pb.EstimateFeeRequest();
-    }
-    // Market
-    if (id == "market_pb.GetRatesRequest") {
-        return new market_pb.GetRatesRequest();
-    }
-    if (id == "market_pb.Pair") {
-        return new market_pb.Pair();
-    }
-    if (id == "common_pb.BlockRef") {
-        return new common_pb.BlockRef();
-    }
+  switch (id) {
+      // Common
+    case 'common_pb.AnyAddress':
+      return new common_pb.AnyAddress();
+    case 'common_pb.Asset':
+      return new common_pb.Asset();
+    case 'common_pb.Chain':
+      return new common_pb.Chain();
+    case 'common_pb.Erc20Asset':
+      return new common_pb.Erc20Asset();
+    case 'common_pb.MultiAddress':
+      return new common_pb.MultiAddress();
+    case 'common_pb.SingleAddress':
+      return new common_pb.SingleAddress();
+    case 'common_pb.XpubAddress':
+      return new common_pb.XpubAddress();
+      // Auth
+    case 'auth_pb.RefreshRequest':
+      return new auth_message_pb.RefreshRequest();
+    case 'auth_pb.AuthRequest':
+      return new auth_message_pb.AuthRequest();
+    case 'auth_pb.AuthResponse':
+      return new auth_message_pb.AuthResponse();
+    case 'auth_pb.ListTokensRequest':
+      return new auth_message_pb.ListTokensRequest();
+    case 'auth_pb.IssueTokenRequest':
+      return new auth_message_pb.IssueTokenRequest();
+    case 'auth_pb.DeleteTokenRequest':
+      return new auth_message_pb.DeleteTokenRequest();
+      // Address
+    case 'address_message_pb.DescribeRequest':
+      return new address_message_pb.DescribeRequest();
+    case 'address_message_pb.DescribeXpubRequest':
+      return new address_message_pb.DescribeXpubRequest();
+      // Blockchain
+    case 'blockchain_pb.AddressBalance':
+      return new blockchain_pb.AddressBalance();
+    case 'blockchain_pb.BalanceRequest':
+      return new blockchain_pb.BalanceRequest();
+    case 'blockchain_pb.EstimateFeeRequest':
+      return new blockchain_pb.EstimateFeeRequest();
+    case 'blockchain_pb.NativeCallItem':
+      return new blockchain_pb.NativeCallItem();
+    case 'blockchain_pb.NativeCallRequest':
+      return new blockchain_pb.NativeCallRequest();
+    case 'blockchain_pb.TxStatus':
+      return new blockchain_pb.TxStatus();
+    case 'blockchain_pb.TxStatusRequest':
+      return new blockchain_pb.TxStatusRequest();
+      // Market
+    case 'market_pb.GetRatesRequest':
+      return new market_pb.GetRatesRequest();
+    case 'market_pb.Pair':
+      return new market_pb.Pair();
+    case 'common_pb.BlockRef':
+      return new common_pb.BlockRef();
+      // Token
+    case 'token_message_pb.AddressAllowanceRequest':
+      return new token_message_pb.AddressAllowanceRequest();
+    case 'token_message_pb.AddressTokenRequest':
+      return new token_message_pb.AddressTokenRequest();
+      // Transaction
+    case 'transaction_message_pb.GetTransactionsRequest':
+      return new transaction_message_pb.GetTransactionsRequest();
+    case 'transaction_message_pb.SubscribeTransactionsRequest':
+      return new transaction_message_pb.SubscribeTransactionsRequest();
+      // Sierra
+    case 'sierra_message_pb.CreateProjectRequest':
+      return new sierra_message_pb.CreateProjectRequest();
+    case 'sierra_message_pb.ListProjectsRequest':
+      return new sierra_message_pb.ListProjectsRequest();
+    case 'sierra_message_pb.GetOrgRequest':
+      return new sierra_message_pb.GetOrgRequest();
+    case 'sierra_message_pb.GetRequestCountRequest':
+      return new sierra_message_pb.GetRequestCountRequest();
+    case 'sierra_message_pb.GetTokenStatRequest':
+      return new sierra_message_pb.GetTokenStatRequest();
 
-    // Transaction
-    if (id == 'transaction_message_pb.GetTransactionsRequest') {
-        return new transaction_message_pb.GetTransactionsRequest();
-    }
-    if (id == 'transaction_message_pb.SubscribeTransactionsRequest') {
-        return new transaction_message_pb.SubscribeTransactionsRequest();
-    }
-
-    // Sierra
-    if (id == "sierra_message_pb.CreateProjectRequest") {
-        return new sierra_message_pb.CreateProjectRequest();
-    }
-    if (id == "sierra_message_pb.ListProjectsRequest") {
-        return new sierra_message_pb.ListProjectsRequest();
-    }
-    if (id == "sierra_message_pb.GetOrgRequest") {
-        return new sierra_message_pb.GetOrgRequest()
-    }
-    if (id == "sierra_message_pb.GetRequestCountRequest") {
-        return new sierra_message_pb.GetRequestCountRequest();
-    }
-    if (id == "sierra_message_pb.GetTokenStatRequest") {
-        return new sierra_message_pb.GetTokenStatRequest();
-    }
-
-    throw Error("Unsupported type: " + id)
+    default:
+      throw Error(`Unsupported type: ${id}`);
+  }
 };

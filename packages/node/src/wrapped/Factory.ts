@@ -1,4 +1,4 @@
-import {MessageFactory} from '@emeraldpay/api';
+import { MessageFactory } from '@emeraldpay/api';
 import * as address_message_pb from '../generated/address.message_pb';
 import * as auth_message_pb from '../generated/auth_pb';
 import * as blockchain_pb from '../generated/blockchain_pb';
@@ -10,7 +10,7 @@ import * as transaction_message_pb from '../generated/transaction.message_pb';
 
 export const classFactory: MessageFactory = (id: string) => {
   switch (id) {
-    // Common
+      // Common
     case 'common_pb.AnyAddress':
       return new common_pb.AnyAddress();
     case 'common_pb.Asset':
@@ -25,7 +25,7 @@ export const classFactory: MessageFactory = (id: string) => {
       return new common_pb.SingleAddress();
     case 'common_pb.XpubAddress':
       return new common_pb.XpubAddress();
-    // Auth
+      // Auth
     case 'auth_pb.RefreshRequest':
       return new auth_message_pb.RefreshRequest();
     case 'auth_pb.AuthRequest':
@@ -36,12 +36,14 @@ export const classFactory: MessageFactory = (id: string) => {
       return new auth_message_pb.ListTokensRequest();
     case 'auth_pb.IssueTokenRequest':
       return new auth_message_pb.IssueTokenRequest();
-    // Address
+    case 'auth_pb.DeleteTokenRequest':
+      return new auth_message_pb.DeleteTokenRequest();
+      // Address
     case 'address_message_pb.DescribeRequest':
       return new address_message_pb.DescribeRequest();
     case 'address_message_pb.DescribeXpubRequest':
       return new address_message_pb.DescribeXpubRequest();
-    // Blockchain
+      // Blockchain
     case 'blockchain_pb.AddressBalance':
       return new blockchain_pb.AddressBalance();
     case 'blockchain_pb.BalanceRequest':
@@ -56,28 +58,34 @@ export const classFactory: MessageFactory = (id: string) => {
       return new blockchain_pb.TxStatus();
     case 'blockchain_pb.TxStatusRequest':
       return new blockchain_pb.TxStatusRequest();
-    // Market
+      // Market
     case 'market_pb.GetRatesRequest':
       return new market_pb.GetRatesRequest();
     case 'market_pb.Pair':
       return new market_pb.Pair();
     case 'common_pb.BlockRef':
       return new common_pb.BlockRef();
-    // Token
+      // Token
     case 'token_message_pb.AddressAllowanceRequest':
       return new token_message_pb.AddressAllowanceRequest();
     case 'token_message_pb.AddressTokenRequest':
       return new token_message_pb.AddressTokenRequest();
-    // Transaction
+      // Transaction
     case 'transaction_message_pb.GetTransactionsRequest':
       return new transaction_message_pb.GetTransactionsRequest();
     case 'transaction_message_pb.SubscribeTransactionsRequest':
       return new transaction_message_pb.SubscribeTransactionsRequest();
-    // Sierra
+      // Sierra
     case 'sierra_message_pb.CreateProjectRequest':
-        return new sierra_message_pb.CreateProjectRequest();
+      return new sierra_message_pb.CreateProjectRequest();
     case 'sierra_message_pb.ListProjectsRequest':
-        return new sierra_message_pb.ListProjectsRequest();
+      return new sierra_message_pb.ListProjectsRequest();
+    case 'sierra_message_pb.GetOrgRequest':
+      return new sierra_message_pb.GetOrgRequest();
+    case 'sierra_message_pb.GetRequestCountRequest':
+      return new sierra_message_pb.GetRequestCountRequest();
+    case 'sierra_message_pb.GetTokenStatRequest':
+      return new sierra_message_pb.GetTokenStatRequest();
 
     default:
       throw Error(`Unsupported type: ${id}`);
