@@ -1,4 +1,4 @@
-import { ConvertMarket, GetRatesRequest, GetRatesResponse, publishToPromise, readOnce } from "@emeraldpay/api";
+import { ConvertMarket, publishToPromise, readOnce, market } from "@emeraldpay/api";
 import { callPromise, WebChannel } from "../channel";
 import * as market_rpc from '../generated/MarketServiceClientPb';
 import { classFactory } from "./Factory";
@@ -17,12 +17,21 @@ export class MarketClient {
         this.retries = retries;
     }
 
-    public getRates(request: GetRatesRequest): Promise<GetRatesResponse> {
+    public getRates(request: market.GetRatesRequest): Promise<market.GetRatesResponse> {
         const req = this.convert.ratesRequest(request);
         const mapper = this.convert.ratesResponse();
 
         const call = callPromise(this.client.getRates.bind(this.client), mapper);
         return publishToPromise(readOnce(this.channel, call, req, this.retries));
     }
+
+    public getRatesSeries(request: market.GetRateSeriesRequest): Promise<market.GetRateSeriesResponse> {
+        const req = this.convert.rateSeriesRequest(request);
+        const mapper = this.convert.rateSeriesResponse();
+
+        const call = callPromise(this.client.getRateSeries.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, req, this.retries));
+    }
+
 
 }

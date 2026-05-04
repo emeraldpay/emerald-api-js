@@ -86,12 +86,13 @@ export {
   BaseCurrency,
   AnyCurrency,
   ConvertMarket,
-  GetRatesRequest,
-  GetRatesResponse,
+  GetRatesRequest, GetRatesResponse,
+  GetRateSeriesRequest, GetRateSeriesResponse,
   Pair,
-  Rate,
+  Rate, RateAt,
   TestCurrency,
 } from './typesMarket';
+export * as market from './typesMarket';
 export * as token from './typesToken';
 export * as transaction from './typesTransaction';
 export * as sierra from './typesSierra';
