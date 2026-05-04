@@ -1,4 +1,4 @@
-import { Blockchain, address } from '@emeraldpay/api';
+import { Blockchain } from '@emeraldpay/api';
 import { EmeraldApi } from '../EmeraldApi';
 
 jest.setTimeout(15000);
@@ -18,7 +18,7 @@ describe('AddressClient', () => {
       blockchain: Blockchain.ETHEREUM,
     });
 
-    expect(description.control).toEqual(address.AddressControl.CONTRACT);
+    expect(description.isContract).toBe(true);
   });
 
   test('describe person address', async () => {
@@ -29,7 +29,7 @@ describe('AddressClient', () => {
       blockchain: Blockchain.ETHEREUM,
     });
 
-    expect(description.control).toEqual(address.AddressControl.PERSON);
+    expect(description.isContract).toBe(false);
   });
 
   test('DescribeXpub', (done) => {

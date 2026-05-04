@@ -7,11 +7,6 @@ export enum AddressCapability {
   ERC20 = 'erc20',
 }
 
-export enum AddressControl {
-  CONTRACT = 'contract',
-  PERSON = 'person',
-}
-
 export interface DescribeRequest {
   address: SingleAddress;
   blockchain: Blockchain;
@@ -21,7 +16,7 @@ export interface DescribeResponse {
   active: boolean;
   address: SingleAddress;
   capabilities: AddressCapability[];
-  control?: AddressControl;
+  isContract: boolean;
 }
 
 export interface DescribeXpubRequest {
@@ -58,7 +53,7 @@ export class ConvertAddress {
         .getCapabilitiesList()
         .map(this.convertAddressCapability)
         .filter((capability) => capability != null),
-      control: this.convertAddressControl(response.getControl()),
+      isContract: response.getIsContract(),
     });
   }
 
@@ -85,14 +80,4 @@ export class ConvertAddress {
     }
   }
 
-  private convertAddressControl(control: address_message_pb.AddressControl): AddressControl | undefined {
-    switch (control) {
-      case address_message_pb.AddressControl.CTRL_CONTRACT:
-        return AddressControl.CONTRACT;
-      case address_message_pb.AddressControl.CTRL_PERSON:
-        return AddressControl.PERSON;
-      default:
-        return undefined;
-    }
-  }
 }
