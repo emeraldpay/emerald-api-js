@@ -1,4 +1,5 @@
 import {EmeraldApi} from "../EmeraldApi";
+import { publishListToPromise } from "@emeraldpay/api";
 
 jest.setTimeout(35000);
 
@@ -27,21 +28,14 @@ describe("SierraProjectClient", () => {
     // return expect(call).rejects.toEqual({code: 7, message: ""}); // 7: PERMISSION_DENIED
   });
 
-  test('listProjects',  (done) => {
+  test('listProjects', async () => {
     const client = api.sierraProject;
 
     const call = client.listProjects({
       orgId: "cafe0000-0000-4000-a000-000000000000",
     })
-    call
-      .onData((data) => {
-        console.log("listProjects", data);
-        done();
-      })
-      .onError((error) => {
-        console.log("cancel: ", error.message);
-        done(error);
-      })
+    let projects = await publishListToPromise(call);
+    expect(projects.length).toEqual(1);
   });
 
 });

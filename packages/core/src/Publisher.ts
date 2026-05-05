@@ -344,46 +344,54 @@ export class MappingPublisher<I, O> implements Publisher<O> {
 }
 
 export class PromisePublisher<T> implements Publisher<T> {
-  private readonly value: Promise<T>;
+  private readonly buffer: BufferedPublisher<T>;
 
   constructor(value: Promise<T>) {
-    this.value = value;
+    this.buffer = new BufferedPublisher<T>();
+
+    // Single handled chain. Using `.then(onFulfilled, onRejected)` consumes the
+    // rejection in-place, so the trailing `.finally()` cannot resurface it as
+    // an unhandled rejection — which is what previously happened when separate
+    // `then` / `catch` / `finally` chains were attached lazily off the same
+    // promise.
+    value
+      .then(
+        (data) => this.buffer.emitData(data),
+        (error) => this.buffer.emitError({ code: error.code ?? -1, message: error.message }),
+      )
+      .finally(() => this.buffer.emitClosed());
   }
 
   get reconnecting(): boolean {
-    return false;
+    return this.buffer.reconnecting;
   }
 
   connected(): void {
-    // Nothing
+    this.buffer.connected();
   }
 
   reconnect(): void {
-    // Nothing
+    this.buffer.reconnect();
   }
 
   cancel(): void {
-    // Nothing
+    this.buffer.cancel();
   }
 
   onData(handler: Handler<T>): Publisher<T> {
-    this.value.then((data) => {
-      handler(data);
-
-      return data;
-    });
+    this.buffer.onData(handler);
 
     return this;
   }
 
   onError(handler: Handler<AnyError>): Publisher<T> {
-    this.value.catch((error) => handler({ code: error.code ?? -1, message: error.message }));
+    this.buffer.onError(handler);
 
     return this;
   }
 
   finally(handler: Handler<void>): Publisher<T> {
-    this.value.finally(() => handler());
+    this.buffer.finally(handler);
 
     return this;
   }

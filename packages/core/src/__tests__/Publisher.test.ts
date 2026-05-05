@@ -1,4 +1,4 @@
-import { BufferedPublisher, ManagedPublisher, publishListToPromise } from '../Publisher';
+import { BufferedPublisher, ManagedPublisher, PromisePublisher, publishListToPromise } from '../Publisher';
 
 describe('Publisher', () => {
   describe('BufferedPublisher', () => {
@@ -97,6 +97,54 @@ describe('Publisher', () => {
       act.then(() => done()).catch((error) => done(error.message === 'test' ? undefined : error));
 
       publisher.emitError(new Error('test'));
+    });
+  });
+
+  describe('PromisePublisher', () => {
+    // Regression: a rejected promise must not surface as an unhandled rejection
+    // when only `onError` (or no handler) is attached. Previously the lazy
+    // `then`/`catch`/`finally` chains each pulled directly off the source
+    // promise, so the `then` and `finally` chains leaked the rejection.
+    it('rejected promise does not produce unhandled rejection', async () => {
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown): void => {
+        unhandled.push(reason);
+      };
+      process.on('unhandledRejection', onUnhandled);
+
+      try {
+        const publisher = new PromisePublisher<number>(Promise.reject({ code: 7, message: 'denied' }));
+
+        const errors: Array<{ code: number; message: string }> = [];
+        const closes: number[] = [];
+
+        publisher.onError((error) => errors.push(error as { code: number; message: string }));
+        publisher.finally(() => closes.push(1));
+
+        // Let microtasks settle so any unhandled rejection would have surfaced.
+        await new Promise((resolve) => setImmediate(resolve));
+
+        expect(errors).toEqual([{ code: 7, message: 'denied' }]);
+        expect(closes).toEqual([1]);
+        expect(unhandled).toEqual([]);
+      } finally {
+        process.off('unhandledRejection', onUnhandled);
+      }
+    });
+
+    it('resolved promise delivers data and closes', async () => {
+      const publisher = new PromisePublisher<number>(Promise.resolve(42));
+
+      const data: number[] = [];
+      const closes: number[] = [];
+
+      publisher.onData((value) => data.push(value));
+      publisher.finally(() => closes.push(1));
+
+      await new Promise((resolve) => setImmediate(resolve));
+
+      expect(data).toEqual([42]);
+      expect(closes).toEqual([1]);
     });
   });
 });
