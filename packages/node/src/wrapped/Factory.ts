@@ -1,6 +1,7 @@
 import { MessageFactory } from '@emeraldpay/api';
 import * as address_message_pb from '../generated/address.message_pb';
 import * as auth_message_pb from '../generated/auth_pb';
+import * as field_mask_pb from 'google-protobuf/google/protobuf/field_mask_pb';
 import * as blockchain_pb from '../generated/blockchain_pb';
 import * as common_pb from '../generated/common_pb';
 import * as market_pb from '../generated/market_pb';
@@ -10,6 +11,9 @@ import * as transaction_message_pb from '../generated/transaction.message_pb';
 
 export const classFactory: MessageFactory = (id: string) => {
   switch (id) {
+      // Google Protobuf
+    case 'field_mask_pb.FieldMask':
+      return new field_mask_pb.FieldMask();
       // Common
     case 'common_pb.AnyAddress':
       return new common_pb.AnyAddress();
@@ -36,6 +40,8 @@ export const classFactory: MessageFactory = (id: string) => {
       return new auth_message_pb.ListTokensRequest();
     case 'auth_pb.IssueTokenRequest':
       return new auth_message_pb.IssueTokenRequest();
+    case 'auth_pb.UpdateTokenRequest':
+      return new auth_message_pb.UpdateTokenRequest();
     case 'auth_pb.DeleteTokenRequest':
       return new auth_message_pb.DeleteTokenRequest();
       // Address

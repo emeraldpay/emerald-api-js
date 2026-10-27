@@ -37,6 +37,7 @@ export {
   ListTokensRequest, ListTokensResponse, TokenDetails,
   WhoIAmResponse, IAmAuthenticated, IAMUnauthenticated,
   IssueTokenRequest, IssuedTokenResponse,
+  UpdateTokenRequest, UpdateTokenResponse,
 } from './typesAuth';
 export {
   AddressBalance,

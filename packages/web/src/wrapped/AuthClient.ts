@@ -6,6 +6,8 @@ import {
     IssuedTokenResponse,
     ListTokensRequest,
     ListTokensResponse,
+    UpdateTokenRequest,
+    UpdateTokenResponse,
     WhoIAmResponse, publishToPromise, readOnce
 } from "@emeraldpay/api";
 import {WebChannel, callPromise} from "../channel";
@@ -46,6 +48,12 @@ export class AuthClient {
         const request = this.convert.issueTokenRequest(req);
         const call = callPromise(this.client.issueToken.bind(this.client), this.convert.issuedTokenResponse);
         return publishToPromise(readOnce(this.channel, call, request, 1));
+    }
+
+    updateToken(req: UpdateTokenRequest): Promise<UpdateTokenResponse> {
+        const request = this.convert.updateTokenRequest(req);
+        const call = callPromise(this.client.updateToken.bind(this.client), this.convert.updateTokenResponse);
+        return publishToPromise(readOnce(this.channel, call, request, this.retries));
     }
 
     deleteToken(req: DeleteTokenRequest): Promise<DeleteTokenResponse> {

@@ -148,6 +148,65 @@ export type IssuedTokenResponse = {
   expiresAt: Date,
 }
 
+/**
+ * Update details of an existing permanent token.
+ *
+ * Only the fields that are set (i.e., not `undefined`) are updated, all other fields keep their current values.
+ * To erase a stored value set it to `null` (an empty value, like `[]` or `""`, erases it as well).
+ * At least one field to update must be provided.
+ *
+ * Note that the token used for the current authentication cannot be updated, and the token cannot be moved
+ * to another organization or project.
+ */
+export type UpdateTokenRequest = {
+  organizationId: OrganizationId,
+  projectId: ProjectId,
+  tokenId: TokenId,
+
+  /**
+   * New access scopes for the token, replacing the current list. Cannot be larger that the current authenticated scopes.
+   */
+  scopes?: string[] | null,
+
+  /**
+   * New expiration time. Use `null` to make the token never expire.
+   */
+  expireAt?: Date | null,
+
+  /**
+   * New description of the token
+   */
+  description?: string | null,
+
+  /**
+   * New list of host names allowed to use the token from a web browser, replacing the current list.
+   * Erase it to allow any origin.
+   *
+   * @see IssueTokenRequest.requiredOrigins
+   */
+  requiredOrigins?: string[] | null,
+
+  /**
+   * New list of IP addresses allowed to use the token (IPv4 or CIDR notation), replacing the current list.
+   * Erase it to allow any address.
+   *
+   * @see IssueTokenRequest.requiredIps
+   */
+  requiredIps?: string[] | null,
+}
+
+export type UpdateTokenResponse = {
+  /**
+   * Id of the updated token
+   */
+  tokenId: TokenId,
+
+  /**
+   * When the token expires, or `undefined` if it never expires
+   */
+  expiresAt?: Date,
+}
+
 export type DeleteTokenRequest = {
   organizationId: OrganizationId,
   projectId: ProjectId,
@@ -272,6 +331,52 @@ export class ConvertAuth {
       // when backed returns 0, it means "never expires" (though it almost always has some actual date).
       // Let's set 10 years from now here, to avoid unnecessary null checks
       expiresAt: res.getExpiresAt() > 0 ? new Date(res.getExpiresAt()) : new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000),
+    }
+  }
+
+  public updateTokenRequest(req: UpdateTokenRequest): auth_pb.UpdateTokenRequest {
+    const result: auth_pb.UpdateTokenRequest = this.factory('auth_pb.UpdateTokenRequest');
+    result.setOrganizationId(req.organizationId);
+    result.setProjectId(req.projectId);
+    result.setTokenId(req.tokenId);
+
+    // The paths are the field names as defined in the protobuf, not the JS names
+    const paths: string[] = [];
+    if (req.scopes !== undefined) {
+      paths.push("scopes");
+      result.setScopesList(req.scopes ?? []);
+    }
+    if (req.expireAt !== undefined) {
+      paths.push("expire_at");
+      result.setExpireAt(req.expireAt?.getTime() ?? 0);
+    }
+    if (req.description !== undefined) {
+      paths.push("description");
+      result.setDescription(req.description ?? "");
+    }
+    if (req.requiredOrigins !== undefined) {
+      paths.push("required_origin");
+      result.setRequiredOriginList(req.requiredOrigins ?? []);
+    }
+    if (req.requiredIps !== undefined) {
+      paths.push("required_ip");
+      result.setRequiredIpList(req.requiredIps ?? []);
+    }
+    if (paths.length == 0) {
+      throw new Error("Nothing to update. Specify at least one field to update");
+    }
+
+    const mask = this.factory('field_mask_pb.FieldMask');
+    mask.setPathsList(paths);
+    result.setUpdateMask(mask);
+
+    return result;
+  }
+
+  public updateTokenResponse(res: auth_pb.IssuedTokenResponse): UpdateTokenResponse {
+    return {
+      tokenId: res.getTokenId(),
+      expiresAt: res.getExpiresAt() > 0 ? new Date(res.getExpiresAt()) : undefined,
     }
   }
 

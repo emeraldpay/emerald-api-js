@@ -3,6 +3,8 @@ import {
   ListTokensRequest,
   ListTokensResponse,
   publishToPromise,
+  UpdateTokenRequest,
+  UpdateTokenResponse,
   readOnce,
   WhoIAmResponse
 } from '@emeraldpay/api';
@@ -64,6 +66,12 @@ export class AuthClient {
   issueToken(req: IssueTokenRequest): Promise<IssuedTokenResponse> {
     const request = this.convert.issueTokenRequest(req);
     const call = callSingle(this.client.issueToken.bind(this.client), this.convert.issuedTokenResponse);
+    return publishToPromise(readOnce(this.channel, call, request, this.retries));
+  }
+
+  updateToken(req: UpdateTokenRequest): Promise<UpdateTokenResponse> {
+    const request = this.convert.updateTokenRequest(req);
+    const call = callSingle(this.client.updateToken.bind(this.client), this.convert.updateTokenResponse);
     return publishToPromise(readOnce(this.channel, call, request, this.retries));
   }
 
