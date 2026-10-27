@@ -97,12 +97,6 @@ export type IssueTokenRequest = {
   scopes?: string[],
 
   /**
-   * The user id associated with the token, i.e. who will use the token.
-   * There are restrictions who can set this. In short the token issuer must be in control of the user / impersonate the user.
-   */
-  userId?: string,
-
-  /**
    * A timestamp when it expires.
    * For a temp one-time token, by default, it's 1 Day and cannot be more than 30 days.
    */
@@ -123,9 +117,26 @@ export type IssueTokenRequest = {
    */
   description?: string,
 
+  /**
+   * Host names allowed to use the token from a web browser. When set, they are checked against the Referer header.
+   * Note that this doesn't prevent using the token outside a browser, where the header can easily be forged.
+   * Any origin is allowed when not set or empty.
+   */
+  requiredOrigins?: string[],
+
+  /**
+   * IP addresses allowed to use the token, in IPv4 or CIDR notation (ex. `192.168.1.10` or `10.0.0.0/8`).
+   * Any address is allowed when not set or empty.
+   */
+  requiredIps?: string[],
 }
 
 export type IssuedTokenResponse = {
+  /**
+   * Id of the issued token
+   */
+  tokenId: TokenId,
+
   /**
    * The issued token
    */
@@ -232,9 +243,6 @@ export class ConvertAuth {
     if (req.scopes) {
         result.setScopesList(req.scopes);
     }
-    if (req.userId) {
-        result.setUserId(req.userId);
-    }
     if (req.organizationId) {
         result.setOrganizationId(req.organizationId);
     }
@@ -247,11 +255,18 @@ export class ConvertAuth {
     if (req.expireAt) {
         result.setExpireAt(req.expireAt.getTime());
     }
+    if (req.requiredOrigins && req.requiredOrigins.length > 0) {
+        result.setRequiredOriginList(req.requiredOrigins);
+    }
+    if (req.requiredIps && req.requiredIps.length > 0) {
+        result.setRequiredIpList(req.requiredIps);
+    }
     return result;
   }
 
   public issuedTokenResponse(res: auth_pb.IssuedTokenResponse): IssuedTokenResponse {
     return {
+      tokenId: res.getTokenId(),
       secret: res.getAuthSecret(),
 
       // when backed returns 0, it means "never expires" (though it almost always has some actual date).
