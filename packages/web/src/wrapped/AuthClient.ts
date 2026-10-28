@@ -2,10 +2,12 @@ import {
     ConvertAuth,
     DeleteTokenRequest,
     DeleteTokenResponse,
+    GetTokenRequest,
     IssueTokenRequest,
     IssuedTokenResponse,
     ListTokensRequest,
     ListTokensResponse,
+    TokenDetails,
     UpdateTokenRequest,
     UpdateTokenResponse,
     WhoIAmResponse, publishToPromise, readOnce
@@ -41,6 +43,12 @@ export class AuthClient {
         const mapper = this.convert.listTokensResponse;
 
         const call = callPromise(this.client.listTokens.bind(this.client), mapper);
+        return publishToPromise(readOnce(this.channel, call, request, this.retries));
+    }
+
+    getToken(req: GetTokenRequest): Promise<TokenDetails> {
+        const request = this.convert.getTokenRequest(req);
+        const call = callPromise(this.client.getToken.bind(this.client), this.convert.tokenDetails);
         return publishToPromise(readOnce(this.channel, call, request, this.retries));
     }
 

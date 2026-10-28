@@ -42,6 +42,8 @@ export const classFactory: MessageFactory = (id: string) => {
       return new auth_message_pb.IssueTokenRequest();
     case 'auth_pb.UpdateTokenRequest':
       return new auth_message_pb.UpdateTokenRequest();
+    case 'auth_pb.GetTokenRequest':
+      return new auth_message_pb.GetTokenRequest();
     case 'auth_pb.DeleteTokenRequest':
       return new auth_message_pb.DeleteTokenRequest();
       // Address

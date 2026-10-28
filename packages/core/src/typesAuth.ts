@@ -81,6 +81,25 @@ export type TokenDetails = {
   tokenId: TokenId,
   createdAt: Date,
   description?: string,
+
+  /**
+   * When the token expires, or `undefined` if it never expires
+   */
+  expiresAt?: Date,
+
+  /**
+   * Host names allowed to use the token from a web browser. Empty when any origin is allowed.
+   *
+   * @see IssueTokenRequest.requiredOrigins
+   */
+  requiredOrigins: string[],
+
+  /**
+   * IP addresses allowed to use the token (IPv4 or CIDR notation). Empty when any address is allowed.
+   *
+   * @see IssueTokenRequest.requiredIps
+   */
+  requiredIps: string[],
 }
 
 export type IssueTokenRequest = {
@@ -207,6 +226,15 @@ export type UpdateTokenResponse = {
   expiresAt?: Date,
 }
 
+/**
+ * Get details of a single token
+ */
+export type GetTokenRequest = {
+  organizationId: OrganizationId,
+  projectId: ProjectId,
+  tokenId: TokenId,
+}
+
 export type DeleteTokenRequest = {
   organizationId: OrganizationId,
   projectId: ProjectId,
@@ -214,6 +242,20 @@ export type DeleteTokenRequest = {
 }
 
 export type DeleteTokenResponse = Record<string, never>;
+
+// A standalone function (not a method) because the converter methods are passed around unbound as response mappers
+function convertTokenDetails(token: auth_pb.TokenDetails): TokenDetails {
+  return {
+    organizationId: token.getOrganizationId(),
+    projectId: token.getProjectId(),
+    tokenId: token.getTokenId(),
+    createdAt: new Date(token.getCreationDate()),
+    description: (typeof token.getDescription() == "string" && token.getDescription().length > 0) ? token.getDescription() : null,
+    expiresAt: token.getExpiresAt() > 0 ? new Date(token.getExpiresAt()) : undefined,
+    requiredOrigins: token.getRequireOriginList(),
+    requiredIps: token.getRequireIpList(),
+  }
+}
 
 export class ConvertAuth {
   private readonly factory: MessageFactory;
@@ -280,16 +322,20 @@ export class ConvertAuth {
 
   public listTokensResponse(res: auth_pb.ListTokensResponse): ListTokensResponse {
     return {
-      tokens: res.getTokensList().map((token) => {
-        return {
-          organizationId: token.getOrganizationId(),
-          projectId: token.getProjectId(),
-          tokenId: token.getTokenId(),
-          createdAt: new Date(token.getCreationDate()),
-          description: (typeof token.getDescription() == "string" && token.getDescription().length > 0) ? token.getDescription() : null,
-        }
-      }),
+      tokens: res.getTokensList().map(convertTokenDetails),
     }
+  }
+
+  public getTokenRequest(req: GetTokenRequest): auth_pb.GetTokenRequest {
+    const result: auth_pb.GetTokenRequest = this.factory('auth_pb.GetTokenRequest');
+    result.setOrganizationId(req.organizationId);
+    result.setProjectId(req.projectId);
+    result.setTokenId(req.tokenId);
+    return result;
+  }
+
+  public tokenDetails(res: auth_pb.TokenDetails): TokenDetails {
+    return convertTokenDetails(res);
   }
 
   public issueTokenRequest(req: IssueTokenRequest): auth_pb.IssueTokenRequest {

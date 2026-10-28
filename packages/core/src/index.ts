@@ -34,6 +34,7 @@ export {
   RefreshRequest,
   ConvertAuth,
   DeleteTokenRequest, DeleteTokenResponse,
+  GetTokenRequest,
   ListTokensRequest, ListTokensResponse, TokenDetails,
   WhoIAmResponse, IAmAuthenticated, IAMUnauthenticated,
   IssueTokenRequest, IssuedTokenResponse,

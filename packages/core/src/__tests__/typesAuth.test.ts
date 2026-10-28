@@ -9,6 +9,8 @@ const factory: MessageFactory = (id: string) => {
             return new auth_pb.IssueTokenRequest();
         case 'auth_pb.UpdateTokenRequest':
             return new auth_pb.UpdateTokenRequest();
+        case 'auth_pb.GetTokenRequest':
+            return new auth_pb.GetTokenRequest();
         case 'field_mask_pb.FieldMask':
             return new field_mask_pb.FieldMask();
         default:
@@ -212,5 +214,110 @@ describe("updateTokenResponse", () => {
 
         expect(act.tokenId).toBe("5b8e4f2a-1c3d-4e5f-9a7b-6c8d0e1f2a3b");
         expect(act.expiresAt).toBeUndefined();
+    });
+});
+
+describe("listTokensResponse", () => {
+    function tokenDetails(): auth_pb.TokenDetails {
+        const token = new auth_pb.TokenDetails();
+        token.setOrganizationId("8a2a39ec-9d0e-4f3c-9d4b-4f6e1c1b2a01");
+        token.setProjectId("f3c2b1a0-7e6d-4c5b-8a9f-0e1d2c3b4a59");
+        token.setTokenId("5b8e4f2a-1c3d-4e5f-9a7b-6c8d0e1f2a3b");
+        token.setCreationDate(1690000000000);
+        return token;
+    }
+
+    test("all fields", () => {
+        const token = tokenDetails();
+        token.setDescription("Test token");
+        token.setExpiresAt(1700000000000);
+        token.setRequireOriginList(["example.com", "app.example.com"]);
+        token.setRequireIpList(["192.168.1.10", "10.0.0.0/8"]);
+        const res = new auth_pb.ListTokensResponse();
+        res.setTokensList([token]);
+
+        const act = convert.listTokensResponse(res);
+
+        expect(act.tokens).toEqual([{
+            organizationId: "8a2a39ec-9d0e-4f3c-9d4b-4f6e1c1b2a01",
+            projectId: "f3c2b1a0-7e6d-4c5b-8a9f-0e1d2c3b4a59",
+            tokenId: "5b8e4f2a-1c3d-4e5f-9a7b-6c8d0e1f2a3b",
+            createdAt: new Date(1690000000000),
+            description: "Test token",
+            expiresAt: new Date(1700000000000),
+            requiredOrigins: ["example.com", "app.example.com"],
+            requiredIps: ["192.168.1.10", "10.0.0.0/8"],
+        }]);
+    });
+
+    test("no restrictions and never expires", () => {
+        const res = new auth_pb.ListTokensResponse();
+        res.setTokensList([tokenDetails()]);
+
+        const act = convert.listTokensResponse(res);
+
+        expect(act.tokens).toHaveLength(1);
+        expect(act.tokens[0].expiresAt).toBeUndefined();
+        expect(act.tokens[0].requiredOrigins).toEqual([]);
+        expect(act.tokens[0].requiredIps).toEqual([]);
+    });
+
+    test("survives serialization", () => {
+        const token = tokenDetails();
+        token.setExpiresAt(1700000000000);
+        token.setRequireOriginList(["example.com"]);
+        token.setRequireIpList(["10.0.0.0/8"]);
+        const original = new auth_pb.ListTokensResponse();
+        original.setTokensList([token]);
+
+        const res = auth_pb.ListTokensResponse.deserializeBinary(original.serializeBinary());
+        const act = convert.listTokensResponse(res);
+
+        expect(act.tokens[0].expiresAt).toEqual(new Date(1700000000000));
+        expect(act.tokens[0].requiredOrigins).toEqual(["example.com"]);
+        expect(act.tokens[0].requiredIps).toEqual(["10.0.0.0/8"]);
+    });
+});
+
+describe("getTokenRequest", () => {
+    test("sets ids", () => {
+        const act = convert.getTokenRequest({
+            organizationId: "8a2a39ec-9d0e-4f3c-9d4b-4f6e1c1b2a01",
+            projectId: "f3c2b1a0-7e6d-4c5b-8a9f-0e1d2c3b4a59",
+            tokenId: "5b8e4f2a-1c3d-4e5f-9a7b-6c8d0e1f2a3b",
+        });
+
+        expect(act.getOrganizationId()).toBe("8a2a39ec-9d0e-4f3c-9d4b-4f6e1c1b2a01");
+        expect(act.getProjectId()).toBe("f3c2b1a0-7e6d-4c5b-8a9f-0e1d2c3b4a59");
+        expect(act.getTokenId()).toBe("5b8e4f2a-1c3d-4e5f-9a7b-6c8d0e1f2a3b");
+    });
+});
+
+describe("tokenDetails", () => {
+    test("all fields", () => {
+        const res = new auth_pb.TokenDetails();
+        res.setOrganizationId("8a2a39ec-9d0e-4f3c-9d4b-4f6e1c1b2a01");
+        res.setProjectId("f3c2b1a0-7e6d-4c5b-8a9f-0e1d2c3b4a59");
+        res.setTokenId("5b8e4f2a-1c3d-4e5f-9a7b-6c8d0e1f2a3b");
+        res.setCreationDate(1690000000000);
+        res.setDescription("Test token");
+        res.setExpiresAt(1700000000000);
+        res.setRequireOriginList(["example.com"]);
+        res.setRequireIpList(["10.0.0.0/8"]);
+
+        // called unbound, as it's passed as a response mapper by the clients
+        const mapper = convert.tokenDetails;
+        const act = mapper(res);
+
+        expect(act).toEqual({
+            organizationId: "8a2a39ec-9d0e-4f3c-9d4b-4f6e1c1b2a01",
+            projectId: "f3c2b1a0-7e6d-4c5b-8a9f-0e1d2c3b4a59",
+            tokenId: "5b8e4f2a-1c3d-4e5f-9a7b-6c8d0e1f2a3b",
+            createdAt: new Date(1690000000000),
+            description: "Test token",
+            expiresAt: new Date(1700000000000),
+            requiredOrigins: ["example.com"],
+            requiredIps: ["10.0.0.0/8"],
+        });
     });
 });
