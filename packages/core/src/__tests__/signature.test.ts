@@ -1,4 +1,4 @@
-import {StandardSigner} from "../signature";
+import {AuthDetails, StandardSigner} from "../signature";
 import {AuthRequest, AuthResponse, CredentialsClient} from "../typesAuth";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: clientVersion } = require('../../package.json');
@@ -102,5 +102,84 @@ describe("StandardSigner concurrent calls", () => {
         await expect(first).rejects.toThrow("Failed to auth. Code=1, message=denied");
         await expect(second).rejects.toThrow("Failed to authenticate");
         consoleWarn.mockRestore();
+    });
+});
+
+/**
+ * Credentials client that responds with the prepared responses, and records which calls were made
+ */
+class ScriptedClient implements CredentialsClient {
+    readonly calls: string[] = [];
+
+    constructor(private readonly authResponses: AuthResponse[], private readonly refreshResponses: AuthResponse[] = []) {
+    }
+
+    authenticate(): Promise<AuthResponse> {
+        this.calls.push("authenticate");
+        return this.respond(this.authResponses);
+    }
+
+    refresh(): Promise<AuthResponse> {
+        this.calls.push("refresh");
+        return this.respond(this.refreshResponses);
+    }
+
+    private respond(responses: AuthResponse[]): Promise<AuthResponse> {
+        const response = responses.shift();
+        return response ? Promise.resolve(response) : Promise.reject(new Error("no response prepared"));
+    }
+}
+
+const authOk = (jwt: string, expiresAt: Date): AuthResponse => ({status: 0, jwt, expiresAt, refreshToken: `refresh-for-${jwt}`});
+const authDenied: AuthResponse = {status: 1, denyMessage: "denied"};
+const expired = new Date(0);
+const valid = (): Date => new Date(Date.now() + 60_000);
+
+/**
+ * Returns the JWT from the auth details
+ */
+function jwtOf(auth: AuthDetails): string | undefined {
+    let jwt: string | undefined;
+    auth.applyAuth({add: (_key, value) => jwt = value.replace("Bearer ", "")});
+    return jwt;
+}
+
+describe("StandardSigner refresh", () => {
+
+    let consoleWarn: jest.SpyInstance;
+    beforeEach(() => {
+        consoleWarn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    });
+    afterEach(() => {
+        consoleWarn.mockRestore();
+    });
+
+    test("refreshes an expired token", async () => {
+        const client = new ScriptedClient([authOk("jwt-1", expired)], [authOk("jwt-2", valid())]);
+        const signer = new StandardSigner(client, secretToken, []);
+
+        expect(jwtOf(await signer.getAuth())).toBe("jwt-1");
+        expect(jwtOf(await signer.getAuth())).toBe("jwt-2");
+        expect(client.calls).toEqual(["authenticate", "refresh"]);
+    });
+
+    test("authenticates again when the refresh is rejected", async () => {
+        const client = new ScriptedClient([authOk("jwt-1", expired), authOk("jwt-2", valid())], [authDenied]);
+        const signer = new StandardSigner(client, secretToken, []);
+
+        expect(jwtOf(await signer.getAuth())).toBe("jwt-1");
+        expect(jwtOf(await signer.getAuth())).toBe("jwt-2");
+        expect(client.calls).toEqual(["authenticate", "refresh", "authenticate"]);
+    });
+
+    test("authenticates from scratch on the next call when both refresh and authentication failed", async () => {
+        const client = new ScriptedClient([authOk("jwt-1", expired), authDenied, authOk("jwt-2", valid())], [authDenied]);
+        const signer = new StandardSigner(client, secretToken, []);
+
+        expect(jwtOf(await signer.getAuth())).toBe("jwt-1");
+        await expect(signer.getAuth()).rejects.toThrow("Failed to auth. Code=1, message=denied");
+        expect(jwtOf(await signer.getAuth())).toBe("jwt-2");
+        // doesn't try to use the rejected refresh token again
+        expect(client.calls).toEqual(["authenticate", "refresh", "authenticate", "authenticate"]);
     });
 });

@@ -208,8 +208,14 @@ export class StandardSigner implements Signer {
       this.tokenStatus = TokenStatus.REQUESTED;
       this.notify(AuthenticationStatus.AUTHENTICATING);
 
-      return this.provider
+      const provider = this.provider;
+      return provider
           .refresh()
+          .catch((error) => {
+            // the refresh token may be expired or revoked, and then the only way is to authenticate from scratch
+            console.warn("Failed to refresh, authenticating again", error);
+            return provider.authenticate();
+          })
           .then((token) => {
             this.token = token;
             this.tokenStatus = TokenStatus.SUCCESS;
@@ -218,7 +224,9 @@ export class StandardSigner implements Signer {
             return token;
           })
           .catch((error) => {
-            console.warn("Failed to refresh", error);
+            console.warn("Failed to authenticate", error);
+            // drop the expired token, so the next call authenticates from scratch instead of trying to refresh it again
+            this.token = undefined;
             this.tokenStatus = TokenStatus.ERROR;
             this.notify(AuthenticationStatus.ERROR);
 
