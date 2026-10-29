@@ -1,4 +1,4 @@
-import {ClientReadableStream, Metadata, StreamInterceptor, UnaryInterceptor} from 'grpc-web';
+import {ClientReadableStream, Metadata, RpcError, Status, StatusCode, StreamInterceptor, UnaryInterceptor} from 'grpc-web';
 import {Signer, Headers, SecretToken, isSecretToken, StandardSigner} from "@emeraldpay/api";
 import {AuthClient} from "./generated/AuthServiceClientPb";
 import {
@@ -74,88 +74,128 @@ export class CredentialsContext {
     }
 
     private get unaryInterceptor(): UnaryInterceptor<any, any> {
-        let intercept = async (request, invoker) => {
-            let meta = request.getMetadata();
-            let auth = await this.signer.getAuth();
-            auth.applyAuth(new WebHeaders(meta));
-            return invoker(request)
-        };
         return {
-            intercept: intercept.bind(this)
+            intercept: async (request, invoker) => {
+                const meta = request.getMetadata();
+                const auth = await this.signer.getAuth();
+                auth.applyAuth(new WebHeaders(meta));
+                return invoker(request);
+            }
         };
     }
 
     private get streamInterceptor(): StreamInterceptor<any, any> {
-        let intercept = (request, invoker) => {
-            // For a Stream Interceptor we cannot return a Promise but must return a Stream immediately.
-            // But we cannot get the actual stream yet because we need the auth headers added before that.
-            // In this case we use a StreamPipe, which we initialize and then populate with the actual stream once we have the auth.
-            let pipe = new StreamPipe();
-            let meta = request.getMetadata();
-            this.signer.getAuth()
-                .then((auth) => {
-                    auth.applyAuth(new WebHeaders(meta));
-                    let original = invoker(request);
-                    pipe.setDelegate(original);
-                })
-                .catch((err) => {
-                    console.warn("Failed to get an authentication", err);
-                    pipe.cancel();
-                });
-            // return the piped stream immediately
-            return pipe
-        }
         return {
-            intercept: intercept.bind(this)
+            intercept: (request, invoker) => {
+                // For a Stream Interceptor we cannot return a Promise but must return a Stream immediately.
+                // But we cannot get the actual stream yet because we need the auth headers added before that.
+                // In this case we use a StreamPipe, which we initialize and then populate with the actual stream once we have the auth.
+                const pipe = new StreamPipe();
+                const meta = request.getMetadata();
+                this.signer.getAuth()
+                    .then((auth) => {
+                        auth.applyAuth(new WebHeaders(meta));
+                        pipe.setDelegate(invoker(request));
+                    })
+                    .catch((err) => {
+                        console.warn("Failed to get an authentication", err);
+                        const details = err instanceof Error ? err.message : "no details";
+                        pipe.fail(new RpcError(StatusCode.UNAUTHENTICATED, `Failed to get an authentication: ${details}`, {}));
+                    });
+                // return the piped stream immediately
+                return pipe;
+            }
         };
     }
 }
 
+type StreamEvent = "error" | "status" | "metadata" | "data" | "end";
+// a listener for any of the events, the specific types are enforced by the `on` and `removeListener` overloads
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StreamListener = (...args: any[]) => void;
+
 /**
  * A pipe to another stream which may be created only later, but all the event subscription (i.e, `on` calls)
  * can be accepted immediately, and forwarded to the actual stream once it's available.
+ *
+ * If the actual stream cannot be created (ex. the authentication failed) the pipe reports it through `fail`
+ * to the `error` listeners, the same way as a failed gRPC call.
+ *
+ * Exported only for tests; not a part of the public API.
  */
-class StreamPipe<RESP> implements ClientReadableStream<RESP> {
+export class StreamPipe<RESP> implements ClientReadableStream<RESP> {
     private delegate: ClientReadableStream<RESP> | undefined;
+    private error: RpcError | undefined;
+    private cancelled = false;
 
-    private queueOn = [];
-    private queueRemove = [];
+    private listeners: Array<[StreamEvent, StreamListener]> = [];
 
-    setDelegate(delegate: ClientReadableStream<RESP>) {
+    setDelegate(delegate: ClientReadableStream<RESP>): void {
+        if (this.cancelled) {
+            // the pipe was cancelled while we were waiting for the stream, so close it right away
+            delegate.cancel();
+            return;
+        }
         this.delegate = delegate;
-        this.queueOn.forEach((item) => {
-            delegate.on(item[0], item[1]);
-        });
-        this.queueRemove.forEach((item) => {
-            delegate.removeListener(item[0], item[1]);
-        });
+        this.listeners.forEach(([eventType, callback]) => this.forward(delegate, eventType, callback));
+        this.listeners = [];
     }
 
-    // @ts-ignore
-    on (eventType: string,
-        callback: any): StreamPipe<RESP> {
+    /**
+     * Fails the stream before it was created, i.e., notifies the `error` listeners
+     */
+    fail(error: RpcError): void {
+        if (this.cancelled || this.delegate) {
+            return;
+        }
+        this.error = error;
+        this.listeners
+            .filter(([eventType]) => eventType === "error")
+            .forEach(([, callback]) => callback(error));
+        this.listeners = [];
+    }
+
+    on(eventType: "error", callback: (err: RpcError) => void): ClientReadableStream<RESP>;
+    on(eventType: "status", callback: (status: Status) => void): ClientReadableStream<RESP>;
+    on(eventType: "metadata", callback: (status: Metadata) => void): ClientReadableStream<RESP>;
+    on(eventType: "data", callback: (response: RESP) => void): ClientReadableStream<RESP>;
+    on(eventType: "end", callback: () => void): ClientReadableStream<RESP>;
+    on(eventType: StreamEvent, callback: StreamListener): ClientReadableStream<RESP> {
         if (this.delegate) {
-            // @ts-ignore
-            this.delegate.on(eventType, callback);
+            this.forward(this.delegate, eventType, callback);
+        } else if (this.error) {
+            // already failed, so only an error listener has anything to receive
+            if (eventType === "error") {
+                callback(this.error);
+            }
         } else {
-            this.queueOn.push([eventType, callback]);
+            this.listeners.push([eventType, callback]);
         }
         return this;
     }
 
-    removeListener (eventType: string,
-                    callback: any): void {
+    removeListener(eventType: "error", callback: (err: RpcError) => void): void;
+    removeListener(eventType: "status", callback: (status: Status) => void): void;
+    removeListener(eventType: "metadata", callback: (status: Metadata) => void): void;
+    removeListener(eventType: "data", callback: (response: RESP) => void): void;
+    removeListener(eventType: "end", callback: () => void): void;
+    removeListener(eventType: StreamEvent, callback: StreamListener): void {
         if (this.delegate) {
-            // @ts-ignore
-            this.delegate.removeListener(eventType, callback);
+            // same as with `on`, a specific event type is required by the overloads
+            this.delegate.removeListener(eventType as "data", callback);
         } else {
-            this.queueRemove.push([eventType, callback]);
+            this.listeners = this.listeners.filter(([e, c]) => !(e === eventType && c === callback));
         }
     }
 
-
-    cancel (): void {
-        this.delegate.cancel();
+    cancel(): void {
+        this.cancelled = true;
+        this.delegate?.cancel();
     }
 
+    private forward(delegate: ClientReadableStream<RESP>, eventType: StreamEvent, callback: StreamListener): void {
+        // the delegate accepts only a specific event type through its overloads, though any of them is fine here
+        // because the listener is passed for the same event type as it was registered
+        delegate.on(eventType as "data", callback);
+    }
 }
