@@ -210,6 +210,8 @@ export class ConvertMarket {
       target = this.common.erc20Asset(rate.getErc20Target());
     } else if (rate.hasTarget()) {
       target = rate.getTarget() as BaseCurrency;
+    } else {
+      throw new Error('No target currency in rate');
     }
 
 
