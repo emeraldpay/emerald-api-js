@@ -19,7 +19,7 @@ import {
   WhoAmIRequest as ProtoWhoAmIRequest,
 } from '../generated/auth_pb';
 import {classFactory} from "./Factory";
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: clientVersion } = require('../../package.json');
 
 export class AuthClient {

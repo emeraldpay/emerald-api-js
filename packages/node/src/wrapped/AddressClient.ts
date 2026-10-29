@@ -8,7 +8,7 @@ import { ChannelCredentials } from '@grpc/grpc-js';
 import { NativeChannel, callSingle } from '../channel';
 import { AddressClient as ProtoAddressClient } from '../generated/address_grpc_pb';
 import { classFactory } from './Factory';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: clientVersion } = require('../../package.json');
 
 export class AddressClient {

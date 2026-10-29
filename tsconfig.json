@@ -2,10 +2,13 @@
   "compilerOptions": {
     "declaration": true,
     "esModuleInterop": true,
+    "lib": ["ES2018", "DOM"],
     "module": "CommonJS",
-    "moduleResolution": "Node",
+    "moduleResolution": "Bundler",
     "skipLibCheck": true,
     "sourceMap": true,
+    // TypeScript 6 enables `strict` by default; the code isn't ready for it yet
+    "strict": false,
     "target": "ES2015"
   }
 }

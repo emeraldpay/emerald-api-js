@@ -3,7 +3,7 @@ import { ChannelCredentials } from '@grpc/grpc-js';
 import { NativeChannel, callSingle } from '../channel';
 import { MonitoringClient as ProtoMonitoringClient } from '../generated/monitoring_grpc_pb';
 import { PingRequest as ProtoPingRequest } from '../generated/monitoring_pb';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: clientVersion } = require('../../package.json');
 
 export class MonitoringClient {

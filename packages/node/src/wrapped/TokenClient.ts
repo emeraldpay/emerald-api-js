@@ -3,7 +3,7 @@ import { ChannelCredentials } from '@grpc/grpc-js';
 import { NativeChannel, callSingle, callStream } from '../channel';
 import { TokenClient as ProtoTokenClient } from '../generated/token_grpc_pb';
 import { classFactory } from './Factory';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: clientVersion } = require('../../package.json');
 
 export class TokenClient {
