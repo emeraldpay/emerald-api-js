@@ -84,7 +84,7 @@ export class CredentialsContext {
             try {
               auth.applyAuth(meta);
             } catch (exception) {
-              callback(exception);
+              callback(exception instanceof Error ? exception : new Error(String(exception)));
               return;
             }
             callback(null, meta);

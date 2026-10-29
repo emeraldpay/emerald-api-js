@@ -20,6 +20,29 @@ interface EmitItemClosed {
 export type AnyError = Error | grpc.Error;
 
 /**
+ * Converts a caught exception to an error, because anything could be thrown in JavaScript.
+ * Errors and gRPC errors (an object with `code` and `message`) are returned as is, other values are wrapped into an Error.
+ *
+ * @param exception the caught value
+ */
+function asError(exception: unknown): AnyError {
+  if (exception instanceof Error) {
+    return exception;
+  }
+  if (
+    typeof exception === 'object' &&
+    exception != null &&
+    'code' in exception &&
+    typeof exception.code === 'number' &&
+    'message' in exception &&
+    typeof exception.message === 'string'
+  ) {
+    return exception as grpc.Error;
+  }
+  return new Error(String(exception));
+}
+
+/**
  * Interface for data produced by a call
  */
 export interface Publisher<T> {
@@ -144,7 +167,7 @@ export class BufferedPublisher<T> implements Publisher<T> {
         try {
           this.onDataHandler(item.value);
         } catch (exception) {
-          left.push({ type: 'error', value: exception });
+          left.push({ type: 'error', value: asError(exception) });
           // the item would never be processed
           // left.push(item);
           internalError = true;
@@ -161,7 +184,7 @@ export class BufferedPublisher<T> implements Publisher<T> {
         try {
           this.onFinallyHandler();
         } catch (exception) {
-          left.push({ type: 'error', value: exception });
+          left.push({ type: 'error', value: asError(exception) });
           left.push(item);
 
           internalError = true;
@@ -300,7 +323,7 @@ export class MappingPublisher<I, O> implements Publisher<O> {
 
           this.buffer.emitData(value);
         } catch (exception) {
-          this.buffer.emitError(exception);
+          this.buffer.emitError(asError(exception));
         }
       })
       .onError((error) => this.buffer.emitError(error))

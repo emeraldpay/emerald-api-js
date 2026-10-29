@@ -1,4 +1,11 @@
-import { BufferedPublisher, ManagedPublisher, PromisePublisher, publishListToPromise } from '../Publisher';
+import {
+  AnyError,
+  BufferedPublisher,
+  ManagedPublisher,
+  MappingPublisher,
+  PromisePublisher,
+  publishListToPromise,
+} from '../Publisher';
 
 describe('Publisher', () => {
   describe('BufferedPublisher', () => {
@@ -48,6 +55,98 @@ describe('Publisher', () => {
       buffer.onError((error) => done(error.message === 'test' ? undefined : 'Invalid error'));
 
       buffer.emitError(new Error('test'));
+    });
+  });
+
+  describe('Exceptions thrown by handlers', () => {
+    // Anything can be thrown in JavaScript, but the error handlers expect an Error
+    const throwFromOnData = (thrown: unknown): AnyError[] => {
+      const buffer = new BufferedPublisher<number>();
+      const errors: AnyError[] = [];
+
+      buffer.onError((error) => errors.push(error));
+      buffer.onData(() => {
+        throw thrown;
+      });
+      buffer.emitData(1);
+
+      return errors;
+    };
+
+    it('passes an Error as is', () => {
+      const thrown = new Error('test');
+
+      const errors = throwFromOnData(thrown);
+
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBe(thrown);
+    });
+
+    it('passes a gRPC error as is', () => {
+      const thrown = { code: 7, message: 'denied' };
+
+      const errors = throwFromOnData(thrown);
+
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBe(thrown);
+    });
+
+    it('wraps a string into an Error', () => {
+      const errors = throwFromOnData('oops');
+
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBeInstanceOf(Error);
+      expect(errors[0].message).toBe('oops');
+    });
+
+    it('wraps undefined into an Error', () => {
+      const errors = throwFromOnData(undefined);
+
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBeInstanceOf(Error);
+      expect(errors[0].message).toBe('undefined');
+    });
+
+    it('wraps null into an Error', () => {
+      const errors = throwFromOnData(null);
+
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBeInstanceOf(Error);
+      expect(errors[0].message).toBe('null');
+    });
+
+    it('wraps a value thrown by finally handler into an Error', () => {
+      const buffer = new BufferedPublisher<number>();
+      const errors: AnyError[] = [];
+      let thrown = false;
+
+      buffer.onError((error) => errors.push(error));
+      buffer.finally(() => {
+        if (!thrown) {
+          thrown = true;
+          throw 'oops';
+        }
+      });
+      buffer.emitClosed();
+
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBeInstanceOf(Error);
+      expect(errors[0].message).toBe('oops');
+    });
+
+    it('wraps a value thrown by a mapper into an Error', () => {
+      const source = new ManagedPublisher<number>();
+      const mapped = new MappingPublisher<number, string>(source, () => {
+        throw 'oops';
+      });
+      const errors: AnyError[] = [];
+
+      mapped.onError((error) => errors.push(error));
+      source.emitData(1);
+
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBeInstanceOf(Error);
+      expect(errors[0].message).toBe('oops');
     });
   });
 
