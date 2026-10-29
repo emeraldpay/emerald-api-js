@@ -228,12 +228,11 @@ export class ConvertMarket {
   public ratesRequest(request: GetRatesRequest): market_pb.GetRatesRequest {
     const req: market_pb.GetRatesRequest = this.factory('market_pb.GetRatesRequest');
 
-    let pairsList: Pair[];
+    const pairsList: Pair[] = Array.isArray(request) ? request : request.pairs;
 
-    if (Array.isArray(request)) {
-        pairsList = request;
-    } else if ('pairs' in request) {
-        pairsList = request.pairs;
+    // the types guarantee it, but a JavaScript caller may pass anything
+    if (!Array.isArray(pairsList)) {
+      throw new Error('No pairs in rates request');
     }
 
     pairsList.forEach((pair) => {
