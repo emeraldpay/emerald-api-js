@@ -1,13 +1,10 @@
 import {Chain, ChainRef} from './generated/common_pb';
 
-const allTypes = [
-    ChainRef.CHAIN_BITCOIN,
-    ChainRef.CHAIN_ETHEREUM, ChainRef.CHAIN_MATIC,
-    ChainRef.CHAIN_ETHEREUM_CLASSIC,
-    ChainRef.CHAIN_RSK,
-    ChainRef.CHAIN_MORDEN, ChainRef.CHAIN_KOVAN, ChainRef.CHAIN_GOERLI, ChainRef.CHAIN_ROPSTEN, ChainRef.CHAIN_RINKEBY,
-    ChainRef.CHAIN_TESTNET_BITCOIN,
-];
+/**
+ * All chain ids defined by the Protobuf `ChainRef`, except CHAIN_UNSPECIFIED which doesn't refer to any actual chain
+ */
+const protobufIds: number[] = Object.values(ChainRef)
+    .filter((it): it is ChainRef => typeof it === 'number' && it !== ChainRef.CHAIN_UNSPECIFIED);
 
 export class ChainSpec {
     id: number;
@@ -21,13 +18,17 @@ export class ChainSpec {
         this.fullname = fullname;
     }
 
-    public toProtobuf(): Chain {
-        const type = allTypes.find((it) => it.valueOf() === this.id);
-        if (!type) {
+    /**
+     * Converts to the Protobuf reference
+     *
+     * @returns the chain, or `null` if it's not an actual chain defined by the Protobuf (i.e., UNSPECIFIED, GRIN or CUSTOM)
+     */
+    public toProtobuf(): Chain | null {
+        if (!protobufIds.includes(this.id)) {
             return null;
         }
         const result = new Chain();
-        result.setType(type);
+        result.setType(this.id);
         return result;
     }
 }
@@ -35,37 +36,42 @@ export class ChainSpec {
 export const CHAINS = {
     UNSPECIFIED: new ChainSpec(0, 'UNKNOWN', 'Unknown'),
 
-    BITCOIN: new ChainSpec(1, 'BTC', 'Bitcoin'),
+    BITCOIN: new ChainSpec(ChainRef.CHAIN_BITCOIN, 'BTC', 'Bitcoin'),
+    // Not supported by the API
     GRIN: new ChainSpec(2, 'GRIN', 'Grin'),
 
     // Networks with tokens
-    ETHEREUM: new ChainSpec(100, 'ETH', 'Ethereum'),
-    ETHEREUM_CLASSIC: new ChainSpec(101, 'ETC', 'Ethereum Classic'),
-    MATIC: new ChainSpec(102, 'MATIC', 'Matic'),
+    ETHEREUM: new ChainSpec(ChainRef.CHAIN_ETHEREUM, 'ETH', 'Ethereum'),
+    ETHEREUM_CLASSIC: new ChainSpec(ChainRef.CHAIN_ETHEREUM_CLASSIC, 'ETC', 'Ethereum Classic'),
+    FANTOM: new ChainSpec(ChainRef.CHAIN_FANTOM, 'FTM', 'Fantom'),
+    MATIC: new ChainSpec(ChainRef.CHAIN_MATIC, 'MATIC', 'Matic'),
+    RSK: new ChainSpec(ChainRef.CHAIN_RSK, 'RSK', 'Bitcoin RSK'),
 
     // Testnets
-    MORDEN: new ChainSpec(10001, 'MORDEN', 'Morden Ethereum Testnet'),
-    KOVAN: new ChainSpec(10002, 'KOVAN', 'Kovan Ethereum Testnet'),
-    BITCOIN_TESTNET: new ChainSpec(10003, 'BITCOIN_TESTNET', 'Bitcoin Testnet'),
-    GOERLI: new ChainSpec(10005, 'GOERLI', 'Goerli Ethereum Testnet'),
-    ROPSTEN: new ChainSpec(10006, 'ROPSTEN', 'Ropsten Ethereum Testnet'),
-    RINKEBY: new ChainSpec(10007, 'RINKEBY', 'Rinkeby Ethereum Testnet'),
+    /** @deprecated */
+    MORDEN: new ChainSpec(ChainRef.CHAIN_MORDEN, 'MORDEN', 'Morden Ethereum Testnet'),
+    /** @deprecated */
+    KOVAN: new ChainSpec(ChainRef.CHAIN_KOVAN, 'KOVAN', 'Kovan Ethereum Testnet'),
+    /** @deprecated use BITCOIN_TESTNET_V4 */
+    BITCOIN_TESTNET: new ChainSpec(ChainRef.CHAIN_TESTNET_BITCOIN, 'BITCOIN_TESTNET', 'Bitcoin Testnet'),
+    BITCOIN_TESTNET_V4: new ChainSpec(ChainRef.CHAIN_TESTNET_BITCOIN_4, 'TESTNET_BITCOIN_V4', 'Bitcoin Testnet V4'),
+    /** @deprecated use SEPOLIA */
+    GOERLI: new ChainSpec(ChainRef.CHAIN_GOERLI, 'GOERLI', 'Goerli Ethereum Testnet'),
+    /** @deprecated use HOODI */
+    ROPSTEN: new ChainSpec(ChainRef.CHAIN_ROPSTEN, 'ROPSTEN', 'Ropsten Ethereum Testnet'),
+    /** @deprecated use SEPOLIA */
+    RINKEBY: new ChainSpec(ChainRef.CHAIN_RINKEBY, 'RINKEBY', 'Rinkeby Ethereum Testnet'),
+    /** @deprecated use HOODI */
+    HOLESKY: new ChainSpec(ChainRef.CHAIN_HOLESKY, 'HOLESKY', 'Holesky Ethereum Testnet'),
+    SEPOLIA: new ChainSpec(ChainRef.CHAIN_SEPOLIA, 'SEPOLIA', 'Sepolia Ethereum Testnet'),
+    HOODI: new ChainSpec(ChainRef.CHAIN_HOODI, 'HOODI', 'Hoodi Ethereum Testnet'),
 
     // Non standard/custom starts from 50000
     CUSTOM: new ChainSpec(50000, 'CUSTOM', 'Custom Chain')
 };
 
-const all = [
-    CHAINS.BITCOIN, CHAINS.GRIN,
-    CHAINS.ETHEREUM, CHAINS.ETHEREUM_CLASSIC, CHAINS.MATIC,
-    CHAINS.MORDEN, CHAINS.KOVAN, CHAINS.BITCOIN_TESTNET, CHAINS.GOERLI, CHAINS.ROPSTEN, CHAINS.RINKEBY,
-    CHAINS.UNSPECIFIED,
-    CHAINS.CUSTOM
-];
+const all: ChainSpec[] = Object.values(CHAINS);
 
 export function chainByCode(code: string): ChainSpec {
     return all.find((it) => it.code.toLowerCase() === code.toLowerCase()) || CHAINS.UNSPECIFIED
 }
-
-
-
