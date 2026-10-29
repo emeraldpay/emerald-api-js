@@ -29,7 +29,7 @@ export function asStatus(state: ConnectivityState | number): ConnectionStatus {
 
 export interface Channel {
   getState(): ConnectivityState;
-  watch(current: ConnectivityState, deadline: number, handler: StateListener);
+  watch(current: ConnectivityState, deadline: number, handler: StateListener): void;
 }
 
 export function isChannel(channel: unknown): channel is Channel {
