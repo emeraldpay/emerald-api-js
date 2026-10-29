@@ -178,6 +178,8 @@ export class ConvertSierra {
         group = {
           projectId: response.getProjectId(),
         };
+      } else {
+        throw new Error('No group in request count');
       }
       return {
         group: group,
