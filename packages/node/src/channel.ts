@@ -117,7 +117,7 @@ export function callSingle<R, I, O>(
   mapper: DataMapper<I, O>,
 ): RemoteCall<R, O> {
   return (request) => {
-    const source = new NativeCallPublisher();
+    const source = new NativeCallPublisher<I>();
 
     delegate(request, new Metadata(), source.handler());
 
