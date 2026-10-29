@@ -3,7 +3,6 @@ import {WebChannel} from "./channel";
 import {CredentialsContext, emeraldCredentials} from "./credentials";
 import {AuthClient} from "./wrapped/AuthClient";
 import {BlockchainClient} from "./wrapped";
-import {InsightsClient} from "./wrapped/InsightsClient";
 import {MarketClient} from "./wrapped";
 import {SierraOrgClient} from "./wrapped";
 import {SierraProjectClient} from "./wrapped";
@@ -29,13 +28,6 @@ export class EmeraldApi {
 
     static productionApi(token: SecretToken): EmeraldApi {
         return new EmeraldApi('https://api.emrld.io', token);
-    }
-
-    /**
-     * @deprecated
-     */
-    insights(): InsightsClient {
-        return new InsightsClient(this.hostname, this.channel);
     }
 
     get blockchain(): BlockchainClient {
