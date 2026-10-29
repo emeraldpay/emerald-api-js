@@ -28,7 +28,7 @@ export class Executor<T, R> extends ManagedPublisher<R> implements MethodExecuto
 
   private checker: ContinueCheck;
   private logger: Logger | undefined;
-  private upstream: Publisher<R> | null;
+  private upstream: Publisher<R> | null = null;
 
   constructor(call: RemoteCall<T, R>, checker: ContinueCheck, request: T) {
     super();

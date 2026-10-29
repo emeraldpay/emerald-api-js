@@ -41,7 +41,7 @@ function toConnectivityState(state: GrpcConnectivityState): ConnectivityState {
 export class NativeChannel implements Channel {
   private readonly client: Client;
 
-  private listener: NodeJS.Timeout;
+  private listener: NodeJS.Timeout | undefined;
 
   constructor(client: Client) {
     this.client = client;
