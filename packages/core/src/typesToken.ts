@@ -1,7 +1,7 @@
 import * as token_message_pb from './generated/token.message_pb';
 import { DataMapper } from './Publisher';
 import { AnyAddress, Blockchain, ConvertCommon, SingleAddress, } from './typesCommon';
-import { MessageFactory } from './typesConvert';
+import { MessageFactory, required } from './typesConvert';
 
 export interface AddressTokenRequest {
   blockchain: Blockchain;
@@ -66,7 +66,7 @@ export class Convert {
 
       return {
         blockchain: resp.getChain().valueOf(),
-        address: resp.getAddress().getAddress(),
+        address: required(resp.getAddress(), 'address').getAddress(),
         contractAddresses: contractAddresses,
       };
     };
@@ -77,12 +77,17 @@ export class Convert {
       'token_message_pb.AddressAllowanceRequest',
     );
 
-    return result
+    result
       .setChain(req.blockchain.valueOf())
       .setAddress(this.common.pbAnyAddress(req.address))
-      .setContractAddressesList(req.contractAddresses.map((value) => this.common.pbSingleAddress(value)))
-      .setCursor(req.cursor)
-      .setLimit(req.limit);
+      .setContractAddressesList(req.contractAddresses.map((value) => this.common.pbSingleAddress(value)));
+    if (req.cursor != null) {
+      result.setCursor(req.cursor);
+    }
+    if (req.limit != null) {
+      result.setLimit(req.limit);
+    }
+    return result;
   }
 
   public addressAllowanceToken(): DataMapper<token_message_pb.AddressAllowanceToken, AddressAllowanceToken> {
@@ -92,7 +97,7 @@ export class Convert {
 
       return {
         blockchain: resp.getChain().valueOf(),
-        address: resp.getAddress().getAddress(),
+        address: required(resp.getAddress(), 'address').getAddress(),
         approvedByAddress: approvedByAddress,
         approvedForAddress: approvedForAddress,
       };
@@ -105,13 +110,13 @@ export class Convert {
 
       return {
         blockchain: response.getChain().valueOf(),
-        address: response.getAddress().getAddress(),
+        address: required(response.getAddress(), 'address').getAddress(),
         allowance: response.getAllowance(),
         available: response.getAvailable(),
         chain: response.getChain().valueOf(),
-        contractAddress: response.getContractAddress().getAddress(),
-        ownerAddress: response.getOwnerAddress().getAddress(),
-        spenderAddress: response.getSpenderAddress().getAddress(),
+        contractAddress: required(response.getContractAddress(), 'contract address').getAddress(),
+        ownerAddress: required(response.getOwnerAddress(), 'owner address').getAddress(),
+        spenderAddress: required(response.getSpenderAddress(), 'spender address').getAddress(),
         cursor: cursor.length > 0 ? cursor : undefined,
       };
     };

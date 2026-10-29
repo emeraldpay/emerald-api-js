@@ -3,7 +3,7 @@ import { Granularity } from './generated/market_pb';
 import * as common_pb from './generated/common_pb';
 import { DataMapper } from './Publisher';
 import { Blockchain, ConvertCommon, Erc20Asset, isErc20Asset } from './typesCommon';
-import { MessageFactory } from './typesConvert';
+import { MessageFactory, required } from './typesConvert';
 
 export type CryptoCurrency = 'BTC' | 'ETC' | 'ETH';
 export type StablecoinCurrency = 'DAI' | 'USDT' | 'USDC';
@@ -196,8 +196,9 @@ export class ConvertMarket {
   public pairResponse(rate: market_pb.Rate | market_pb.Pair): Pair {
     let base: AnyCurrency;
 
-    if (rate.hasErc20Base()) {
-      base = this.common.erc20Asset(rate.getErc20Base());
+    const erc20Base = rate.getErc20Base();
+    if (erc20Base) {
+      base = this.common.erc20Asset(erc20Base);
     } else if (rate.hasBase()) {
       base = rate.getBase() as BaseCurrency;
     } else {
@@ -206,8 +207,9 @@ export class ConvertMarket {
 
     let target: AnyCurrency;
 
-    if (rate.hasErc20Target()) {
-      target = this.common.erc20Asset(rate.getErc20Target());
+    const erc20Target = rate.getErc20Target();
+    if (erc20Target) {
+      target = this.common.erc20Asset(erc20Target);
     } else if (rate.hasTarget()) {
       target = rate.getTarget() as BaseCurrency;
     } else {
@@ -310,7 +312,7 @@ export class ConvertMarket {
 
   public rateSeriesResponse(): DataMapper<market_pb.GetRateSeriesResponse, GetRateSeriesResponse> {
     return (value) => {
-      let pair: Pair = this.pairResponse(value.getPair());
+      let pair: Pair = this.pairResponse(required(value.getPair(), 'pair'));
       let rates: RateAt[] = value.getRatesList().map((protoRate) => {
         return {
           rate: protoRate.getRate(),

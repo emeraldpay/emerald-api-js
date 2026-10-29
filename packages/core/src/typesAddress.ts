@@ -1,7 +1,7 @@
 import * as address_message_pb from './generated/address.message_pb';
 import { DataMapper } from './Publisher';
 import { Blockchain, ConvertCommon, SingleAddress, XpubAddress } from './typesCommon';
-import { MessageFactory } from './typesConvert';
+import { MessageFactory, required } from './typesConvert';
 
 export enum AddressCapability {
   ERC20 = 'erc20',
@@ -48,7 +48,7 @@ export class ConvertAddress {
   describeResponse(): DataMapper<address_message_pb.DescribeResponse, DescribeResponse> {
     return (response) => ({
       active: response.getActive(),
-      address: response.getAddress().getAddress(),
+      address: required(response.getAddress(), 'address').getAddress(),
       capabilities: response
         .getCapabilitiesList()
         .map(this.convertAddressCapability)
@@ -65,9 +65,9 @@ export class ConvertAddress {
   public describeXpubResponse(): DataMapper<address_message_pb.DescribeXpubResponse, DescribeXpubResponse> {
     return (response) => ({
         blockchain: response.getChain().valueOf(),
-        address: response.getAddress().getXpub(),
-        lastAddress: response.hasLastAddress() ? response.getLastAddress().getAddress() : undefined,
-        lastIndex: response.hasLastIndex() ? response.getLastIndex().getValue() : undefined,
+        address: required(response.getAddress(), 'address').getXpub(),
+        lastAddress: response.getLastAddress()?.getAddress(),
+        lastIndex: response.getLastIndex()?.getValue(),
     });
   }
 

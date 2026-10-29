@@ -2,7 +2,7 @@ import * as blockchain_pb from './generated/blockchain_pb';
 import * as common_pb from './generated/common_pb';
 import { DataMapper } from './Publisher';
 import { AnyAddress, AnyAsset, Blockchain, ConvertCommon, SingleAddress, isAsset, isErc20Asset } from './typesCommon';
-import { MessageFactory } from './typesConvert';
+import { MessageFactory, required } from './typesConvert';
 
 const textDecoder = new TextDecoder('utf-8');
 const textEncoder = new TextEncoder();
@@ -225,10 +225,12 @@ export class ConvertBlockchain {
     return (resp: blockchain_pb.AddressBalance) => {
       let asset;
 
-      if (resp.hasAsset()) {
-        asset = this.common.asset(resp.getAsset());
-      } else if (resp.hasErc20Asset()) {
-        asset = this.common.erc20Asset(resp.getErc20Asset());
+      const pbAsset = resp.getAsset();
+      const pbErc20Asset = resp.getErc20Asset();
+      if (pbAsset) {
+        asset = this.common.asset(pbAsset);
+      } else if (pbErc20Asset) {
+        asset = this.common.erc20Asset(pbErc20Asset);
       } else {
         throw new Error('Invalid response: neither asset nor erc20Asset is set');
       }
@@ -247,7 +249,7 @@ export class ConvertBlockchain {
       }
       return {
         asset,
-        address: resp.getAddress().getAddress(),
+        address: required(resp.getAddress(), 'address').getAddress(),
         balance: resp.getBalance(),
         utxo,
       };
@@ -264,12 +266,8 @@ export class ConvertBlockchain {
 
   public txResponse(): DataMapper<blockchain_pb.TxStatus, TxStatusResponse> {
     return (resp) => {
-      let block;
-      if (resp.hasBlock()) {
-        block = this.common.blockInfo(resp.getBlock());
-      } else {
-        block = undefined;
-      }
+      const pbBlock = resp.getBlock();
+      const block = pbBlock ? this.common.blockInfo(pbBlock) : undefined;
       return {
         broadcast: resp.getBroadcasted(),
         confirmations: resp.getConfirmations(),
@@ -310,27 +308,29 @@ export class ConvertBlockchain {
 
   public estimateFeeResponse(): DataMapper<blockchain_pb.EstimateFeeResponse, EstimateFeeResponse> {
     return (resp) => {
-      if (resp.hasEthereumextended()) {
-        const value = resp.getEthereumextended();
+      const ethereumExt = resp.getEthereumextended();
+      if (ethereumExt) {
         const result: EthereumExtFees = {
           type: 'ethereumExt',
-          expect: value.getExpect(),
-          max: value.getMax(),
-          priority: value.getPriority(),
+          expect: ethereumExt.getExpect(),
+          max: ethereumExt.getMax(),
+          priority: ethereumExt.getPriority(),
         };
         return result;
       }
-      if (resp.hasEthereumstd()) {
+      const ethereumStd = resp.getEthereumstd();
+      if (ethereumStd) {
         const result: EthereumStdFees = {
           type: 'ethereumStd',
-          fee: resp.getEthereumstd().getFee(),
+          fee: ethereumStd.getFee(),
         };
         return result;
       }
-      if (resp.hasBitcoinstd()) {
+      const bitcoinStd = resp.getBitcoinstd();
+      if (bitcoinStd) {
         const result: BitcoinStdFees = {
           type: 'bitcoinStd',
-          satPerKb: resp.getBitcoinstd().getSatperkb(),
+          satPerKb: bitcoinStd.getSatperkb(),
         };
         return result;
       }

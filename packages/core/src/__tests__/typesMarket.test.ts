@@ -88,3 +88,29 @@ describe("ratesRequest", () => {
         expect(() => converter.ratesRequest({} as never)).toThrow("No pairs in rates request");
     });
 });
+
+describe("rateSeriesResponse", () => {
+
+    const factory: MessageFactory = (id: string) => {
+        throw Error(`Unsupported type ${id}`)
+    }
+    const converter = new ConvertMarket(factory)
+
+    test("converts", () => {
+        const response = new market_pb.GetRateSeriesResponse()
+            .setPair(new market_pb.Pair().setBase("ETH").setTarget("USD"))
+            .setRatesList([new market_pb.RateAt().setRate("3000.50").setTimestamp(1700000000000)]);
+
+        expect(converter.rateSeriesResponse()(response)).toEqual({
+            pair: {base: "ETH", target: "USD"},
+            rates: [{rate: "3000.50", timestamp: new Date(1700000000000)}],
+        });
+    });
+
+    test("fails without pair", () => {
+        const response = new market_pb.GetRateSeriesResponse()
+            .setRatesList([new market_pb.RateAt().setRate("3000.50").setTimestamp(1700000000000)]);
+
+        expect(() => converter.rateSeriesResponse()(response)).toThrow("Invalid response: no pair");
+    });
+});

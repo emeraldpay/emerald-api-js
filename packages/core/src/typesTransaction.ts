@@ -7,7 +7,7 @@ import {
   ConvertCommon,
   SingleAddress,
 } from './typesCommon';
-import { MessageFactory } from './typesConvert';
+import { MessageFactory, required } from './typesConvert';
 
 export enum Direction {
   RECEIVE = 0,
@@ -90,9 +90,13 @@ export class ConvertTransaction {
     let result: transaction_message_pb.GetTransactionsRequest = this.factory('transaction_message_pb.GetTransactionsRequest');
     result = result
       .setChain(req.blockchain.valueOf())
-      .setAddress(this.common.pbAnyAddress(req.address))
-      .setCursor(req.cursor)
-      .setLimit(req.limit);
+      .setAddress(this.common.pbAnyAddress(req.address));
+    if (req.cursor != null) {
+        result = result.setCursor(req.cursor);
+    }
+    if (req.limit != null) {
+        result = result.setLimit(req.limit);
+    }
     if (typeof req.onlyUnspent === 'boolean') {
         result = result.setUnspentOnly(req.onlyUnspent);
     }
@@ -112,27 +116,24 @@ export class ConvertTransaction {
   private static change(change: transaction_message_pb.Change): Change {
     return {
       direction: change.getDirection(),
-      address: change.hasAddress() ? change.getAddress().getAddress() : undefined,
+      address: change.getAddress()?.getAddress(),
       amount: change.getAmount(),
       type: change.getType(),
-      contractAddress: change.hasContractAddress() ? change.getContractAddress().getAddress() : undefined,
-      xpubIndex: change.hasXpubIndex() ? change.getXpubIndex().getValue() : undefined,
+      contractAddress: change.getContractAddress()?.getAddress(),
+      xpubIndex: change.getXpubIndex()?.getValue(),
     };
   }
 
   public addressTransaction(): DataMapper<transaction_message_pb.AddressTransaction, AddressTransaction> {
     return (resp) => {
-      let block: BlockInfo | undefined;
-
-      if (resp.hasBlock()) {
-        block = this.common.blockInfo(resp.getBlock());
-      }
+      const pbBlock = resp.getBlock();
+      const block: BlockInfo | undefined = pbBlock ? this.common.blockInfo(pbBlock) : undefined;
 
       const blockchain = resp.getChain().valueOf();
       const changes = resp.getChangesList().map((value) => ConvertTransaction.change(value));
       const cursor = resp.getCursor();
       const mempool = resp.getMempool();
-      const xpubIndex = resp.hasXpubIndex() ? resp.getXpubIndex().getValue() : undefined;
+      const xpubIndex = resp.getXpubIndex()?.getValue();
 
       return {
         block,
@@ -140,7 +141,7 @@ export class ConvertTransaction {
         changes,
         mempool,
         xpubIndex,
-        address: resp.getAddress().getAddress(),
+        address: required(resp.getAddress(), 'address').getAddress(),
         cursor: cursor.length > 0 ? cursor : undefined,
         failed: resp.getFailed(),
         removed: resp.getRemoved(),
