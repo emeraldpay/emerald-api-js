@@ -1,4 +1,4 @@
-import {isXpubAddress} from "../typesCommon";
+import {isAsset, isErc20Asset, isXpubAddress} from "../typesCommon";
 
 describe("isXpubAddress", () => {
     test("for zpub", () => {
@@ -62,5 +62,31 @@ describe("isXpubAddress", () => {
         expect(
             isXpubAddress({xpub: "xpub6CB5Ug1xJoGVjkywgetJ5GakppwzVv7aFdmBLWVHdZk3Gv8XeUNrdBBLah9pTcisiM7BBLvKEYzi67vB2vUzLdLgUEfFN4MiLyS8hJcdLaA"})
         ).toBeTruthy();
+    });
+});
+
+describe("isAsset", () => {
+    test("for asset", () => {
+        expect(isAsset({blockchain: 100, code: "ETHER"})).toBeTruthy();
+    });
+    test("not for erc20 asset", () => {
+        expect(isAsset({blockchain: 100, contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7"})).toBeFalsy();
+    });
+    test("not for null or undefined", () => {
+        expect(isAsset(null)).toBeFalsy();
+        expect(isAsset(undefined)).toBeFalsy();
+    });
+});
+
+describe("isErc20Asset", () => {
+    test("for erc20 asset", () => {
+        expect(isErc20Asset({blockchain: 100, contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7"})).toBeTruthy();
+    });
+    test("not for asset", () => {
+        expect(isErc20Asset({blockchain: 100, code: "ETHER"})).toBeFalsy();
+    });
+    test("not for null or undefined", () => {
+        expect(isErc20Asset(null)).toBeFalsy();
+        expect(isErc20Asset(undefined)).toBeFalsy();
     });
 });

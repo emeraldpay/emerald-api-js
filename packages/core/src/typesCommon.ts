@@ -99,11 +99,11 @@ export function asDetailedXpub(address: XpubAddress): DetailedXpubAddress {
 }
 
 export function isAsset(asset: unknown): asset is Asset {
-  return typeof asset === 'object' && 'code' in asset;
+  return typeof asset === 'object' && asset !== null && 'code' in asset;
 }
 
 export function isErc20Asset(asset: unknown): asset is Erc20Asset {
-  return typeof asset === 'object' && 'contractAddress' in asset;
+  return typeof asset === 'object' && asset !== null && 'contractAddress' in asset;
 }
 
 export function blockchainType(blockchain: Blockchain): BlockchainType {
