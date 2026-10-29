@@ -259,7 +259,7 @@ class JwtAuthProvider implements EmeraldAuthenticator {
   constructor(client: CredentialsClient, secretToken: SecretToken, agents: string[]) {
     this.client = client;
     this.secretToken = secretToken;
-    if (this.agents == null || this.agents.length == 0) {
+    if (agents == null || agents.length == 0) {
       this.agents = [`emerald-client/${clientVersion}`];
     } else {
       this.agents = agents;
