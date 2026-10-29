@@ -1,4 +1,4 @@
-import {isAsset, isErc20Asset, isXpubAddress} from "../typesCommon";
+import {isAsset, isErc20Asset, isMultiAddress, isXpubAddress} from "../typesCommon";
 
 describe("isXpubAddress", () => {
     test("for zpub", () => {
@@ -88,5 +88,20 @@ describe("isErc20Asset", () => {
     test("not for null or undefined", () => {
         expect(isErc20Asset(null)).toBeFalsy();
         expect(isErc20Asset(undefined)).toBeFalsy();
+    });
+});
+
+describe("isMultiAddress", () => {
+    test("for list of addresses", () => {
+        expect(isMultiAddress(["0xdac17f958d2ee523a2206206994597c13d831ec7", "0x6b175474e89094c44da98b954eedeac495271d0f"])).toBeTruthy();
+    });
+    test("not for single address", () => {
+        expect(isMultiAddress("0xdac17f958d2ee523a2206206994597c13d831ec7")).toBeFalsy();
+    });
+    test("not for detailed xpub", () => {
+        expect(isMultiAddress({xpub: "xpub6CB5Ug1xJoGVjkywgetJ5GakppwzVv7aFdmBLWVHdZk3Gv8XeUNrdBBLah9pTcisiM7BBLvKEYzi67vB2vUzLdLgUEfFN4MiLyS8hJcdLaA"})).toBeFalsy();
+    });
+    test("not for empty list", () => {
+        expect(isMultiAddress([])).toBeFalsy();
     });
 });

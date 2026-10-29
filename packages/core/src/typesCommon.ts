@@ -63,7 +63,7 @@ export function isSingleAddress(address: AnyAddress): address is SingleAddress {
 }
 
 export function isMultiAddress(address: AnyAddress): address is MultiAddress {
-  return typeof address == 'object' && typeof address[0] == 'string';
+  return Array.isArray(address) && typeof address[0] == 'string';
 }
 
 export function isXpubAddress(address: AnyAddress): address is XpubAddress {
