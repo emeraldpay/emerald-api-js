@@ -245,12 +245,13 @@ export type DeleteTokenResponse = Record<string, never>;
 
 // A standalone function (not a method) because the converter methods are passed around unbound as response mappers
 function convertTokenDetails(token: auth_pb.TokenDetails): TokenDetails {
+  const description = token.getDescription();
   return {
     organizationId: token.getOrganizationId(),
     projectId: token.getProjectId(),
     tokenId: token.getTokenId(),
     createdAt: new Date(token.getCreationDate()),
-    description: (typeof token.getDescription() == "string" && token.getDescription().length > 0) ? token.getDescription() : null,
+    description: description.length > 0 ? description : undefined,
     expiresAt: token.getExpiresAt() > 0 ? new Date(token.getExpiresAt()) : undefined,
     requiredOrigins: token.getRequireOriginList(),
     requiredIps: token.getRequireIpList(),

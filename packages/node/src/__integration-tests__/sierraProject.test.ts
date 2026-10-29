@@ -20,7 +20,7 @@ describe("SierraProjectClient", () => {
       })
     } catch (e) {
       console.log("createProject error: ", e)
-      expect(e.code).toEqual(7); // 7: PERMISSION_DENIED
+      expect((e as { code?: number }).code).toEqual(7); // 7: PERMISSION_DENIED
     }
   });
 

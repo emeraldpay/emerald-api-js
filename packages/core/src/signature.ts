@@ -163,13 +163,12 @@ export class StandardSigner implements Signer {
     if (this.tokenStatus === TokenStatus.REQUESTED) {
       return new Promise((resolve, reject) => {
         const awaitToken = (): void => {
-          switch (this.tokenStatus) {
-            case TokenStatus.ERROR:
-              return reject();
-            case TokenStatus.SUCCESS:
-              return resolve(this.token);
-            default:
-              setTimeout(awaitToken, 50);
+          if (this.tokenStatus === TokenStatus.ERROR) {
+            reject(new Error('Failed to authenticate'));
+          } else if (this.tokenStatus === TokenStatus.SUCCESS && this.token != null) {
+            resolve(this.token);
+          } else {
+            setTimeout(awaitToken, 50);
           }
         };
 
@@ -294,7 +293,7 @@ class JwtAuthProvider implements EmeraldAuthenticator {
     }
 
     return this.client.refresh(refreshRequest).then((result: AuthResponse) => {
-      this.refreshToken = null;
+      this.refreshToken = undefined;
       if (isAuthResponseFail(result)) {
         throw new Error(`Failed to auth. Code=${result.status}, message=${result.denyMessage}`);
       }

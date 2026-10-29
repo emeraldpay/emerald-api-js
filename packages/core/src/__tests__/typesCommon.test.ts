@@ -1,4 +1,4 @@
-import {isAsset, isErc20Asset, isMultiAddress, isXpubAddress} from "../typesCommon";
+import {isAsset, isDetailedXpubAddress, isErc20Asset, isMultiAddress, isXpubAddress} from "../typesCommon";
 
 describe("isXpubAddress", () => {
     test("for zpub", () => {
@@ -48,10 +48,10 @@ describe("isXpubAddress", () => {
 
     test("for empty", () => {
         expect(
-            isXpubAddress(undefined)
+            isXpubAddress(undefined as never)
         ).toBeFalsy();
         expect(
-            isXpubAddress(null)
+            isXpubAddress(null as never)
         ).toBeFalsy();
         expect(
             isXpubAddress("")
@@ -103,5 +103,25 @@ describe("isMultiAddress", () => {
     });
     test("not for empty list", () => {
         expect(isMultiAddress([])).toBeFalsy();
+    });
+});
+
+describe("isDetailedXpubAddress", () => {
+    const xpub = "xpub6CB5Ug1xJoGVjkywgetJ5GakppwzVv7aFdmBLWVHdZk3Gv8XeUNrdBBLah9pTcisiM7BBLvKEYzi67vB2vUzLdLgUEfFN4MiLyS8hJcdLaA";
+
+    test("for detailed xpub", () => {
+        expect(isDetailedXpubAddress({xpub})).toBe(true);
+    });
+    test("not for an object without valid xpub", () => {
+        expect(isDetailedXpubAddress({xpub: "0xdac17f958d2ee523a2206206994597c13d831ec7"})).toBe(false);
+    });
+    test("not for a plain xpub string", () => {
+        expect(isDetailedXpubAddress(xpub)).toBe(false);
+    });
+    test("false, not an empty string, for an empty address", () => {
+        expect(isDetailedXpubAddress("")).toBe(false);
+    });
+    test("false for null", () => {
+        expect(isDetailedXpubAddress(null as never)).toBe(false);
     });
 });

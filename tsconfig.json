@@ -7,8 +7,7 @@
     "moduleResolution": "Bundler",
     "skipLibCheck": true,
     "sourceMap": true,
-    // TypeScript 6 enables `strict` by default; the code isn't ready for it yet
-    "strict": false,
+    "strict": true,
     "target": "ES2015"
   }
 }

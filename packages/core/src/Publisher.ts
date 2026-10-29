@@ -95,7 +95,7 @@ export type Handler<T> = (value: T) => void;
  * @param current
  * @param additional
  */
-function joinHandlers<T>(current: Handler<T> | undefined, additional: Handler<T> | undefined): Handler<T> {
+function joinHandlers<T>(current: Handler<T> | undefined, additional: Handler<T> | undefined): Handler<T> | undefined {
   if (current == null) {
     return additional;
   }
@@ -105,21 +105,25 @@ function joinHandlers<T>(current: Handler<T> | undefined, additional: Handler<T>
   }
 
   return (value: T) => {
-    let error = null;
+    // a flag instead of checking the error itself, because anything could be thrown, including null or undefined
+    let failed = false;
+    let error: unknown;
 
     try {
       current(value);
     } catch (exception) {
+      failed = true;
       error = exception;
     }
 
     try {
       additional(value);
     } catch (exception) {
+      failed = true;
       error = exception;
     }
 
-    if (error != null) {
+    if (failed) {
       throw error;
     }
   };

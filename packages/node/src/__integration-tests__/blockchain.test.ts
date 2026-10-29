@@ -251,8 +251,8 @@ describe('BlockchainClient', () => {
         blockchain: 100,
       })
       .onData((response) => {
-        expect(response.block.hash).toBe('5038ffc0d84d496fb6669ab0e60df559fa39dbf181f278d508086a82fc72761f');
-        expect(response.block.height).toBe(2500001);
+        expect(response.block?.hash).toBe('5038ffc0d84d496fb6669ab0e60df559fa39dbf181f278d508086a82fc72761f');
+        expect(response.block?.height).toBe(2500001);
         expect(response.mined).toBeTruthy();
 
         done();
@@ -269,7 +269,7 @@ describe('BlockchainClient', () => {
       txid: '9a7870a8bd7805bdb270db77105eb4a811058cfec602107ba1d027b6bf028928',
     })
     call.onData((response) => {
-      expect(response.block.height).toBe(651732);
+      expect(response.block?.height).toBe(651732);
       expect(response.mined).toBeTruthy();
       call.cancel();
       done();

@@ -82,8 +82,8 @@ export function isXpubAddress(address: AnyAddress): address is XpubAddress {
 
 export function isDetailedXpubAddress(address: AnyAddress): address is DetailedXpubAddress {
   return (
-    address &&
     typeof address == 'object' &&
+    address != null &&
     Object.entries(address).some((a) => a[0] === 'xpub' && typeof a[1] === 'string' && isXpubAddress(a[1]))
   );
 }

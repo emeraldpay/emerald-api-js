@@ -111,7 +111,7 @@ describe('Auth', () => {
     credentials.setAuthentication(new FakeAuthentication());
     credentials.setListener((...statuses) => ([, tokenStatus] = statuses));
 
-    const api = EmeraldApi.devApi(null, credentials.getChannelCredentials());
+    const api = EmeraldApi.devApi(undefined, credentials.getChannelCredentials());
 
     const blockchainClient = api.blockchain();
     const marketClient = api.market();

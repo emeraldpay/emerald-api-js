@@ -134,6 +134,24 @@ describe('Publisher', () => {
       expect(errors[0].message).toBe('oops');
     });
 
+    it('calls all handlers and reports null thrown by one of them', () => {
+      const buffer = new BufferedPublisher<number>();
+      const errors: AnyError[] = [];
+      const received: number[] = [];
+
+      buffer.onError((error) => errors.push(error));
+      buffer.onData(() => {
+        throw null;
+      });
+      buffer.onData((value) => received.push(value));
+      buffer.emitData(1);
+
+      expect(received).toEqual([1]);
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBeInstanceOf(Error);
+      expect(errors[0].message).toBe('null');
+    });
+
     it('wraps a value thrown by a mapper into an Error', () => {
       const source = new ManagedPublisher<number>();
       const mapped = new MappingPublisher<number, string>(source, () => {

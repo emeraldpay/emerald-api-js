@@ -257,6 +257,7 @@ describe("listTokensResponse", () => {
         const act = convert.listTokensResponse(res);
 
         expect(act.tokens).toHaveLength(1);
+        expect(act.tokens[0].description).toBeUndefined();
         expect(act.tokens[0].expiresAt).toBeUndefined();
         expect(act.tokens[0].requiredOrigins).toEqual([]);
         expect(act.tokens[0].requiredIps).toEqual([]);
