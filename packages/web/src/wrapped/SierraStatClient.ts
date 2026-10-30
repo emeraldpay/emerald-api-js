@@ -33,4 +33,17 @@ export class SierraStatClient {
         return readOnce(this.channel, call, req, this.retries);
     }
 
+    /**
+     * Subscribe to a sample of the current requests to the API that match the filter.
+     * The stream is rate limited by the server (usually to ~100 req/min), so it's not guaranteed to have all the requests,
+     * and some parts of a request (start, message or close) may be missing. Intended for debugging and monitoring.
+     */
+    public subscribeLogs(request: sierra.GetLogsRequest): Publisher<sierra.LogResponse> {
+        const req = this.convert.getLogsRequest(request);
+        const mapper = this.convert.logResponse();
+
+        const call = callStream(this.client.subscribeLogs.bind(this.client), mapper);
+        return readOnce(this.channel, call, req, this.retries);
+    }
+
 }

@@ -54,4 +54,27 @@ describe("SierraStatClient", () => {
         done();
       });
   });
+
+  test('subscribeLogs', (done) => {
+    const client = api.sierraStat;
+
+    const call = client.subscribeLogs({
+      orgId: "cafe0000-0000-4000-a000-000000000000",
+    })
+    call
+      .onData((data) => {
+        console.log("log", data);
+        call.cancel();
+        done();
+      })
+      .onError((error) => {
+        call.cancel();
+        console.log("cancel: ", error.message);
+        done(error);
+      })
+      .finally(() => {
+        console.log("stream ended");
+        done();
+      });
+  });
 });

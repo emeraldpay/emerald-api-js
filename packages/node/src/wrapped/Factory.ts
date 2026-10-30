@@ -94,6 +94,8 @@ export const classFactory: MessageFactory = (id: string) => {
       return new sierra_message_pb.GetRequestCountRequest();
     case 'sierra_message_pb.GetTokenStatRequest':
       return new sierra_message_pb.GetTokenStatRequest();
+    case 'sierra_message_pb.GetLogsRequest':
+      return new sierra_message_pb.GetLogsRequest();
 
     default:
       throw Error(`Unsupported type: ${id}`);
