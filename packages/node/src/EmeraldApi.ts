@@ -6,6 +6,7 @@ import {AuthClient} from "./wrapped/Auth";
 import {BlockchainClient} from './wrapped/BlockchainClient';
 import {MarketClient} from './wrapped/MarketClient';
 import {MonitoringClient} from './wrapped/MonitoringClient';
+import {SierraBillingClient} from "./wrapped/SierraBillingClient";
 import {SierraProjectClient} from "./wrapped/SierraProjectClient";
 import {TokenClient} from './wrapped/TokenClient';
 import {TransactionClient} from './wrapped/TransactionClient';
@@ -69,6 +70,10 @@ export class EmeraldApi {
 
   sierraProject(): SierraProjectClient {
     return new SierraProjectClient(this.hostname, this.credentials, this.agents);
+  }
+
+  sierraBilling(): SierraBillingClient {
+    return new SierraBillingClient(this.hostname, this.credentials, this.agents);
   }
 
 }

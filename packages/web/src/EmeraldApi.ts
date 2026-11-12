@@ -4,6 +4,7 @@ import {CredentialsContext, emeraldCredentials} from "./credentials";
 import {AuthClient} from "./wrapped/AuthClient";
 import {BlockchainClient} from "./wrapped";
 import {MarketClient} from "./wrapped";
+import {SierraBillingClient} from "./wrapped";
 import {SierraOrgClient} from "./wrapped";
 import {SierraProjectClient} from "./wrapped";
 import {SierraStatClient} from "./wrapped";
@@ -48,6 +49,10 @@ export class EmeraldApi {
 
     get sierraStat(): SierraStatClient {
         return new SierraStatClient(this.hostname, this.channel, this.credentials);
+    }
+
+    get sierraBilling(): SierraBillingClient {
+        return new SierraBillingClient(this.hostname, this.channel, this.credentials);
     }
 
     get auth(): AuthClient {

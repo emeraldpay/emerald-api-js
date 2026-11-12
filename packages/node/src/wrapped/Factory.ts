@@ -96,6 +96,16 @@ export const classFactory: MessageFactory = (id: string) => {
       return new sierra_message_pb.GetTokenStatRequest();
     case 'sierra_message_pb.GetLogsRequest':
       return new sierra_message_pb.GetLogsRequest();
+    case 'sierra_message_pb.GetCostsRequest':
+      return new sierra_message_pb.GetCostsRequest();
+    case 'sierra_message_pb.GetOrgBillingRequest':
+      return new sierra_message_pb.GetOrgBillingRequest();
+    case 'sierra_message_pb.GetProjectBillingRequest':
+      return new sierra_message_pb.GetProjectBillingRequest();
+    case 'sierra_message_pb.GetBalanceRequest':
+      return new sierra_message_pb.GetBalanceRequest();
+    case 'sierra_message_pb.GetAccountHistoryRequest':
+      return new sierra_message_pb.GetAccountHistoryRequest();
 
     default:
       throw Error(`Unsupported type: ${id}`);

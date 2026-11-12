@@ -11,6 +11,7 @@ export {
     AuthClient,
     BlockchainClient,
     MarketClient,
+    SierraBillingClient,
     SierraOrgClient,
     SierraProjectClient,
     SierraStatClient,

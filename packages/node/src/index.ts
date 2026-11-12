@@ -16,5 +16,6 @@ export { AddressClient } from './wrapped/AddressClient';
 export { BlockchainClient } from './wrapped/BlockchainClient';
 export { MarketClient } from './wrapped/MarketClient';
 export { MonitoringClient } from './wrapped/MonitoringClient';
+export { SierraBillingClient } from './wrapped/SierraBillingClient';
 export { TokenClient } from './wrapped/TokenClient';
 export { TransactionClient } from './wrapped/TransactionClient';

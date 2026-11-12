@@ -15,6 +15,10 @@ export {
 } from './MarketClient';
 
 export {
+  SierraBillingClient
+} from './SierraBillingClient';
+
+export {
   SierraOrgClient
 } from './SierraOrgClient';
 
