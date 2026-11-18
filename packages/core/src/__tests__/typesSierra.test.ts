@@ -1,4 +1,6 @@
 import * as sierra_message_pb from "../generated/sierra.message_pb";
+import * as common_pb from "../generated/common_pb";
+import {Blockchain} from "../typesCommon";
 import {MessageFactory} from "../typesConvert";
 import {ConvertSierra, CostBreakdown, GetCostsRequest, Granularity, LogStatus, isLogPartClose, isLogPartMessage, isLogPartStart} from "../typesSierra";
 
@@ -109,6 +111,38 @@ describe("logResponse", () => {
             },
         });
         expect(isLogPartStart(result.part)).toBeTruthy();
+        expect(result.part).not.toHaveProperty("blockchain");
+    });
+
+    test("start with blockchain", () => {
+        const start = new sierra_message_pb.LogResponsePart.Start()
+            .setOrgId("cafe0000-0000-4000-a000-000000000000")
+            .setProjectId("f3c2b1a0-7e6d-4c5b-8a9f-0e1d2c3b4a59")
+            .setTokenId("0b1a2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d")
+            .setService("emerald.blockchain/NativeCall")
+            .setBlockchain(common_pb.ChainRef.CHAIN_ETHEREUM);
+
+        const result = converter.logResponse()(response(new sierra_message_pb.LogResponsePart().setStart(start)));
+
+        expect(result.part).toEqual({
+            type: "start",
+            orgId: "cafe0000-0000-4000-a000-000000000000",
+            projectId: "f3c2b1a0-7e6d-4c5b-8a9f-0e1d2c3b4a59",
+            tokenId: "0b1a2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d",
+            service: "emerald.blockchain/NativeCall",
+            blockchain: Blockchain.ETHEREUM,
+        });
+    });
+
+    test("start with explicitly unspecified blockchain", () => {
+        // an optional field set to the default value is still sent, and should be passed as-is
+        const start = new sierra_message_pb.LogResponsePart.Start()
+            .setService("emerald.auth/Authenticate")
+            .setBlockchain(common_pb.ChainRef.CHAIN_UNSPECIFIED);
+
+        const result = converter.logResponse()(response(new sierra_message_pb.LogResponsePart().setStart(start)));
+
+        expect(result.part).toHaveProperty("blockchain", Blockchain.UNSPECIFIED);
     });
 
     test("ok message", () => {
@@ -124,6 +158,23 @@ describe("logResponse", () => {
             responseSize: 1024,
         });
         expect(isLogPartMessage(result.part)).toBeTruthy();
+        expect(result.part).not.toHaveProperty("operation");
+    });
+
+    test("message with operation", () => {
+        const message = new sierra_message_pb.LogResponsePart.Message()
+            .setStatus(sierra_message_pb.LogResponsePart.Status.STATUS_OK)
+            .setResponseSize(64)
+            .setOperation("eth_getBalance");
+
+        const result = converter.logResponse()(response(new sierra_message_pb.LogResponsePart().setMessage(message)));
+
+        expect(result.part).toEqual({
+            type: "message",
+            status: LogStatus.OK,
+            responseSize: 64,
+            operation: "eth_getBalance",
+        });
     });
 
     test("error message", () => {

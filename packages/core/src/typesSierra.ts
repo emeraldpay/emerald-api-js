@@ -1,6 +1,6 @@
 import * as sierra_message_pb from './generated/sierra.message_pb';
 import { DataMapper } from './Publisher';
-import { UUID } from "./typesCommon";
+import { Blockchain, UUID } from "./typesCommon";
 import { MessageFactory } from './typesConvert';
 
 export interface Project {
@@ -136,6 +136,10 @@ export interface LogPartStart {
    * Full service name, ex. `emerald.blockchain/NativeCall`
    */
   service: string;
+  /**
+   * Blockchain the request was made for. Not set if the service is not related to a specific blockchain.
+   */
+  blockchain?: Blockchain;
 }
 
 /**
@@ -152,6 +156,11 @@ export interface LogPartMessage {
    * Size of the response in bytes.
    */
   responseSize: number;
+  /**
+   * An operation in the service call, ex. a JSON RPC method name (`eth_getBalance`) for `emerald.blockchain/NativeCall`.
+   * Not set if the service doesn't have operations.
+   */
+  operation?: string;
 }
 
 /**
@@ -604,13 +613,18 @@ export class ConvertSierra {
     return (response) => {
       const start = response.getStart();
       if (start) {
-        return {
+        const result: LogPartStart = {
           type: 'start',
           orgId: start.getOrgId(),
           projectId: start.getProjectId(),
           tokenId: start.getTokenId(),
           service: start.getService(),
         };
+        const blockchain = start.getBlockchain();
+        if (start.hasBlockchain() && blockchain !== undefined) {
+          result.blockchain = blockchain.valueOf();
+        }
+        return result;
       }
       const message = response.getMessage();
       if (message) {
@@ -621,6 +635,9 @@ export class ConvertSierra {
         };
         if (message.hasErrorMessage()) {
           result.errorMessage = message.getErrorMessage();
+        }
+        if (message.hasOperation()) {
+          result.operation = message.getOperation();
         }
         return result;
       }
