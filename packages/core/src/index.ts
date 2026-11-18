@@ -9,6 +9,7 @@ export {
   asStatus,
   readOnce,
 } from './Channel';
+export { blockchainName, isTestnet } from './blockchain';
 export { Executor, MethodExecutor, RemoteCall } from './Executor';
 export {
   DataMapper,
