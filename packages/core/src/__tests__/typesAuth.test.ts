@@ -29,6 +29,7 @@ describe("issueTokenRequest", () => {
         expect(act.getExpireAt()).toBe(0);
         expect(act.getRequiredOriginList()).toEqual([]);
         expect(act.getRequiredIpList()).toEqual([]);
+        expect(act.getIsPublic()).toBe(false);
     });
 
     test("permanent token with all fields", () => {
@@ -41,6 +42,7 @@ describe("issueTokenRequest", () => {
             description: "Test token",
             requiredOrigins: ["example.com", "app.example.com"],
             requiredIps: ["192.168.1.10", "10.0.0.0/8"],
+            isPublic: true,
         });
 
         expect(act.getType()).toBe(auth_pb.IssueTokenRequest.TokenType.PERMANENT);
@@ -51,6 +53,13 @@ describe("issueTokenRequest", () => {
         expect(act.getDescription()).toBe("Test token");
         expect(act.getRequiredOriginList()).toEqual(["example.com", "app.example.com"]);
         expect(act.getRequiredIpList()).toEqual(["192.168.1.10", "10.0.0.0/8"]);
+        expect(act.getIsPublic()).toBe(true);
+    });
+
+    test("not public", () => {
+        const act = convert.issueTokenRequest({type: "permanent", isPublic: false});
+
+        expect(act.getIsPublic()).toBe(false);
     });
 
     test("empty origin and ip lists", () => {
@@ -69,12 +78,14 @@ describe("issueTokenRequest", () => {
             type: "permanent",
             requiredOrigins: ["example.com"],
             requiredIps: ["10.0.0.0/8"],
+            isPublic: true,
         });
 
         const act = auth_pb.IssueTokenRequest.deserializeBinary(req.serializeBinary());
 
         expect(act.getRequiredOriginList()).toEqual(["example.com"]);
         expect(act.getRequiredIpList()).toEqual(["10.0.0.0/8"]);
+        expect(act.getIsPublic()).toBe(true);
     });
 });
 
@@ -233,6 +244,7 @@ describe("listTokensResponse", () => {
         token.setExpiresAt(1700000000000);
         token.setRequireOriginList(["example.com", "app.example.com"]);
         token.setRequireIpList(["192.168.1.10", "10.0.0.0/8"]);
+        token.setIsPublic(true);
         const res = new auth_pb.ListTokensResponse();
         res.setTokensList([token]);
 
@@ -247,6 +259,7 @@ describe("listTokensResponse", () => {
             expiresAt: new Date(1700000000000),
             requiredOrigins: ["example.com", "app.example.com"],
             requiredIps: ["192.168.1.10", "10.0.0.0/8"],
+            isPublic: true,
         }]);
     });
 
@@ -261,6 +274,7 @@ describe("listTokensResponse", () => {
         expect(act.tokens[0].expiresAt).toBeUndefined();
         expect(act.tokens[0].requiredOrigins).toEqual([]);
         expect(act.tokens[0].requiredIps).toEqual([]);
+        expect(act.tokens[0].isPublic).toBe(false);
     });
 
     test("survives serialization", () => {
@@ -268,6 +282,7 @@ describe("listTokensResponse", () => {
         token.setExpiresAt(1700000000000);
         token.setRequireOriginList(["example.com"]);
         token.setRequireIpList(["10.0.0.0/8"]);
+        token.setIsPublic(true);
         const original = new auth_pb.ListTokensResponse();
         original.setTokensList([token]);
 
@@ -277,6 +292,7 @@ describe("listTokensResponse", () => {
         expect(act.tokens[0].expiresAt).toEqual(new Date(1700000000000));
         expect(act.tokens[0].requiredOrigins).toEqual(["example.com"]);
         expect(act.tokens[0].requiredIps).toEqual(["10.0.0.0/8"]);
+        expect(act.tokens[0].isPublic).toBe(true);
     });
 });
 
@@ -319,6 +335,7 @@ describe("tokenDetails", () => {
             expiresAt: new Date(1700000000000),
             requiredOrigins: ["example.com"],
             requiredIps: ["10.0.0.0/8"],
+            isPublic: false,
         });
     });
 });

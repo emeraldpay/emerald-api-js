@@ -100,6 +100,13 @@ export type TokenDetails = {
    * @see IssueTokenRequest.requiredIps
    */
   requiredIps: string[],
+
+  /**
+   * `true` if the token is flagged as public, i.e., embedded within a client-side app.
+   *
+   * @see IssueTokenRequest.isPublic
+   */
+  isPublic: boolean,
 }
 
 export type IssueTokenRequest = {
@@ -148,6 +155,14 @@ export type IssueTokenRequest = {
    * Any address is allowed when not set or empty.
    */
   requiredIps?: string[],
+
+  /**
+   * Flag the token as public, i.e., embedded within a web, mobile, desktop or other client-side app,
+   * where it can be extracted by the user.
+   * For a public token the API may apply additional checks or disable access to certain methods.
+   * Default is `false`.
+   */
+  isPublic?: boolean,
 }
 
 export type IssuedTokenResponse = {
@@ -255,6 +270,7 @@ function convertTokenDetails(token: auth_pb.TokenDetails): TokenDetails {
     expiresAt: token.getExpiresAt() > 0 ? new Date(token.getExpiresAt()) : undefined,
     requiredOrigins: token.getRequireOriginList(),
     requiredIps: token.getRequireIpList(),
+    isPublic: token.getIsPublic(),
   }
 }
 
@@ -366,6 +382,9 @@ export class ConvertAuth {
     }
     if (req.requiredIps && req.requiredIps.length > 0) {
         result.setRequiredIpList(req.requiredIps);
+    }
+    if (req.isPublic) {
+        result.setIsPublic(true);
     }
     return result;
   }
